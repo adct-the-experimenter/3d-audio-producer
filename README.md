@@ -1,19 +1,21 @@
 
-# binaural-audio-editor
-This is an audio application that produces binaural audio from 2D mono audio samples and positional information given through the graphical user interface. Listen to 3D audio through stereo headphones.
+# 3D Audio Producer
 
-Resize the window if unable to move timeline.
+This is an audio application that produces 3D audio from 2D mono audio samples and positional information given through the graphical user interface. 
+Listen to 3D audio through stereo headphones or surround sound system.
+
+This is a fork of the binaural-audio-editor project, but wxwidgets and openscenegraph are replaced with raylib.
+
+## Much work has to be done before this is stable and ready for use.
 
 [![Open Source Helpers](https://www.codetriage.com/adct-the-experimenter/binaural-audio-editor/badges/users.svg)](https://www.codetriage.com/adct-the-experimenter/binaural-audio-editor)
 
 ## Required Libraries
 - OpenAL Soft https://github.com/kcat/openal-soft
 
-- openscenegraph https://github.com/openscenegraph/OpenSceneGraph
+- raylib 
 
 - libsndfile http://www.mega-nerd.com/libsndfile/
-
-- wxwidgets https://www.wxwidgets.org/
 
 - Boost Math Quaternion headers and Boost ASIO serial https://www.boost.org/users/history/version_1_70_0.html
 
@@ -26,11 +28,7 @@ Resize the window if unable to move timeline.
 3. cd binaural-audio-editor
 4. mkdir build
 5. cd build
-6. cmake .. -DwxWidgets_CONFIG_EXECUTABLE=path-to-wxconfig-executable
-    
-    FreeBSD: path-to-wxconfig-executable = /usr/local/bin/wxgtk3u-3.1-config
-    
-    Linux: path-to-wxconfig-executable = /usr/bin/wx-config-gtk3
+6. cmake .. 
 7. make
 8. ./binaural-audio-editor
 
