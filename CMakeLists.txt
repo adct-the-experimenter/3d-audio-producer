@@ -41,26 +41,27 @@ set ( PROJECT_INCLUDE_DIR )
 #for where to find header files for source and library
 include_directories(/usr/include /usr/local/include ./include ./src/timeline-track-editor/include ${PROJECT_INCLUDE_DIR} )
 
-set(SOURCES src/viewer.cpp
-			src/SaveSystem.cpp src/LoadSystem.cpp src/XMLCreator.cpp src/XMLReader.cpp
+set(SOURCES src/main.cpp
+			src/viewer.cpp
+			#src/SaveSystem.cpp src/LoadSystem.cpp src/XMLCreator.cpp src/XMLReader.cpp
 			#src/CreateStandardReverbZoneDialog.cpp src/EditMultipleStandardReverbZonesDialog.cpp 
 			#src/CreateEAXReverbZoneDialog.cpp src/EditMultipleEAXReverbZonesDialog.cpp 
 			#src/CreateEchoZoneDialog.cpp src/EditMultipleEchoZonesDialog.cpp
-			src/echo-zone.cpp
-			src/reverb-zone.cpp
-			src/effect-zone.cpp
-			src/effects-manager.cpp
+			#src/echo-zone.cpp
+			#src/reverb-zone.cpp
+			#src/effect-zone.cpp
+			#src/effects-manager.cpp
 			#src/soundproducer-track-manager.cpp
 			#src/soundproducer-track.cpp
 			#src/listener-track.cpp
-			src/soundproducer-registry.cpp
-			src/CreateSoundProducerDialog.cpp src/EditMultipleSoundProducersDialog.cpp 
-			src/Change-HRTF-Dialog.cpp src/HRTF-Test-Dialog.cpp 
-			src/EditListenerDialog.cpp
-			src/setup-serial-dialog.cpp
-			src/listener-external.cpp
+			#src/soundproducer-registry.cpp
+			#src/CreateSoundProducerDialog.cpp src/EditMultipleSoundProducersDialog.cpp 
+			#src/Change-HRTF-Dialog.cpp src/HRTF-Test-Dialog.cpp 
+			#src/EditListenerDialog.cpp
+			#src/setup-serial-dialog.cpp
+			#src/listener-external.cpp
 			src/openalsoftaudioengine.cpp src/soundproducer.cpp src/listener.cpp
-			src/external-orientation-device-serial.cpp
+			#src/external-orientation-device-serial.cpp
 
 			#src/timeline-track-editor/src/timeline-frame.cpp
 			#src/timeline-track-editor/src/timeline-window.cpp

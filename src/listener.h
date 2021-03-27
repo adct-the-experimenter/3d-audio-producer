@@ -14,7 +14,6 @@
 
 
 
-
 //This is a class that holds positional info on object
 //as well as source and buffer components for use with OpenALSoftAudioEngine
 

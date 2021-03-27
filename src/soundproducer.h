@@ -11,9 +11,6 @@
 #include <vector>
 #include <iostream>
 
-#include <osg/ShapeDrawable> //for object to render on screen
-#include <osg/PositionAttitudeTransform> //for matrix transform that moves object rendered
-#include <osg/Geode> //for object rendered to be moved on screen by matrix transform
 
 //This is a class that holds positional info on object
 //as well as source and buffer components for use with sound producer track
@@ -66,11 +63,7 @@ class SoundProducer
 
 		void SetReferenceToTrackSource(ALuint* thisSource);
 
-		osg::ShapeDrawable* getRenderObject();
-
-		osg::Geode* getGeodeNode();
-
-		osg::PositionAttitudeTransform* getTransformNode();
+		//return reference to 3d model 
 		
 		SoundProducerSaveData GetSoundProducerSaveData();
 		void LoadSoundProducerSaveData(SoundProducerSaveData& data);
@@ -99,16 +92,7 @@ class SoundProducer
 
 		void moveSource(); //function to move source to producer position vector coordinates
 
-		//ShapeDrawable object to render
-		osg::ref_ptr<osg::ShapeDrawable> m_renderObject;
-
-		osg::ref_ptr<osg::Box> m_box;
-
-		//holds geometry information for rendering, moved by transform of matrix
-		osg::ref_ptr<osg::Geode> m_geode;
-
-		//moves the geode
-		osg::ref_ptr<osg::PositionAttitudeTransform> m_paTransform;
+		//define 3d model here
 		
 
 		//save data

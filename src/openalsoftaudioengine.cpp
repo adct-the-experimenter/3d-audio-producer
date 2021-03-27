@@ -284,7 +284,7 @@ void OpenAlSoftAudioEngine::loadSound(ALuint* buffer, const std::string& filenam
 
 	/* The SF_INFO struct must be initialized before using it.
 	*/
-	memset (&sfinfo, 0, sizeof (sfinfo)) ;
+	//memset (&sfinfo, 0, sizeof (sfinfo)) ;
 
 	/* Here's where we open the input file. We pass sf_open the file name and
 	** a pointer to an SF_INFO struct.

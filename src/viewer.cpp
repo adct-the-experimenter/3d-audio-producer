@@ -14,12 +14,12 @@
 
 bool init_listener_once = false;
 
-wxOsgApp::wxOsgApp()
+Viewer::Viewer()
 {
 	
 }
 
-wxOsgApp::~wxOsgApp()
+Viewer::~Viewer()
 {
     
     //close listener reverb thread here
@@ -37,7 +37,7 @@ wxOsgApp::~wxOsgApp()
 #include <sys/types.h> 
 
 // `Main program' equivalent, creating windows and returning main app frame
-bool wxOsgApp::OnInit()
+bool Viewer::OnInit()
 {
 	/*
     if (argc<2)
@@ -63,14 +63,15 @@ bool wxOsgApp::OnInit()
 
 
 		// Create the main frame window
-
+		std::unique_ptr <MainFrame> thisFrame( new MainFrame("3D Audio Producer",&audio_engine) );
+		frame = std::move(thisFrame);
 
 		//set function KeyDownLogic to be called every time key pressed event happens in OSGCanvas
 		using std::placeholders::_1;
-		std::function<void(int&)> func = std::bind( &wxOsgApp::KeyDownLogic, this, _1 );
+		std::function<void(int&)> func = std::bind( &Viewer::KeyDownLogic, this, _1 );
 
 
-		wxOsgApp::initListener();
+		Viewer::initListener();
 
 		//connect mainframe to listener
 		frame->SetListenerReference(listener.get());
@@ -98,7 +99,7 @@ bool wxOsgApp::OnInit()
     return true;
 }
 
-void wxOsgApp::initListener()
+void Viewer::initListener()
 {
 	if(!init_listener_once)
 	{
@@ -122,7 +123,7 @@ void wxOsgApp::initListener()
 	}
 }
 
-void wxOsgApp::KeyDownLogic(int& thisKey)
+void Viewer::KeyDownLogic(int& thisKey)
 {
 	
 	float distanceToMove = 1.0f;
@@ -328,7 +329,7 @@ void MainFrame::SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundPr
 {
 	sound_producer_vector_ref = sound_producer_vector;
 
-	soundproducer_registry.SetReferenceToSoundProducerVector(sound_producer_vector_ref);
+	//soundproducer_registry.SetReferenceToSoundProducerVector(sound_producer_vector_ref);
 }
 
 void MainFrame::SetListenerReference(Listener* thisListener)

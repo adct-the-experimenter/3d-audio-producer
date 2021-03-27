@@ -64,28 +64,8 @@ void Listener::initListener()
 					listener_position_vector[POSITION_INDEX::Y], 
 					listener_position_vector[POSITION_INDEX::Z]);
 	
-	//make box
-	//create ShapeDrawable object
-	m_renderObject= new osg::ShapeDrawable;
-	m_box = new osg::Box(osg::Vec3(0.0f, 0.0f, 0.0f),1.0f);
-
-	//make ShapeDrawable object a box 
-	//initialize box at certain position 
-	m_renderObject->setShape( m_box );
-	//set color of ShapeDrawable object with box
-	m_renderObject->setColor( osg::Vec4(0.6f, 1.0f, 0.4f, 1.0f) );
+	//make box as 3d model
 	
-	//add ShapeDrawable box to geometry root node
-	m_geode = new osg::Geode;
-	m_geode->addDrawable( m_renderObject.get() );
-	
-	//add geode to position attitude transform
-	m_paTransform = new osg::PositionAttitudeTransform;
-	m_paTransform->setPosition( osg::Vec3(
-											listener_position_vector[POSITION_INDEX::X],
-											listener_position_vector[POSITION_INDEX::Y],
-											listener_position_vector[POSITION_INDEX::Z]));
-	m_paTransform->addChild(m_geode);
 }
 
 void Listener::setListenerPosition()
@@ -96,11 +76,6 @@ void Listener::setListenerPosition()
 					listener_position_vector[POSITION_INDEX::Y], 
 					listener_position_vector[POSITION_INDEX::Z]);
 
-	m_paTransform->setPosition(osg::Vec3(
-								listener_position_vector[POSITION_INDEX::X], 
-								listener_position_vector[POSITION_INDEX::Y], 
-								listener_position_vector[POSITION_INDEX::Z])
-								);
 }
 
 void Listener::setPositionX(float& x)
@@ -191,12 +166,6 @@ void Listener::SetWholeOrientation(float& fx, float& fy, float& fz, float& ux, f
 	listener_orientation_vector.assign( {fx,fy,fz,ux,uy,uz} );
 	Listener::setListenerOrientation();
 }
-
-osg::ShapeDrawable* Listener::getRenderObject(){return m_renderObject;}
-
-osg::Geode* Listener::getGeodeNode(){return m_geode;}
-
-osg::PositionAttitudeTransform* Listener::getTransformNode(){return m_paTransform;}
 
 void Listener::MoveUp(float& distance)
 {

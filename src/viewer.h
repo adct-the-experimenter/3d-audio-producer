@@ -10,13 +10,13 @@
 #include "listener.h"
 //#include "listener-external.h"
 
-#include "soundproducer-registry.h"
+//#include "soundproducer-registry.h"
 
-#include "CreateSoundProducerDialog.h"
-#include "EditMultipleSoundProducersDialog.h"
+//#include "CreateSoundProducerDialog.h"
+//#include "EditMultipleSoundProducersDialog.h"
 //#include "HRTF-Test-Dialog.h"
 //#include "Change-HRTF-Dialog.h"
-#include "EditListenerDialog.h"
+//#include "EditListenerDialog.h"
 //#include "setup-serial-dialog.h"
 
 #include "openalsoftaudioengine.h"
@@ -41,7 +41,7 @@ class MainFrame
 public:
     MainFrame( const std::string& title, OpenAlSoftAudioEngine* thisAudioEngine);
 		
-	//for connecting mainframe to wxOsgApp
+	//for connecting mainframe to Viewer
     
     void SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector);
     
@@ -76,7 +76,7 @@ public:
 	void UnloadAll();
 	*/
 	
-	friend class wxOsgApp;
+	friend class Viewer;
 	
 private:
     
@@ -140,7 +140,7 @@ private:
     void OnEditMultipleEchoZones(wxCommandEvent& event); //function for menu to edit current available echo zones
     */
     
-    SoundProducerRegistry soundproducer_registry;
+    //SoundProducerRegistry soundproducer_registry;
     
     //wxBoxSizer* m_add_rm_box_sizer;
     
@@ -171,17 +171,16 @@ private:
     */
 };
 
-class wxOsgApp;
 
 //define thread for listener reverb
 
 /* Define a new application type */
 //the main of the application
-class wxOsgApp
+class Viewer
 {
 public:
-	wxOsgApp();
-	~wxOsgApp();
+	Viewer();
+	~Viewer();
 	
     bool OnInit();
     
@@ -204,7 +203,7 @@ private:
 	
 	//define listener reverb thread here
     	
-	MainFrame* frame;
+	std::unique_ptr <MainFrame> frame;
 };
 
 #endif // _WXSIMPLEVIEWERWX_H_
