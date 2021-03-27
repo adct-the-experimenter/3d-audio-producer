@@ -39,16 +39,25 @@ int main(int argc, char* args[])
 	}
 	
 	CloseRaylibSystem();
+	
 	return 0;
 }
 
 void ApplicationLoop()
 {
+	//handle events
+	
 	//draw
 	BeginDrawing();
 
 	ClearBackground(RAYWHITE);
-		
+	
+	BeginMode3D(*editor.GetPointerToCamera());
+	
+	editor.Draw3DModels();
+	
+	EndMode3D();
+	
 	EndDrawing();
 }
 

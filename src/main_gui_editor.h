@@ -186,6 +186,10 @@ public:
     
     void KeyDownLogic(int& thisKey);
     
+    void Draw3DModels();
+    
+    Camera3D* GetPointerToCamera();
+    
 private:
 	
 	
@@ -204,6 +208,9 @@ private:
 	//define listener reverb thread here
     	
 	std::unique_ptr <MainFrame> frame;
+	
+	Camera3D main_camera;
+	void InitCamera();
 };
 
 #endif // _WXSIMPLEVIEWERWX_H_

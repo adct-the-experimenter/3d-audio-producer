@@ -70,7 +70,8 @@ bool MainGuiEditor::OnInit()
 		using std::placeholders::_1;
 		std::function<void(int&)> func = std::bind( &MainGuiEditor::KeyDownLogic, this, _1 );
 
-
+		MainGuiEditor::InitCamera();
+		
 		MainGuiEditor::initListener();
 
 		//connect mainframe to listener
@@ -267,7 +268,39 @@ void MainGuiEditor::KeyDownLogic(int& thisKey)
 	}
 }
 
+void MainGuiEditor::Draw3DModels()
+{
+	//draw 3d model of listener
+	listener->DrawModel();
+	
+	//draw 3d models of sound producers
+	
+	if(sound_producer_vector.size() > 0)
+	{
+		for(size_t i = 0; i < sound_producer_vector.size(); i++)
+		{
+			sound_producer_vector[i]->DrawModel();
+		}
+	}
+	
+	
+}
 
+void MainGuiEditor::InitCamera()
+{
+	main_camera = { 0 };
+    main_camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
+    main_camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    main_camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    main_camera.fovy = 45.0f;                                // Camera field-of-view Y
+    main_camera.type = CAMERA_PERSPECTIVE;                   // Camera mode type
+    
+}
+
+Camera3D* MainGuiEditor::GetPointerToCamera()
+{
+	return &main_camera;
+}
 
 /* My frame constructor */
 MainFrame::MainFrame(const std::string& title,

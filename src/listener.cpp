@@ -2,8 +2,6 @@
 
 Listener::Listener()
 {
-	//initialize listener position
-    listener_position_vector.resize(3);
 
     //initialize listener orientation
     listener_orientation_vector.resize(6);
@@ -31,9 +29,9 @@ void Listener::initListener()
 	orientationByExternalDevice = false;
 	
 	//set listener position at origin
-	listener_position_vector[POSITION_INDEX::X] = 0.0f;
-	listener_position_vector[POSITION_INDEX::Y] = 0.0f;
-	listener_position_vector[POSITION_INDEX::Z] = 0.0f;
+	listener_position.x = 0.0f;
+	listener_position.y = 0.0f;
+	listener_position.z = 0.0f;
 	
 	//std::cout << "Listener x:" << Listener::getPositionX();
 	//std::cout << "\nListener y:" << Listener::getPositionY();
@@ -60,9 +58,9 @@ void Listener::initListener()
 	
 	//initialize listener position
 	alListener3f(AL_POSITION, 
-					listener_position_vector[POSITION_INDEX::X], 
-					listener_position_vector[POSITION_INDEX::Y], 
-					listener_position_vector[POSITION_INDEX::Z]);
+					listener_position.x, 
+					listener_position.y, 
+					listener_position.z);
 	
 	//make box as 3d model
 	
@@ -72,37 +70,37 @@ void Listener::setListenerPosition()
 {
 	
 	alListener3f(AL_POSITION, 
-					listener_position_vector[POSITION_INDEX::X], 
-					listener_position_vector[POSITION_INDEX::Y], 
-					listener_position_vector[POSITION_INDEX::Z]);
+					listener_position.x, 
+					listener_position.y, 
+					listener_position.z);
 
 }
 
 void Listener::setPositionX(float& x)
 {		
-	listener_position_vector[POSITION_INDEX::X] = x;
+	listener_position.x = x;
 	
 	Listener::setListenerPosition();
 } 
 
-float Listener::getPositionX(){return listener_position_vector[POSITION_INDEX::X];} 
+float Listener::getPositionX(){return listener_position.x;} 
 
 void Listener::setPositionY(float& y)
 {
-	listener_position_vector[POSITION_INDEX::Y] = y;
+	listener_position.y = y;
 	Listener::setListenerPosition();
 } 
 
-float Listener::getPositionY(){return listener_position_vector[POSITION_INDEX::Y];}
+float Listener::getPositionY(){return listener_position.y;}
 
 void Listener::setPositionZ(float& z)
 {
-	listener_position_vector[POSITION_INDEX::Z] = z;
+	listener_position.z = z;
 
 	Listener::setListenerPosition();	
 }
  
-float Listener::getPositionZ(){return listener_position_vector[POSITION_INDEX::Z];}
+float Listener::getPositionZ(){return listener_position.z;}
 
 //Listener Orientation Functions
 
@@ -227,4 +225,9 @@ void Listener::LoadListenerSaveData(ListenerSaveData& data)
 	
 	Listener::SetListenerFreeRoamBool(data.freeRoam);
 	Listener::SetListenerExternalDeviceOrientationBool(data.externalOrientation);
+}
+
+void Listener::DrawModel()
+{
+	DrawCube(listener_position, 2.0f, 2.0f, 2.0f, BLUE);
 }

@@ -11,7 +11,7 @@
 #include <vector>
 #include <iostream>
 
-
+#include "raylib.h"
 
 
 //This is a class that holds positional info on object
@@ -77,6 +77,8 @@ public:
 	ListenerSaveData GetListenerSaveData();
 	void LoadListenerSaveData(ListenerSaveData& data);
 	
+	void DrawModel();
+	
 private:
 	//bool to indicate if the listener position can be changed freely by user or by listener track
 	bool freeRoamByUser;
@@ -87,7 +89,7 @@ private:
 	void initListener();
 	
 	//position of Listener
-	std::vector <float> listener_position_vector;
+	Vector3 listener_position;
 	enum POSITION_INDEX { X=0,Y=1,Z=2 };
 	void setListenerPosition(); //function to set listener position based on listener position vector coordinates
 	

@@ -1,5 +1,7 @@
 #include "soundproducer.h"
 
+
+
 SoundProducer::SoundProducer()
 {
 
@@ -7,10 +9,9 @@ SoundProducer::SoundProducer()
 	m_buffer = 0;
 
 	//initialize position vector
-	producer_position_vector.resize(3);
-	producer_position_vector[POSITION_INDEX::X] = 0;
-	producer_position_vector[POSITION_INDEX::Y] = 0;
-	producer_position_vector[POSITION_INDEX::Z] = 0;
+	producer_position.x = 0;
+	producer_position.y = 0;
+	producer_position.z = 0;
 
 	track_source_ptr = nullptr;
 	
@@ -46,12 +47,12 @@ void SoundProducer::InitSoundProducer(std::string& thisName,std::string& filepat
 	}
 
 	//set position
-	producer_position_vector[POSITION_INDEX::X] = x;
-	producer_position_vector[POSITION_INDEX::Y] = y;
-	producer_position_vector[POSITION_INDEX::Z] = z;
+	producer_position.x = x;
+	producer_position.y = y;
+	producer_position.z = z;
 
 	//make box as 3d model
-
+	
 	moveSource();
 	
 	//init save data
@@ -60,6 +61,8 @@ void SoundProducer::InitSoundProducer(std::string& thisName,std::string& filepat
 	m_saveData.y = y;
 	m_saveData.z = z;
 }
+
+
 
 void SoundProducer::SetNameString(std::string& thisName){ name = thisName;}
 std::string SoundProducer::GetNameString(){ return name;}
@@ -72,53 +75,53 @@ void SoundProducer::moveSource()
 
 		//move source
 		alSource3f(m_source, AL_POSITION,
-				(ALfloat)producer_position_vector[POSITION_INDEX::X],
-				(ALfloat)producer_position_vector[POSITION_INDEX::Y],
-				(ALfloat)producer_position_vector[POSITION_INDEX::Z]);
+				(ALfloat)producer_position.x,
+				(ALfloat)producer_position.y,
+				(ALfloat)producer_position.z);
 	}
 
 	if(track_source_ptr != nullptr)
 	{
 		//move source
 		alSource3f(*track_source_ptr, AL_POSITION,
-				(ALfloat)producer_position_vector[POSITION_INDEX::X],
-				(ALfloat)producer_position_vector[POSITION_INDEX::Y],
-				(ALfloat)producer_position_vector[POSITION_INDEX::Z]);
+				(ALfloat)producer_position.x,
+				(ALfloat)producer_position.y,
+				(ALfloat)producer_position.z);
 	}
 }
 
 void SoundProducer::SetPositionX(double& x)
 {
-	producer_position_vector[POSITION_INDEX::X] = x;
+	producer_position.x = x;
 
 	moveSource();
 	
 	m_saveData.x = x;
 }
 
-double SoundProducer::GetPositionX(){return producer_position_vector[POSITION_INDEX::X];}
+double SoundProducer::GetPositionX(){return producer_position.x;}
 
 void SoundProducer::SetPositionY(double& y)
 {
-	producer_position_vector[POSITION_INDEX::Y] = y;
+	producer_position.y = y;
 
 	moveSource();
 	
 	m_saveData.y = y;
 }
 
-double SoundProducer::GetPositionY(){return producer_position_vector[POSITION_INDEX::Y];}
+double SoundProducer::GetPositionY(){return producer_position.y;}
 
 void SoundProducer::SetPositionZ(double& z)
 {
-	producer_position_vector[POSITION_INDEX::Z] = z;
+	producer_position.z = z;
 
 	moveSource();
 	
 	m_saveData.z = z;
 }
 
-double SoundProducer::GetPositionZ(){return producer_position_vector[POSITION_INDEX::Z];}
+double SoundProducer::GetPositionZ(){return producer_position.z;}
 
 void SoundProducer::setFilepathToSound(std::string& filepath){m_filepath = filepath;}
 
@@ -161,3 +164,8 @@ void SoundProducer::LoadSoundProducerSaveData(SoundProducerSaveData& data)
 void SoundProducer::SetFreeRoamBool(bool state){freeRoam = state;}
 
 bool SoundProducer::GetFreeRoamBool(){return freeRoam;}
+
+void SoundProducer::DrawModel()
+{
+	DrawCube(producer_position,2.0f, 2.0f, 2.0f, RED);
+}
