@@ -73,11 +73,7 @@ public:
 	void SetListenerExternalDeviceOrientationBool(bool thisBool);
 	bool GetListenerExternalDeviceOrientationBool();
 	
-	osg::ShapeDrawable* getRenderObject();
-	
-	osg::Geode* getGeodeNode();
-	
-	osg::PositionAttitudeTransform* getTransformNode();
+	//get reference to 3d model here
 		
 	ListenerSaveData GetListenerSaveData();
 	void LoadListenerSaveData(ListenerSaveData& data);
@@ -104,16 +100,7 @@ private:
 												 UP_X=3, UP_Y=4, UP_Z=5 };
 	void setListenerOrientation(); //function to set listener orientation based on listener orientation vector coordinates
 	
-	//ShapeDrawable object to render
-	osg::ref_ptr<osg::ShapeDrawable> m_renderObject;
-	
-	osg::ref_ptr<osg::Box> m_box; 
-	
-	//holds geometry information for rendering, moved by transform of matrix
-	osg::ref_ptr<osg::Geode> m_geode;
-	
-	//moves the geode
-	osg::ref_ptr<osg::PositionAttitudeTransform> m_paTransform;
+	//define 3d model here
 	
 	ListenerSaveData m_saveData;
 };

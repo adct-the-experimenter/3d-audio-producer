@@ -1,12 +1,6 @@
 #ifndef _CREATE_SOUND_PRODUCER_H
 #define _CREATE_SOUND_PRODUCER_H
 
-#include <wx/wx.h>
-
-#include <wx/valnum.h> //for wxFloatingPointValidator
-#include <wx/textctrl.h> //for wxTextCtrl
-
-#include <wx/checkbox.h>
 
 #include "openalsoftaudioengine.h" //for loading buffer and creating source of sound producer
 

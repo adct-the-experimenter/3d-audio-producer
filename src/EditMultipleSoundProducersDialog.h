@@ -2,11 +2,6 @@
 #define _EDIT_MULTIPLE_SOUND_PRODUCERS_H
 
 #include <memory>
-#include <wx/wx.h>
-
-#include <wx/valnum.h> //for wxFloatingPointValidator
-#include <wx/textctrl.h> //for wxTextCtrl
-#include <wx/listbox.h> //for list box
 
 #include "soundproducer.h"
 

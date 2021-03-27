@@ -2,6 +2,7 @@
 
 #include "viewer.h"
 
+/*
 #include "CreateStandardReverbZoneDialog.h"
 #include "CreateEAXReverbZoneDialog.h"
 #include "CreateEchoZoneDialog.h"
@@ -9,83 +10,22 @@
 #include "EditMultipleStandardReverbZonesDialog.h"
 #include "EditMultipleEAXReverbZonesDialog.h"
 #include "EditMultipleEchoZonesDialog.h"
-
+*/
 
 bool init_listener_once = false;
 
 wxOsgApp::wxOsgApp()
 {
-	m_listener_reverb_thread = nullptr;
+	
 }
 
 wxOsgApp::~wxOsgApp()
 {
     
-    //Free CheckListenerReverbThread member
+    //close listener reverb thread here
 	
-	{
-		wxCriticalSectionLocker enter(m_ReverbThreadCS);
-		if (m_listener_reverb_thread)         // does the thread still exist?
-		{
-			wxMessageOutputDebug().Printf("wxOsgApp: deleting listener reverb thread");
-			
-			if (m_listener_reverb_thread->Delete() != wxTHREAD_NO_ERROR )
-			{
-				wxLogError("Can't delete the thread!");
-			}
-				
-		}
-    }       
-    // exit from the critical section to give the thread
-    // the possibility to enter its destructor
-    // (which is guarded with m_pThreadCS critical section!)
-    
-    while (1)
-    {
-        { // was the ~MyThread() function executed?
-            wxCriticalSectionLocker enter(m_ReverbThreadCS);
-            if (!m_listener_reverb_thread){break;}
-        }
-        
-        // wait for thread completion
-        wxThread::This()->Sleep(1);
-    }
+	//effects_manager_ptr->FreeEffects();
 	
-	effects_manager_ptr->FreeEffects();
-	
-}
-
-CheckListenerReverbZoneThread::CheckListenerReverbZoneThread(EffectsManager* manager,wxOsgApp* handler)
-{
-	m_effects_manager_ptr = manager;
-	
-	m_ThreadHandler = handler;
-	
-	
-	//call wxThread:: Run virtual function to start thread which runs Entry()
-	
-	//call wxThread::Delete to destroy thread
-}
-
-CheckListenerReverbZoneThread::~CheckListenerReverbZoneThread()
-{
-	wxCriticalSectionLocker enter(m_ThreadHandler->m_ReverbThreadCS);
-    // the thread is being destroyed; make sure not to leave dangling pointers around
-    m_ThreadHandler->m_listener_reverb_thread = NULL;
-}
-
-wxThread::ExitCode CheckListenerReverbZoneThread::Entry() 
-{
-
-	while (!TestDestroy() )
-	{
-		wxMilliSleep(250); //sleep for 250 milliseconds
-		
-		m_effects_manager_ptr->PerformReverbThreadOperation();
-		
-	}
-	
-	return nullptr;  
 }
 
 
@@ -108,9 +48,9 @@ bool wxOsgApp::OnInit()
 	*/
 	
 	//create directory in home if not already made, if not windows
-#ifndef WIN32
-	system("mkdir -p $HOME/.binaural-audio-editor/resources");
-#endif
+//#ifndef WIN32
+//	system("mkdir -p $HOME/.binaural-audio-editor/resources");
+//#endif
 
     //initialize openalsoft audio engine class
     if(!audio_engine.initOpenALSoft())
@@ -120,61 +60,15 @@ bool wxOsgApp::OnInit()
 	}
 	else
 	{
-		//initialize audio stuff
 
-
-		//initialize graphical stuff
-		int width = 800;
-		int height = 600;
 
 		// Create the main frame window
 
-		frame = new MainFrame(NULL, wxT("Binaural Audio Editor"),
-			wxDefaultPosition, wxSize(width, height),&audio_engine);
-		
-		// create osg canvas
-		//    - initialize
-
-		int attributes[7];
-		attributes[0] = int(WX_GL_DOUBLEBUFFER);
-		attributes[1] = WX_GL_RGBA;
-		attributes[2] = WX_GL_DEPTH_SIZE;
-		attributes[3] = 8;
-		attributes[4] = WX_GL_STENCIL_SIZE;
-		attributes[5] = 8;
-		attributes[6] = 0;
-
-		OSGCanvas *canvas = new OSGCanvas(frame, wxID_ANY, wxDefaultPosition,
-			wxSize(width, height), wxSUNKEN_BORDER, wxT("osgviewerWX"), attributes);
 
 		//set function KeyDownLogic to be called every time key pressed event happens in OSGCanvas
 		using std::placeholders::_1;
 		std::function<void(int&)> func = std::bind( &wxOsgApp::KeyDownLogic, this, _1 );
 
-		canvas->SetReferenceToFunctionToRunKeydown(func);
-		
-
-		GraphicsWindowWX* gw = new GraphicsWindowWX(canvas);
-
-		canvas->SetGraphicsWindow(gw);
-
-		osgViewer::Viewer *viewer = new osgViewer::Viewer;
-		viewer->getCamera()->setGraphicsContext(gw);
-		viewer->getCamera()->setViewport(0,0,width,height);
-
-		// set the draw and read buffers up for a double buffered window with rendering going to back buffer
-		viewer->getCamera()->setDrawBuffer(GL_BACK);
-		viewer->getCamera()->setReadBuffer(GL_BACK);
-
-		//viewer->addEventHandler(new osgViewer::StatsHandler);
-		viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-
-
-
-		//init geommetry node which is a leaf node of scenegraph
-		//containing geometry information
-		rootNode = new osg::Group;
-		frame->SetRootNode(rootNode);
 
 		wxOsgApp::initListener();
 
@@ -182,7 +76,7 @@ bool wxOsgApp::OnInit()
 		frame->SetListenerReference(listener.get());
 
 		//connect mainframe to external listener
-		frame->SetListenerExternalReference(listenerExternal.get());
+		//frame->SetListenerExternalReference(listenerExternal.get());
 
 		//connect mainframe to soundproducer vector
 		frame->SetSoundProducerVectorRef(&sound_producer_vector);
@@ -191,49 +85,13 @@ bool wxOsgApp::OnInit()
 		frame->SetAudioEngineReference(&audio_engine);
 		
 		//initialize effects manager
-		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager( frame->GetReferenceToSoundProducerTrackManager(), listener.get() ) );
+		//effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager( frame->GetReferenceToSoundProducerTrackManager(), listener.get() ) );
 		
 		//create thread to check if listener is in reverb zone
-		 m_listener_reverb_thread = new CheckListenerReverbZoneThread(effects_manager_ptr.get(),this); 
-		 if ( m_listener_reverb_thread->Create() != wxTHREAD_NO_ERROR ) 
-		 {
-			 wxLogError(wxT("Can't create thread!"));
-			 std::cout << "Can't create thread! \n";
-		 }
-		 else
-		 {
-			 std::cout << "\nThread created! Trying to run thread.\n";
-			 if(m_listener_reverb_thread->Run() != wxTHREAD_NO_ERROR)
-			 {
-				 wxLogError(wxT("Can't run thread!"));
-				 std::cout << "Can't run thread! \n";
-			 }
-		 }
-		 
-		//connect mainframe to effects manager
-		frame->SetEffectsManagerReference(effects_manager_ptr.get());
 		
-		//initialize viewer
-		viewer->setSceneData(rootNode.get());
-
-		//Initialize and set camera manipulator
-		cameraManipulator = new osgGA::TrackballManipulator();
-		viewer->setCameraManipulator(cameraManipulator);
-
-		//Set camera to look at listener 10 units above origin and behind origin
-		osg::Vec3d eye( 0.0, 10.0, 10.0 ); //The position of your camera -can be used to set its height position.
-		osg::Vec3d center( 0.0, 0.0, 0.0 ); // The point your camera is looking at - set this to the center of the observed object.
-		// The up-vector of your camera -
-		//this controls how your viewport will be rotated about its center
-		//and should be equal to [0, 1, 0] OpenAL Soft coordinate system
-		osg::Vec3d up( 0.0, 1.0, 0.0 );
-
-		cameraManipulator->setTransformation(eye,center,up);
-
-		frame->SetViewer(viewer);
-
-		/* Show the frame */
-		frame->Show(true);
+		//connect mainframe to effects manager
+		//frame->SetEffectsManagerReference(effects_manager_ptr.get());
+		
 	}
 
 
@@ -252,14 +110,11 @@ void wxOsgApp::initListener()
 		if(listener.get() == nullptr){std::cout << "listener raw pointer is null in osgViewerWxApp init! \n";}
 		else{std::cout << "\nListener raw pointer:" << listener.get() << std::endl;}
 
-		//add position attitude transform to root node group
-		rootNode->addChild(listener->getTransformNode());
-
 		//initialize listener external
 		if(listener.get() != nullptr)
 		{
-			std::unique_ptr <ListenerExternal> thisListenerExternal( new ListenerExternal(listener.get()) );
-			listenerExternal = std::move(thisListenerExternal);
+			//std::unique_ptr <ListenerExternal> thisListenerExternal( new ListenerExternal(listener.get()) );
+			//listenerExternal = std::move(thisListenerExternal);
 		}
 
 
@@ -311,6 +166,7 @@ void wxOsgApp::KeyDownLogic(int& thisKey)
 			if(listener){listener->MoveUp(distanceToMove);}
 			break;
 		}
+		/*
 		//if b key pressed
 		case 66:
 		{
@@ -320,6 +176,7 @@ void wxOsgApp::KeyDownLogic(int& thisKey)
 			}
 			break;
 		}
+		
 		//if i key pressed
 		case 73:
 		{
@@ -404,142 +261,56 @@ void wxOsgApp::KeyDownLogic(int& thisKey)
 			}
 			break;
 		}
+		*/
 		default:{break;}
 	}
 }
 
-wxIMPLEMENT_APP(wxOsgApp);
-
-//Event table for main frame specific events
-BEGIN_EVENT_TABLE(MainFrame, wxFrame)
-    EVT_IDLE					(MainFrame::OnIdle)
-    EVT_MENU				(wxID_EXIT,  MainFrame::OnExit)
-    EVT_MENU				(wxID_ABOUT, MainFrame::OnAbout)
-    EVT_MENU				(wxID_OPEN, MainFrame::OnOpen)
-    EVT_MENU				(MainFrame::ID_CREATE_SOUND_PRODUCER, MainFrame::OnCreateSoundProducer)
-    EVT_MENU				(MainFrame::ID_EDIT_MULTIPLE_SOUND_PRODUCERS, MainFrame::OnEditMultipleSoundProducers)
-    EVT_BUTTON				(wxEVT_CONTEXT_MENU, MainFrame::OnPopupClick)
-    EVT_MENU				(MainFrame::ID_TEST_HRTF, MainFrame::OnTestHRTF)
-    EVT_MENU				(MainFrame::ID_LISTENER_EDIT, MainFrame::OnEditListener)
-    EVT_MENU				(MainFrame::ID_SETUP_SERIAL, MainFrame::OnSetupSerial)
-    EVT_MENU				(MainFrame::ID_CHANGE_HRTF, MainFrame::OnChangeHRTF)
-    EVT_MENU				(MainFrame::ID_CREATE_STANDARD_REVERB_ZONE, MainFrame::OnCreateStandardReverbZone)
-    EVT_MENU				(MainFrame::ID_CREATE_EAX_REVERB_ZONE, MainFrame::OnCreateEAXReverbZone)
-    EVT_MENU				(MainFrame::ID_CREATE_ECHO_ZONE, MainFrame::OnCreateEchoZone)
-    EVT_MENU				(MainFrame::ID_EDIT_MULTIPLE_STANDARD_REVERB_ZONES, MainFrame::OnEditMultipleStandardReverbZones)
-    EVT_MENU				(MainFrame::ID_EDIT_MULTIPLE_EAX_REVERB_ZONES, MainFrame::OnEditMultipleEAXReverbZones)
-    EVT_MENU				(MainFrame::ID_EDIT_MULTIPLE_ECHO_ZONES, MainFrame::OnEditMultipleEchoZones)
-    EVT_MENU				(MainFrame::ID_NEW_PROJECT, MainFrame::OnNewProject)
-    EVT_MENU				(MainFrame::ID_SAVE_PROJECT, MainFrame::OnSaveProject)
-    EVT_MENU				(MainFrame::ID_LOAD_PROJECT, MainFrame::OnLoadProject)
-    //EVT_KEY_DOWN			(MainFrame::OnKeyDown)
-END_EVENT_TABLE()
 
 
 /* My frame constructor */
-MainFrame::MainFrame(wxFrame *frame, const wxString& title, const wxPoint& pos,
-    const wxSize& size, OpenAlSoftAudioEngine* thisAudioEngine,long style)
-    : wxFrame(frame, wxID_ANY, title, pos, size, style)
+MainFrame::MainFrame(const std::string& title,
+    OpenAlSoftAudioEngine* thisAudioEngine)
 {
 	MainFrame::SetAudioEngineReference(thisAudioEngine);
-
+	
 	//create file menu item
-    wxMenu *menuFile = new wxMenu;
-    
-    
-    menuFile->Append(MainFrame::ID_NEW_PROJECT,"&New Project");
-    menuFile->Append(MainFrame::ID_LOAD_PROJECT,"&Open Project");
-    menuFile->Append(MainFrame::ID_SAVE_PROJECT,"&Save Project");
-    menuFile->Append(wxID_EXIT);
 	
     //create help menu item
-    wxMenu *menuHelp = new wxMenu;
-    menuHelp->Append(wxID_ABOUT);
 
     //create sound producers menu item
-    wxMenu* menuSoundProducers = new wxMenu;
-    menuSoundProducers->Append(MainFrame::ID_CREATE_SOUND_PRODUCER,"&Create Sound Producer");
 
     //create the edit multiple sound producers menu item
-    menuSoundProducers->Append(MainFrame::ID_EDIT_MULTIPLE_SOUND_PRODUCERS,"&Edit Sound Producers");
 
     //create playback menu item
-    wxMenu* menuPlayback = new wxMenu;
-    menuPlayback->Append(MainFrame::ID_PLAY_AUDIO,"&Play Audio");
 
     //Create hrtf menu item
-    wxMenu* menuHRTF = new wxMenu;
-    menuHRTF->Append(MainFrame::ID_TEST_HRTF,"&Test HRTF");
-    menuHRTF->Append(MainFrame::ID_CHANGE_HRTF, "&Change HRTF");
 
     //create listener menu item
-    wxMenu* menuListener = new wxMenu;
-    menuListener->Append(MainFrame::ID_LISTENER_EDIT,"&Edit Listener");
-    menuListener->Append(MainFrame::ID_SETUP_SERIAL,"&Setup Serial");
     
     //create effects menu items
-	wxMenu* menuEffects = new wxMenu;
-    menuEffects->Append(MainFrame::ID_CREATE_STANDARD_REVERB_ZONE,"&Create Standard Reverb Zone");
-    menuEffects->Append(MainFrame::ID_CREATE_EAX_REVERB_ZONE,"&Create EAX Reverb Zone");
-    menuEffects->Append(MainFrame::ID_CREATE_ECHO_ZONE,"&Create Echo Zone");
-    
-    menuEffects->Append(MainFrame::ID_EDIT_MULTIPLE_STANDARD_REVERB_ZONES,"&Edit Standard Reverb Zones");
-    menuEffects->Append(MainFrame::ID_EDIT_MULTIPLE_EAX_REVERB_ZONES,"&Edit EAX Reverb Zones");
-    menuEffects->Append(MainFrame::ID_EDIT_MULTIPLE_ECHO_ZONES,"&Edit Echo Zones");
     
     //create and set menu bar with items file and help
-    wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append( menuFile, "&File" ); //connect file menu item to bar
-    menuBar->Append(menuListener, "&Listener"); //connecte listener menu item to bar
-    menuBar->Append( menuSoundProducers, "&Sound Producers"); //connect Sound Producers menu item to bar
-    menuBar->Append( menuEffects, "&Effects");
-    menuBar->Append( menuHRTF, "&HRTF"); //connect HRTF menu item to bar	
-    menuBar->Append( menuHelp, "&Help" ); //connect help menu item  to bar
-
-    SetMenuBar( menuBar );
 	
-	
-    CreateStatusBar();
-    SetStatusText( "Welcome to Binaural Audio Editor!" );
     
     //initliaze save system
-    save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
+    //save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
 	
-    wxToolBar* toolbar = this->CreateToolBar(wxTB_HORZ_TEXT | wxTB_NOICONS );
-    
-    
-    m_sp_toolbar_combobox = new wxComboBox(toolbar, wxID_ANY, wxEmptyString, wxDefaultPosition, 
-											wxDefaultSize, 0, NULL, 0, wxDefaultValidator, wxT(""));
-    
-    sp_toolbar_text = new wxStaticText(toolbar, wxID_ANY, wxT("Active SoundProducer:"), wxDefaultPosition,wxDefaultSize,
-											0, wxEmptyString);
+    //make toolbar for active sound producer
 	
-	//if using MS Windows OS
-	#ifdef WIN32
-    toolbar->AddTool(toolbar->AddControl( sp_toolbar_text ) );
 	
-    toolbar->AddTool( toolbar->AddControl(m_sp_toolbar_combobox, wxEmptyString) );
-    
-    toolbar->Realize();
-    #endif
-    
-    //if not using MS Windows OS
-    #ifndef WIN32
-    toolbar->AddControl( sp_toolbar_text );
-    toolbar->AddControl(m_sp_toolbar_combobox);
-    #endif
     
     //Code to initialize timeline track editor part of GUI
 
-	timeFrame = new TimelineFrame(this);
+	//timeFrame = new TimelineFrame(this);
 
-
+	/*
 	soundproducertrack_manager_ptr = std::unique_ptr <SoundProducerTrackManager>(new SoundProducerTrackManager("SoundProducer Track Manager",
 																		audioEnginePtr->GetReferenceToAudioDevice(),
 																		audioEnginePtr->GetReferenceToAudioContext() ) ) ;
 
 	soundproducertrack_manager_ptr->SetReferenceToSoundProducerTrackVector(&m_soundproducer_track_vec);
-
+	
 //Initialize listener track
 	MainFrame::CreateListenerTrack();
 
@@ -549,11 +320,9 @@ MainFrame::MainFrame(wxFrame *frame, const wxString& title, const wxPoint& pos,
 	
 	timeFrame->Layout();
 	timeFrame->Show(true); //show the timeframe
+	*/
 }
 
-void MainFrame::SetViewer(osgViewer::Viewer *viewer){_viewer = viewer;}
-
-void MainFrame::SetRootNode(osg::Group *root){_rootNode = root;}
 
 void MainFrame::SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector)
 {
@@ -565,21 +334,24 @@ void MainFrame::SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundPr
 void MainFrame::SetListenerReference(Listener* thisListener)
 {
 	listenerPtr = thisListener;
-	m_listener_track->SetReferenceToListenerToManipulate(listenerPtr);
+	//m_listener_track->SetReferenceToListenerToManipulate(listenerPtr);
 }
 
+/*
 void MainFrame::SetListenerExternalReference(ListenerExternal* thisListenerExternal)
 {
 	listenerExternalPtr = thisListenerExternal;
 	m_listener_track->SetReferenceToExternalListener(listenerExternalPtr);
 }
+*/
 
 void MainFrame::SetAudioEngineReference(OpenAlSoftAudioEngine* audioEngine){ audioEnginePtr = audioEngine;}
 
-void MainFrame::SetEffectsManagerReference(EffectsManager* effectsManager){effectsManagerPtr = effectsManager;}
+//void MainFrame::SetEffectsManagerReference(EffectsManager* effectsManager){effectsManagerPtr = effectsManager;}
 
-SoundProducerTrackManager* MainFrame::GetReferenceToSoundProducerTrackManager(){return soundproducertrack_manager_ptr.get();}
+//SoundProducerTrackManager* MainFrame::GetReferenceToSoundProducerTrackManager(){return soundproducertrack_manager_ptr.get();}
 
+/*
 void MainFrame::OnIdle(wxIdleEvent &event)
 {
     if (!_viewer->isRealized())
@@ -1506,276 +1278,4 @@ void MainFrame::OnKeyDown(wxKeyEvent &event)
 	std::cout << "KeyDown:" << key << std::endl;
 
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////			///////////////////////////////////////////////////////////////////
-///////////////////////OSGCanvas///////////////////////////////////////////////////////////////////
-///////////////////////			///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//OSGCanvas event table for openscenegraph specific events
-BEGIN_EVENT_TABLE(OSGCanvas, wxGLCanvas)
-    EVT_SIZE                (OSGCanvas::OnSize)
-    EVT_PAINT               (OSGCanvas::OnPaint)
-    EVT_ERASE_BACKGROUND    (OSGCanvas::OnEraseBackground)
-
-    EVT_CHAR                (OSGCanvas::OnChar)
-    EVT_KEY_UP              (OSGCanvas::OnKeyUp)
-    EVT_KEY_DOWN			(OSGCanvas::OnKeyDown)
-    EVT_ENTER_WINDOW        (OSGCanvas::OnMouseEnter)
-    EVT_LEFT_DOWN           (OSGCanvas::OnMouseDown)
-    EVT_MIDDLE_DOWN         (OSGCanvas::OnMouseDown)
-    EVT_RIGHT_DOWN          (OSGCanvas::OnMouseDown)
-    EVT_LEFT_UP             (OSGCanvas::OnMouseUp)
-    EVT_MIDDLE_UP           (OSGCanvas::OnMouseUp)
-    EVT_RIGHT_UP            (OSGCanvas::OnMouseUp)
-    EVT_MOTION              (OSGCanvas::OnMouseMotion)
-    EVT_MOUSEWHEEL          (OSGCanvas::OnMouseWheel)
-END_EVENT_TABLE()
-
-OSGCanvas::OSGCanvas(wxWindow *parent, wxWindowID id,
-    const wxPoint& pos, const wxSize& size, long style, const wxString& name, int *attributes)
-    : wxGLCanvas(parent, id, attributes, pos, size, style|wxFULL_REPAINT_ON_RESIZE, name)
-    ,_context(this)
-{
-    // default cursor to standard
-    _oldCursor = *wxSTANDARD_CURSOR;
-}
-
-OSGCanvas::~OSGCanvas()
-{
-	
-}
-
-void OSGCanvas::SetContextCurrent(){_context.SetCurrent(*this);}
-
-void OSGCanvas::OnPaint( wxPaintEvent& WXUNUSED(event) )
-{
-    /* must always be here */
-    wxPaintDC dc(this);
-    
-}
-
-void OSGCanvas::OnSize(wxSizeEvent& event)
-{
-    // set GL viewport (not called by wxGLCanvas::OnSize on all platforms...)
-    int width, height;
-    GetClientSize(&width, &height);
-
-    if (_graphics_window.valid())
-    {
-        // update the window dimensions, in case the window has been resized.
-        _graphics_window->getEventQueue()->windowResize(0, 0, width, height);
-        _graphics_window->resized(0,0,width,height);
-    }
-}
-
-void OSGCanvas::OnEraseBackground(wxEraseEvent& WXUNUSED(event))
-{
-    /* Do nothing, to avoid flashing on MSW */
-}
-
-void OSGCanvas::OnChar(wxKeyEvent &event)
-{
-#if wxUSE_UNICODE
-    int key = event.GetUnicodeKey();
-#else
-    int key = event.GetKeyCode();
-#endif
-
-    //if (_graphics_window.valid())
-    //    _graphics_window->getEventQueue()->keyPress(key);
-
-    // If this key event is not processed here, we should call
-    // event.Skip() to allow processing to continue.
-}
-
-void OSGCanvas::OnKeyUp(wxKeyEvent &event)
-{
-#if wxUSE_UNICODE
-    int key = event.GetUnicodeKey();
-#else
-    int key = event.GetKeyCode();
-#endif
-
-
-    if (_graphics_window.valid())
-        _graphics_window->getEventQueue()->keyRelease(key);
-
-    // If this key event is not processed here, we should call
-    // event.Skip() to allow processing to continue.
-}
-
-void OSGCanvas::OnKeyDown(wxKeyEvent &event)
-{
-#if wxUSE_UNICODE
-    int key = event.GetUnicodeKey();
-#else
-    int key = event.GetKeyCode();
-#endif
-
-	//std::cout << "keydown in OSGCanvas, key:" << key << std::endl;
-
-	//call function to run after key pressed down
-	functionToRunKeyDown(key);
-
-    if (_graphics_window.valid())
-        _graphics_window->getEventQueue()->keyRelease(key);
-
-    // If this key event is not processed here, we should call event.skip to allow processing to continue
-     event.Skip();
-}
-
-void OSGCanvas::OnMouseEnter(wxMouseEvent & /*event*/)
-{
-    // Set focus to ourselves, so keyboard events get directed to us
-    SetFocus();
-}
-
-void OSGCanvas::OnMouseDown(wxMouseEvent &event)
-{
-    if (_graphics_window.valid())
-    {
-        _graphics_window->getEventQueue()->mouseButtonPress(event.GetX(), event.GetY(),
-            event.GetButton());
-    }
-}
-
-void OSGCanvas::OnMouseUp(wxMouseEvent &event)
-{
-    if (_graphics_window.valid())
-    {
-        _graphics_window->getEventQueue()->mouseButtonRelease(event.GetX(), event.GetY(),
-            event.GetButton());
-    }
-}
-
-void OSGCanvas::OnMouseMotion(wxMouseEvent &event)
-{
-    if (_graphics_window.valid())
-        _graphics_window->getEventQueue()->mouseMotion(event.GetX(), event.GetY());
-}
-
-void OSGCanvas::OnMouseWheel(wxMouseEvent &event)
-{
-    int delta = event.GetWheelRotation() / event.GetWheelDelta() * event.GetLinesPerAction();
-
-    if (_graphics_window.valid()) {
-        _graphics_window->getEventQueue()->mouseScroll(
-            delta>0 ?
-            osgGA::GUIEventAdapter::SCROLL_UP :
-            osgGA::GUIEventAdapter::SCROLL_DOWN);
-    }
-}
-
-void OSGCanvas::UseCursor(bool value)
-{
-    if (value)
-    {
-        // show the old cursor
-        SetCursor(_oldCursor);
-    }
-    else
-    {
-        // remember the old cursor
-        _oldCursor = GetCursor();
-
-        // hide the cursor
-        //    - can't find a way to do this neatly, so create a 1x1, transparent image
-        wxImage image(1,1);
-        image.SetMask(true);
-        image.SetMaskColour(0, 0, 0);
-        wxCursor cursor(image);
-        SetCursor(cursor);
-
-        // On wxGTK, only works as of version 2.7.0
-        // (http://trac.wxwidgets.org/ticket/2946)
-        // SetCursor( wxStockCursor( wxCURSOR_BLANK ) );
-    }
-}
-
-void OSGCanvas::SetReferenceToFunctionToRunKeydown(std::function <void(int&)> thisFunction)
-{
-	functionToRunKeyDown = thisFunction;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////					/////////////////////////////////////////////////////////////
-///////////////////////GraphicsWindowWX///////////////////////////////////////////////////////////////////
-///////////////////////					////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-GraphicsWindowWX::GraphicsWindowWX(OSGCanvas *canvas)
-{
-    _canvas = canvas;
-
-    _traits = new GraphicsContext::Traits;
-
-    wxPoint pos = _canvas->GetPosition();
-    wxSize  size = _canvas->GetSize();
-
-    _traits->x = pos.x;
-    _traits->y = pos.y;
-    _traits->width = size.x;
-    _traits->height = size.y;
-
-    init();
-}
-
-GraphicsWindowWX::~GraphicsWindowWX()
-{
-}
-
-void GraphicsWindowWX::init()
-{
-    if (valid())
-    {
-        setState( new osg::State );
-        getState()->setGraphicsContext(this);
-
-        if (_traits.valid() && _traits->sharedContext.valid())
-        {
-            getState()->setContextID( _traits->sharedContext->getState()->getContextID() );
-            incrementContextIDUsageCount( getState()->getContextID() );
-        }
-        else
-        {
-            getState()->setContextID( osg::GraphicsContext::createNewContextID() );
-        }
-    }
-    
-}
-
-void GraphicsWindowWX::grabFocus()
-{
-    // focus the canvas
-    _canvas->SetFocus();
-}
-
-void GraphicsWindowWX::grabFocusIfPointerInWindow()
-{
-    // focus this window, if the pointer is in the window
-    wxPoint pos = wxGetMousePosition();
-    if (wxFindWindowAtPoint(pos) == _canvas)
-        _canvas->SetFocus();
-}
-
-void GraphicsWindowWX::useCursor(bool cursorOn)
-{
-    _canvas->UseCursor(cursorOn);
-}
-
-bool GraphicsWindowWX::makeCurrentImplementation()
-{
-    _canvas->SetContextCurrent();
-    return true;
-}
-
-void GraphicsWindowWX::swapBuffersImplementation()
-{
-    _canvas->SwapBuffers();
-}
+*/
