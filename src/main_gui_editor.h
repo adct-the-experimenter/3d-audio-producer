@@ -1,5 +1,5 @@
-#ifndef VIEWER_H
-#define VIEWER_H
+#ifndef MAIN_GUI_EDITOR_H
+#define MAIN_GUI_EDITOR_H
 
 #include "raylib.h"
 
@@ -41,7 +41,7 @@ class MainFrame
 public:
     MainFrame( const std::string& title, OpenAlSoftAudioEngine* thisAudioEngine);
 		
-	//for connecting mainframe to Viewer
+	//for connecting mainframe to MainGuiEditor
     
     void SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector);
     
@@ -76,7 +76,7 @@ public:
 	void UnloadAll();
 	*/
 	
-	friend class Viewer;
+	friend class MainGuiEditor;
 	
 private:
     
@@ -176,11 +176,11 @@ private:
 
 /* Define a new application type */
 //the main of the application
-class Viewer
+class MainGuiEditor
 {
 public:
-	Viewer();
-	~Viewer();
+	MainGuiEditor();
+	~MainGuiEditor();
 	
     bool OnInit();
     

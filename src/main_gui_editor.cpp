@@ -1,6 +1,6 @@
 
 
-#include "viewer.h"
+#include "main_gui_editor.h"
 
 /*
 #include "CreateStandardReverbZoneDialog.h"
@@ -14,12 +14,12 @@
 
 bool init_listener_once = false;
 
-Viewer::Viewer()
+MainGuiEditor::MainGuiEditor()
 {
 	
 }
 
-Viewer::~Viewer()
+MainGuiEditor::~MainGuiEditor()
 {
     
     //close listener reverb thread here
@@ -37,7 +37,7 @@ Viewer::~Viewer()
 #include <sys/types.h> 
 
 // `Main program' equivalent, creating windows and returning main app frame
-bool Viewer::OnInit()
+bool MainGuiEditor::OnInit()
 {
 	/*
     if (argc<2)
@@ -68,10 +68,10 @@ bool Viewer::OnInit()
 
 		//set function KeyDownLogic to be called every time key pressed event happens in OSGCanvas
 		using std::placeholders::_1;
-		std::function<void(int&)> func = std::bind( &Viewer::KeyDownLogic, this, _1 );
+		std::function<void(int&)> func = std::bind( &MainGuiEditor::KeyDownLogic, this, _1 );
 
 
-		Viewer::initListener();
+		MainGuiEditor::initListener();
 
 		//connect mainframe to listener
 		frame->SetListenerReference(listener.get());
@@ -99,7 +99,7 @@ bool Viewer::OnInit()
     return true;
 }
 
-void Viewer::initListener()
+void MainGuiEditor::initListener()
 {
 	if(!init_listener_once)
 	{
@@ -108,7 +108,7 @@ void Viewer::initListener()
 
 		//std::cout << "\nListener initialized. Listener x:" << listener->getPositionX() << std::endl;
 
-		if(listener.get() == nullptr){std::cout << "listener raw pointer is null in osgViewerWxApp init! \n";}
+		if(listener.get() == nullptr){std::cout << "listener raw pointer is null in osgMainGuiEditorWxApp init! \n";}
 		else{std::cout << "\nListener raw pointer:" << listener.get() << std::endl;}
 
 		//initialize listener external
@@ -123,7 +123,7 @@ void Viewer::initListener()
 	}
 }
 
-void Viewer::KeyDownLogic(int& thisKey)
+void MainGuiEditor::KeyDownLogic(int& thisKey)
 {
 	
 	float distanceToMove = 1.0f;

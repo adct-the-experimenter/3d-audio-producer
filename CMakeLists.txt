@@ -27,7 +27,7 @@ find_library(pugixml_LIBRARIES NAMES pugixml)
 
 #For the shared library:
 
-set ( PROJECT_LINK_LIBS  openal sndfile ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${pugixml_LIBRARIES})
+set ( PROJECT_LINK_LIBS  raylib openal sndfile ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${pugixml_LIBRARIES})
 #where to find library files .so 
 link_directories( /usr/lib /usr/local/lib ) 
 
@@ -42,7 +42,7 @@ set ( PROJECT_INCLUDE_DIR )
 include_directories(/usr/include /usr/local/include ./include ./src/timeline-track-editor/include ${PROJECT_INCLUDE_DIR} )
 
 set(SOURCES src/main.cpp
-			src/viewer.cpp
+			src/main_gui_editor.cpp
 			#src/SaveSystem.cpp src/LoadSystem.cpp src/XMLCreator.cpp src/XMLReader.cpp
 			#src/CreateStandardReverbZoneDialog.cpp src/EditMultipleStandardReverbZonesDialog.cpp 
 			#src/CreateEAXReverbZoneDialog.cpp src/EditMultipleEAXReverbZonesDialog.cpp 
