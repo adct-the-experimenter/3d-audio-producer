@@ -190,6 +190,8 @@ public:
     
     Camera3D* GetPointerToCamera();
     
+    void InitCamera();
+    
 private:
 	
 	
@@ -210,7 +212,7 @@ private:
 	std::unique_ptr <MainFrame> frame;
 	
 	Camera3D main_camera;
-	void InitCamera();
+	
 };
 
 #endif // _WXSIMPLEVIEWERWX_H_

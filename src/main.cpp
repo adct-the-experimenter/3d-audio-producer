@@ -24,6 +24,8 @@ int main(int argc, char* args[])
 	
 	InitRaylibSystem();
 	
+	editor.InitCamera();
+	
 	bool quit = false;
 	
 	while (!quit)
@@ -46,6 +48,8 @@ int main(int argc, char* args[])
 void ApplicationLoop()
 {
 	//handle events
+	
+	UpdateCamera(editor.GetPointerToCamera());
 	
 	//draw
 	BeginDrawing();

@@ -70,7 +70,6 @@ bool MainGuiEditor::OnInit()
 		using std::placeholders::_1;
 		std::function<void(int&)> func = std::bind( &MainGuiEditor::KeyDownLogic, this, _1 );
 
-		MainGuiEditor::InitCamera();
 		
 		MainGuiEditor::initListener();
 
@@ -295,6 +294,7 @@ void MainGuiEditor::InitCamera()
     main_camera.fovy = 45.0f;                                // Camera field-of-view Y
     main_camera.type = CAMERA_PERSPECTIVE;                   // Camera mode type
     
+    SetCameraMode(main_camera, CAMERA_FREE);
 }
 
 Camera3D* MainGuiEditor::GetPointerToCamera()
