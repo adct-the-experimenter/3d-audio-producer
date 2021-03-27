@@ -41,7 +41,7 @@ set ( PROJECT_INCLUDE_DIR )
 #for where to find header files for source and library
 include_directories(/usr/include /usr/local/include ./include ./src/timeline-track-editor/include ${PROJECT_INCLUDE_DIR} )
 
-set(SOURCES src/osgViewerWX.cpp
+set(SOURCES src/viewer.cpp
 			src/SaveSystem.cpp src/LoadSystem.cpp src/XMLCreator.cpp src/XMLReader.cpp
 			#src/CreateStandardReverbZoneDialog.cpp src/EditMultipleStandardReverbZonesDialog.cpp 
 			#src/CreateEAXReverbZoneDialog.cpp src/EditMultipleEAXReverbZonesDialog.cpp 

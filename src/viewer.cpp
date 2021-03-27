@@ -1,21 +1,6 @@
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
 
-#ifdef WIN32
-#include <winsock2.h>
-#endif
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
-
-//#define __GXX_ABI_VERSION 1000
-
-#include "osgViewerWX.h"
+#include "viewer.h"
 
 #include "CreateStandardReverbZoneDialog.h"
 #include "CreateEAXReverbZoneDialog.h"
@@ -25,7 +10,6 @@
 #include "EditMultipleEAXReverbZonesDialog.h"
 #include "EditMultipleEchoZonesDialog.h"
 
-#include <wx/toolbar.h>
 
 bool init_listener_once = false;
 
