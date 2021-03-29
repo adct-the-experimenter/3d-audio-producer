@@ -186,6 +186,7 @@ public:
     
     void KeyDownLogic(int& thisKey);
     
+    void DrawGUI_Items();
     void Draw3DModels();
     
     Camera3D* GetPointerToCamera();

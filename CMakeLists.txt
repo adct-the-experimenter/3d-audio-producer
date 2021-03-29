@@ -36,7 +36,7 @@ if (WIN32)
     set (PROJECT_LINK_LIBS ${PROJECT_LINK_LIBS} -lwsock32)
 endif (WIN32)
 
-set ( PROJECT_INCLUDE_DIR )
+set ( PROJECT_INCLUDE_DIR ./src)
 
 #for where to find header files for source and library
 include_directories(/usr/include /usr/local/include ./include ./src/timeline-track-editor/include ${PROJECT_INCLUDE_DIR} )

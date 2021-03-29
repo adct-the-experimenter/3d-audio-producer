@@ -2,6 +2,14 @@
 
 #include "main_gui_editor.h"
 
+#define RAYGUI_IMPLEMENTATION
+#define RAYGUI_SUPPORT_ICONS
+#include "raygui/raygui.h"
+
+#undef RAYGUI_IMPLEMENTATION
+
+//#include "raygui/gui_file_dialog.h"
+
 /*
 #include "CreateStandardReverbZoneDialog.h"
 #include "CreateEAXReverbZoneDialog.h"
@@ -281,6 +289,40 @@ void MainGuiEditor::Draw3DModels()
 			sound_producer_vector[i]->DrawModel();
 		}
 	}
+	
+	
+}
+
+int sp_choice = 0;
+bool dropDown001EditMode = false;
+int dropdownBox001Active = 0;
+
+void MainGuiEditor::DrawGUI_Items()
+{
+	
+	//create,edit object menu panel
+	//draw rectangle panel on the left
+	
+	GuiDrawRectangle((Rectangle){20,80,150,160}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	//GuiPanel( (Rectangle){20,80,125,160} );
+	GuiDrawText("Object Creation", (Rectangle){20,80,125,20}, 1, BLACK);
+	
+	//draw button create
+	bool createObjectClicked = GuiButton( (Rectangle){ 25, 140, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Create") );
+	//draw button edit
+	bool editObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Edit") );
+	
+	//draw GuiDropdownBox for choosing type to manipulate
+	
+	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Sound Producer;Standard Reverb Zone", &dropdownBox001Active, dropDown001EditMode) )
+	{
+		dropDown001EditMode = !dropDown001EditMode;
+	}
+	
+	
+	//active sound producer dropdown box
+	
+	//draw gui dropdownbox for choosing sound producer to manipulate with hot keys
 	
 	
 }
