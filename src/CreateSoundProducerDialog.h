@@ -4,56 +4,27 @@
 
 #include "openalsoftaudioengine.h" //for loading buffer and creating source of sound producer
 
-class CreateSoundProducerDialog : public wxDialog
+class CreateSoundProducerDialog
 {
 
 public:
-	CreateSoundProducerDialog(const wxString& title, OpenAlSoftAudioEngine* audioEngine);
+	CreateSoundProducerDialog(const std::string& title);
 
-
-	void OnOk(wxCommandEvent& event );
-
-	void OnCancel(wxCommandEvent& event);
-
-	void OnBrowse(wxCommandEvent& event);
-
-	void Exit();
-
-	enum
-	{
-		ID_OK = wxID_HIGHEST + 1,
-		ID_CANCEL,
-		ID_BROWSE
-	};
+	void DrawDialog();
 
 	//function to return position of new sound producer object
 	void getNewPosition(double& x, double& y, double& z);
 
 	std::string getNewName();
 
-	std::string& getSoundFilePath();
-
-	ALuint& getBuffer();
-
 	bool OkClickedOn();
+	bool CancelClickedOn();
 	
 	bool getFreeRoamBool();
+	
+	void resetConfig();
 
 private:
-	wxButton* okButton;
-	wxButton* cancelButton;
-	wxButton* browseButton;
-
-	wxTextCtrl* textFieldName;
-
-	wxTextCtrl* textFieldX;
-	wxTextCtrl* textFieldY;
-	wxTextCtrl* textFieldZ;
-
-	wxTextCtrl* textFieldSoundFilePath;
-	
-	wxCheckBox* checkBoxFreeRoam;
-	bool tempFreeRoamBool; 
 
 	OpenAlSoftAudioEngine* ptrAudioEngine;
 
@@ -61,19 +32,11 @@ private:
 	double xPosition;
 	double yPosition;
 	double zPosition;
-
-	std::string soundFilePath;
-	ALuint buffer;
+	bool tempFreeRoamBool;
 	
+	bool okClicked;
+	bool cancelClicked;
 	
-
-
-	bool okClicked; //bool to indicate if ok button was clicked on
-
-	void initPrivateVariables();
-
-	DECLARE_EVENT_TABLE()
-
 };
 
 

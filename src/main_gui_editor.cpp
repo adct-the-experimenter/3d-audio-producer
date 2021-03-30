@@ -8,17 +8,25 @@
 
 #undef RAYGUI_IMPLEMENTATION
 
+#include "CreateSoundProducerDialog.h"
+
 //#include "raygui/gui_file_dialog.h"
 
-/*
-#include "CreateStandardReverbZoneDialog.h"
-#include "CreateEAXReverbZoneDialog.h"
-#include "CreateEchoZoneDialog.h"
+//#include "EditMultipleSoundProducersDialog.h"
+//#include "HRTF-Test-Dialog.h"
+//#include "Change-HRTF-Dialog.h"
+//#include "EditListenerDialog.h"
+//#include "setup-serial-dialog.h"
 
-#include "EditMultipleStandardReverbZonesDialog.h"
-#include "EditMultipleEAXReverbZonesDialog.h"
-#include "EditMultipleEchoZonesDialog.h"
-*/
+
+//#include "CreateStandardReverbZoneDialog.h"
+//#include "CreateEAXReverbZoneDialog.h"
+//#include "CreateEchoZoneDialog.h"
+
+//#include "EditMultipleStandardReverbZonesDialog.h"
+//#include "EditMultipleEAXReverbZonesDialog.h"
+//#include "EditMultipleEchoZonesDialog.h"
+
 
 bool init_listener_once = false;
 
@@ -293,12 +301,34 @@ void MainGuiEditor::Draw3DModels()
 	
 }
 
-int sp_choice = 0;
-bool dropDown001EditMode = false;
-int dropdownBox001Active = 0;
+
 
 void MainGuiEditor::DrawGUI_Items()
 {
+	
+	MainGuiEditor::draw_object_creation_menu();
+	
+	//active sound producer dropdown box
+	
+	//draw gui dropdownbox for choosing sound producer to manipulate with hot keys
+	
+	
+}
+
+bool dropDownObjectTypeMode = false;
+int dropDownObjectTypeActive = 0;
+bool objectManipulationState = false;
+
+CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+
+//state 
+enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER };
+GuiState g_state = GuiState::NONE;
+
+void MainGuiEditor::draw_object_creation_menu()
+{
+	
+	if(objectManipulationState){}
 	
 	//create,edit object menu panel
 	//draw rectangle panel on the left
@@ -314,17 +344,66 @@ void MainGuiEditor::DrawGUI_Items()
 	
 	//draw GuiDropdownBox for choosing type to manipulate
 	
-	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Sound Producer;Standard Reverb Zone", &dropdownBox001Active, dropDown001EditMode) )
+	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Sound Producer;Standard Reverb Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
 	{
-		dropDown001EditMode = !dropDown001EditMode;
+		dropDownObjectTypeMode = !dropDownObjectTypeMode;
 	}
 	
+	//if object to manipulate is not none, and not in a state of object manipulation
+	if(dropDownObjectTypeActive != 0 && !objectManipulationState)
+	{
+		//if create object button clicked on
+		if(createObjectClicked)
+		{
+			switch(dropDownObjectTypeActive)
+			{
+				//sound producer
+				case 1:{ g_state = GuiState::CREATE_SOUND_PRODUCER; break;}
+				//standard reverb zone
+				case 2:{break;}
+				default:{break;}
+			}
+		}
+		
+		//if edit object button clicked on
+		if(editObjectClicked)
+		{
+			switch(dropDownObjectTypeActive)
+			{
+				
+				//sound producer
+				case 1:{break;}
+				//standard reverb zone
+				case 2:{break;}
+				default:{break;}
+			}
+		}
+	}
 	
-	//active sound producer dropdown box
-	
-	//draw gui dropdownbox for choosing sound producer to manipulate with hot keys
-	
-	
+	switch(g_state)
+	{
+		case GuiState::CREATE_SOUND_PRODUCER:
+		{
+			create_sp_dialog.DrawDialog();
+			
+			if(create_sp_dialog.OkClickedOn())
+			{
+				//create sound producer
+				
+				g_state = GuiState::NONE;
+				create_sp_dialog.resetConfig();
+			}
+			
+			if(create_sp_dialog.CancelClickedOn())
+			{
+				g_state = GuiState::NONE;
+				create_sp_dialog.resetConfig();
+			}
+			
+			break;
+		}
+		default:{ break;}
+	}
 }
 
 void MainGuiEditor::InitCamera()

@@ -1,13 +1,29 @@
 #include "CreateSoundProducerDialog.h"
 
-CreateSoundProducerDialog::CreateSoundProducerDialog(const wxString & title, OpenAlSoftAudioEngine* audioEngine)
-       : wxDialog(NULL, -1, title, wxDefaultPosition, wxSize(250, 230))
-{
-	
-	ptrAudioEngine = audioEngine;
+#undef RAYGUI_IMPLEMENTATION
+#include "raygui/raygui.h"
 
+
+
+CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
+{
+	xPosition = 0.0; yPosition = 0.0; zPosition = 0.0;
+	okClicked = false; cancelClicked = false;
+	tempFreeRoamBool = false;
+}
+
+int x_value = 0;
+
+void CreateSoundProducerDialog::DrawDialog()
+{
 	//initialize text fields
 	
+	bool exit = GuiWindowBox((Rectangle){300,100,400,400},"Create Sound Producer");
+	
+	if(exit){cancelClicked = true;}
+	
+	GuiValueBox((Rectangle){400,100,100,50}, "X", &x_value, -10, 10, true);
+	/*
 	wxFloatingPointValidator <double> validator(2,nullptr,wxNUM_VAL_ZERO_AS_BLANK);
     validator.SetRange(-10.00,10.00);     // set allowable range
     
@@ -33,22 +49,12 @@ CreateSoundProducerDialog::CreateSoundProducerDialog(const wxString & title, Ope
 								validator,          // associate the text box with the desired validator
 								wxT("")); 
 	
-	//textFieldSoundFilePath = new wxTextCtrl(this,-1, "", 
-	//							wxPoint(95, 140), wxSize(80,20),
-	//							wxTE_READONLY, wxDefaultValidator,       
-	//							wxT("")); 
-	
 	//initialize text to the left of fields
 	wxStaticText* NameText = new wxStaticText(this, -1, wxT("Name :"), wxPoint(40, 20));
 	wxStaticText* positionText = new wxStaticText(this, -1, wxT("Position :"), wxPoint(20, 40));
 	wxStaticText* xPositionText = new wxStaticText(this, -1, wxT("X :"), wxPoint(40, 60));
 	wxStaticText* yPositionText = new wxStaticText(this, -1, wxT("Y :"), wxPoint(40, 80));
-	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100));
-    //wxStaticText* SoundText = new wxStaticText(this, -1, wxT("Sound File :"), wxPoint(20, 120));
-    
-    //initialize browse button
-    //browseButton = new wxButton(this, CreateSoundProducerDialog::ID_BROWSE, wxT("Browse"), 
-	//						wxPoint(110,140), wxSize(70, 30));
+	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100)); 
     
     //initialize Ok and Cancel buttons 
 	okButton = new wxButton(this, CreateSoundProducerDialog::ID_OK, wxT("Ok"), 
@@ -99,99 +105,18 @@ CreateSoundProducerDialog::CreateSoundProducerDialog(const wxString & title, Ope
 	
 	vbox->Add(checkBoxFreeRoam,1, wxEXPAND | wxALL, 10);
 	
-	//wxBoxSizer *hboxSoundFile = new wxBoxSizer(wxHORIZONTAL);
-	//hboxSoundFile->Add(SoundText);
-	//hboxSoundFile->Add(textFieldSoundFilePath);
-	//hboxSoundFile->Add(browseButton);
-	
-	//vbox->Add(hboxSoundFile,1, wxEXPAND | wxALL, 10);
-	
 	vbox->Add(hbox5, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
 
 	SetSizerAndFit(vbox);
-
-	CreateSoundProducerDialog::initPrivateVariables();
+	*/
 	
-	//center and show elements in dialog
-	Centre();
-	ShowModal();
-
-	//destroy when done showing
-	Destroy(); 
-}
-
-void CreateSoundProducerDialog::initPrivateVariables()
-{
-	okClicked = false;
-	xPosition = 0.0; yPosition = 0.0; zPosition = 0.0;
-	soundFilePath = "";
-	buffer = 0;
-}
-
-void CreateSoundProducerDialog::OnOk(wxCommandEvent& event )
-{
-	name = textFieldName->GetLineText(0).ToStdString();
-	( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-	( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-	( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
-	tempFreeRoamBool = checkBoxFreeRoam->GetValue();
-	
-	okClicked = true;
-	
-	CreateSoundProducerDialog::Exit();
-}
-
-void CreateSoundProducerDialog::OnBrowse(wxCommandEvent& event)
-{
-	wxFileDialog fileDlg(this, _("Choose the WAV file"), wxEmptyString, wxEmptyString, _("WAV file|*.wav|All files|*.*"));
-	if (fileDlg.ShowModal() == wxID_OK)
+	if(okClicked)
 	{
-		wxString path = fileDlg.GetPath();
-		//use this path in your app
-		soundFilePath = std::string(path.mb_str());
-		std::cout << "Sound file path:" << soundFilePath << std::endl;
-		
-		ALuint tempBuffer;
-		//load sound file
-		ptrAudioEngine->loadSound(&tempBuffer,soundFilePath);
-		
-		//if error in loading, show a message box 
-		if( tempBuffer == 0)
-		{
-			std::cout << soundFilePath << "did not load successfully! \n";
-		}
-		//if successfuly
-		else
-		{
-			//put sound file path string into textfieldSoundFilePath
-			wxString thisPath(soundFilePath);
-			textFieldSoundFilePath->WriteText(thisPath) ;
-			//save to buffer
-			buffer = tempBuffer;
-		} 
-	}   
-}
-
-void CreateSoundProducerDialog::OnCancel(wxCommandEvent& event)
-{
-	okClicked = false;
-	CreateSoundProducerDialog::Exit();
-}
-
-void CreateSoundProducerDialog::Exit()
-{
-	if(okButton != nullptr){ delete okButton;}
-	if(cancelButton != nullptr){delete cancelButton;}
-	if(textFieldX != nullptr){ delete textFieldX;}
-	if(textFieldY != nullptr){ delete textFieldY;}
-	if(textFieldZ != nullptr){ delete textFieldZ;}
-    
-    Close( true ); //close window
+		xPosition = (double)x_value;
+	}
 }
 
 std::string CreateSoundProducerDialog::getNewName(){return name;}
-
-std::string& CreateSoundProducerDialog::getSoundFilePath(){return soundFilePath;}
 
 void CreateSoundProducerDialog::getNewPosition(double& x, double& y, double& z)
 {
@@ -200,15 +125,20 @@ void CreateSoundProducerDialog::getNewPosition(double& x, double& y, double& z)
 	z = zPosition;
 }
 
-ALuint& CreateSoundProducerDialog::getBuffer(){return buffer;}
 
 bool CreateSoundProducerDialog::OkClickedOn(){ return okClicked;}
 
+bool CreateSoundProducerDialog::CancelClickedOn(){ return cancelClicked;}
+
 bool CreateSoundProducerDialog::getFreeRoamBool(){return tempFreeRoamBool;}
 
-//Event table for main frame specific events
-BEGIN_EVENT_TABLE(CreateSoundProducerDialog, wxDialog)
-    EVT_BUTTON				(ID_OK, CreateSoundProducerDialog::OnOk)
-    EVT_BUTTON				(ID_CANCEL, CreateSoundProducerDialog::OnCancel)
-    EVT_BUTTON				(ID_BROWSE, CreateSoundProducerDialog::OnBrowse)
-END_EVENT_TABLE()
+void CreateSoundProducerDialog::resetConfig()
+{
+	xPosition = 0;
+	yPosition = 0;
+	zPosition = 0;
+	
+	x_value = 0;
+	okClicked = false;
+	cancelClicked = false;
+}

@@ -12,12 +12,6 @@
 
 //#include "soundproducer-registry.h"
 
-//#include "CreateSoundProducerDialog.h"
-//#include "EditMultipleSoundProducersDialog.h"
-//#include "HRTF-Test-Dialog.h"
-//#include "Change-HRTF-Dialog.h"
-//#include "EditListenerDialog.h"
-//#include "setup-serial-dialog.h"
 
 #include "openalsoftaudioengine.h"
 
@@ -214,6 +208,8 @@ private:
 	
 	Camera3D main_camera;
 	
+	//GUI draw and handling calls
+	void draw_object_creation_menu();
 };
 
 #endif // _WXSIMPLEVIEWERWX_H_
