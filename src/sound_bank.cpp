@@ -13,6 +13,7 @@ SoundBank::SoundBank()
 
 void SoundBank::DrawGui_Item()
 {
+	//
 	//for each account from start to last account number
 	if(last_account_num > 0)
 	{
@@ -31,11 +32,6 @@ void SoundBank::ChangeSoundNameForAccount(std::uint8_t account_num,std::string n
 {
 	m_sound_accounts[account_num].name = new_name;
 	account_look_up[account_num] = new_name;
-}
-	
-void SoundBank::AddNewAccount()
-{
-	last_account_num++;
 }
 	
 //used for querying sound

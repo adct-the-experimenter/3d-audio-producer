@@ -175,3 +175,17 @@ void SoundProducerRegistry::ClearAll()
 	soundproducers_to_edit_wxstring.clear();
 	combo_box_ptr_vec.clear();
 }
+
+void SoundProducerRegistry::AddSourceOfLastSoundProducerToSoundProducerRegistry()
+{
+	if(sound_producer_vector_ref != nullptr)
+	{
+		ALuint* thisSource = sound_producer_vector_ref->at(sound_producer_vector_ref->size() - 1)->getSource();
+		sound_producer_sources_vec.push_back(thisSource);
+	}
+	
+}
+void SoundProducerRegistry::RemoveSourceOfLastTrackFromSoundProducerTrackManager()
+{
+	sound_producer_sources_vec.pop_back();
+}

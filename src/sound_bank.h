@@ -27,7 +27,7 @@ public:
 	
 	void ChangeSoundNameForAccount(std::uint8_t account_num,std::string new_name);
 	
-	void AddNewAccount();
+	void ChangeBufferForAccount(std::uint8_t account_num);
 	
 	
 	//used for querying sound
@@ -35,8 +35,10 @@ public:
 	
 	ALuint& GetBufferFromThisAccount(std::uint8_t account_num);
 	
+	friend class ImmediateModeSoundPlayer;
 	
 private:
+
 	std::array <SoundAccount,10> m_sound_accounts;
 	
 	std::array <std::string,10> account_look_up;

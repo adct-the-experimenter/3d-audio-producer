@@ -82,9 +82,6 @@ bool MainGuiEditor::OnInit()
 		std::unique_ptr <MainFrame> thisFrame( new MainFrame("3D Audio Producer",&audio_engine) );
 		frame = std::move(thisFrame);
 
-		//set function KeyDownLogic to be called every time key pressed event happens in OSGCanvas
-		using std::placeholders::_1;
-		std::function<void(int&)> func = std::bind( &MainGuiEditor::KeyDownLogic, this, _1 );
 
 		
 		MainGuiEditor::initListener();
@@ -139,51 +136,61 @@ void MainGuiEditor::initListener()
 	}
 }
 
-void MainGuiEditor::KeyDownLogic(int& thisKey)
-{
-	
-	float distanceToMove = 1.0f;
 
-	//if a key is pressed
-	switch(thisKey)
+void MainGuiEditor::Draw3DModels()
+{
+	//draw 3d model of listener
+	listener->DrawModel();
+	
+	//draw 3d models of sound producers
+	
+	if(sound_producer_vector.size() > 0)
 	{
-		//if w key pressed
-		case 87:
+		for(size_t i = 0; i < sound_producer_vector.size(); i++)
 		{
-			if(listener){listener->MoveForward(distanceToMove);}
-			break;
+			sound_producer_vector[i]->DrawModel();
 		}
-		//if a key pressed
-		case 65:
-		{
-			if(listener){listener->MoveLeft(distanceToMove);}
-			break;
-		}
-		//if s key pressed
-		case 83:
-		{
-			if(listener){listener->MoveBack(distanceToMove);}
-			break;
-		}
-		//if d key pressed
-		case 68:
-		{
-			if(listener){listener->MoveRight(distanceToMove);}
-			break;
-		}
-		//if q key pressed
-		case 81:
-		{
-			if(listener){listener->MoveDown(distanceToMove);}
-			break;
-		}
-		//if e key pressed
-		case 69:
-		{
-			if(listener){listener->MoveUp(distanceToMove);}
-			break;
-		}
-		/*
+	}
+	
+	
+}
+
+float distanceToMove = 1.0f;
+
+void MainGuiEditor::HandleEvents()
+{
+	//if w key pressed
+	if( IsKeyDown(KEY_W) )
+	{
+		if(listener){listener->MoveForward(distanceToMove);}
+	}
+	//if a key pressed
+	if( IsKeyDown(KEY_A) )
+	{
+		if(listener){listener->MoveLeft(distanceToMove);}
+	}
+	//if s key pressed
+	if( IsKeyDown(KEY_S) )
+	{
+		if(listener){listener->MoveBack(distanceToMove);}
+	}
+	//if d key pressed
+	if( IsKeyDown(KEY_D) )
+	{
+		if(listener){listener->MoveRight(distanceToMove);}
+	}
+	//if q key pressed
+	if( IsKeyDown(KEY_Q) )
+	{
+		if(listener){listener->MoveDown(distanceToMove);}
+	}
+	//if e key pressed
+	if( IsKeyDown(KEY_E) )
+	{
+		if(listener){listener->MoveUp(distanceToMove);}
+	}
+	
+	/*
 		//if b key pressed
 		case 66:
 		{
@@ -279,29 +286,7 @@ void MainGuiEditor::KeyDownLogic(int& thisKey)
 			break;
 		}
 		*/
-		default:{break;}
-	}
 }
-
-void MainGuiEditor::Draw3DModels()
-{
-	//draw 3d model of listener
-	listener->DrawModel();
-	
-	//draw 3d models of sound producers
-	
-	if(sound_producer_vector.size() > 0)
-	{
-		for(size_t i = 0; i < sound_producer_vector.size(); i++)
-		{
-			sound_producer_vector[i]->DrawModel();
-		}
-	}
-	
-	
-}
-
-
 
 void MainGuiEditor::DrawGUI_Items()
 {
@@ -335,7 +320,7 @@ void MainGuiEditor::draw_object_creation_menu()
 	
 	GuiDrawRectangle((Rectangle){20,80,150,160}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
 	//GuiPanel( (Rectangle){20,80,125,160} );
-	GuiDrawText("Object Creation", (Rectangle){20,80,125,20}, 1, BLACK);
+	GuiDrawText("Object Creation / Edit", (Rectangle){20,80,125,20}, 1, BLACK);
 	
 	//draw button create
 	bool createObjectClicked = GuiButton( (Rectangle){ 25, 140, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Create") );

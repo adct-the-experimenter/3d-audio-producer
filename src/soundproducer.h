@@ -27,8 +27,6 @@ struct SoundProducerSaveData
 	double y;
 	double z;
 	
-	//filepath
-	std::string file_path;
 };
 
 

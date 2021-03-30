@@ -48,6 +48,7 @@ int main(int argc, char* args[])
 void ApplicationLoop()
 {
 	//handle events
+	editor.HandleEvents();
 	
 	UpdateCamera(editor.GetPointerToCamera());
 	

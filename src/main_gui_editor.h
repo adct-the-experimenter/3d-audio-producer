@@ -181,8 +181,8 @@ public:
 	
     bool OnInit();
     
-    void KeyDownLogic(int& thisKey);
-    
+    void HandleEvents();
+        
     void DrawGUI_Items();
     void Draw3DModels();
     

@@ -54,6 +54,11 @@ public:
 	//function to clear all
 	void ClearAll();
 	
+	//function
+	void AddSourceOfLastSoundProducerToSoundProducerRegistry();
+	
+	void RemoveSourceOfLastTrackFromSoundProducerTrackManager();
+	
 private:
 
 	//list of names for combo box
@@ -69,6 +74,8 @@ private:
 	//dictionary to keep track of which wxstring associated with index
 	//std::unordered_map <std::string, std::vector <std::unique_ptr <SoundProducer> >::iterator> map_soundproducer;
 	std::unordered_map <std::string, size_t> map_soundproducer; 
+	
+	std::vector <ALuint*> sound_producer_sources_vec;
 };
 
 #endif
