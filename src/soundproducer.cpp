@@ -29,7 +29,7 @@ void SoundProducer::InitSoundProducer(std::string& thisName,
 									double& x, double& y, double& z)
 {
 	//intialize source
-	//SoundProducer::CreateSource();
+	SoundProducer::CreateSource();
 
 	name = thisName;
 
