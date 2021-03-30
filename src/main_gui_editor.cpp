@@ -389,7 +389,12 @@ void MainGuiEditor::draw_object_creation_menu()
 			if(create_sp_dialog.OkClickedOn())
 			{
 				//create sound producer
-				
+				std::string name = create_sp_dialog.getNewName();
+				double x,y,z;
+				create_sp_dialog.getNewPosition(x,y,z);
+				bool freeRoam = create_sp_dialog.getFreeRoamBool();
+				frame->CreateSoundProducer(name,x, y, z, freeRoam);
+									
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
 			}
@@ -812,25 +817,25 @@ void MainFrame::OnCreateSoundProducer(wxCommandEvent& event)
 	}
 
 }
+*/
 
-void MainFrame::CreateSoundProducer(std::string& name, std::string& filePath, ALuint& buffer,double& x, double& y, double& z, 
+void MainFrame::CreateSoundProducer(std::string& name,double& x, double& y, double& z, 
 									bool freeRoam)
 {
 	sound_producer_vector_ref->push_back( std::unique_ptr <SoundProducer>(new SoundProducer()) );
 
-	sound_producer_vector_ref->back()->InitSoundProducer(name,filePath,buffer,x,y,z);
+	sound_producer_vector_ref->back()->InitSoundProducer(name,x,y,z);
 	sound_producer_vector_ref->back()->SetFreeRoamBool(freeRoam);
 	
-	//add position attitude transform to root group of nodes
-	_rootNode->addChild( sound_producer_vector_ref->back()->getTransformNode() );
 
-	soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
+	//soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
 	
-	m_sp_toolbar_combobox->Append(name);
+	//m_sp_toolbar_combobox->Append(name);
 
-	soundproducer_registry.UpdateAllComboBoxesList();
+	//soundproducer_registry.UpdateAllComboBoxesList();
 }
 
+/*
 void MainFrame::OnEditMultipleSoundProducers(wxCommandEvent& event)
 {
 	std::unique_ptr <EditMultipleSoundProducersDialog> soundProducerEditDialog(new EditMultipleSoundProducersDialog( wxT("Edit Sound Producers"),

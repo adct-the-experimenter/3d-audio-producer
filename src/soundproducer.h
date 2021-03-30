@@ -48,14 +48,8 @@ public:
 	void SetPositionZ(double& z); //set z position of sound producer
 	double GetPositionZ(); //get z position of sound producer
 
-	void InitSoundProducer(std::string& thisName, std::string& filepath, ALuint& buffer,
+	void InitSoundProducer(std::string& thisName,
 							double& x, double& y, double& z);
-
-	void setFilepathToSound(std::string& filepath);
-	std::string& getFilepathToSound();
-
-	void setBuffer(ALuint& thisSource);
-	ALuint* getBuffer();
 
 	//function to use openal soft audio engine to create source from buffer
 	void CreateSource();
@@ -81,11 +75,6 @@ private:
 	Vector3 producer_position;
 	enum POSITION_INDEX { X=0,Y=1,Z=2 };
 
-	//file path to sound made
-	std::string m_filepath;
-
-	//buffer to play
-	ALuint m_buffer;
 
 	//source to play buffer
 	ALuint m_source;

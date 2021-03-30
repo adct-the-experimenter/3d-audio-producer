@@ -5,9 +5,6 @@
 SoundProducer::SoundProducer()
 {
 
-	//initialize buffer as empty
-	m_buffer = 0;
-
 	//initialize position vector
 	producer_position.x = 0;
 	producer_position.y = 0;
@@ -26,25 +23,15 @@ SoundProducer::~SoundProducer()
 		alDeleteSources(1, &m_source);
 	}
 
-	if(m_buffer != 0)
-	{
-		alDeleteBuffers(1, &m_buffer);
-	}
 }
 
-void SoundProducer::InitSoundProducer(std::string& thisName,std::string& filepath, ALuint& buffer,
+void SoundProducer::InitSoundProducer(std::string& thisName,
 									double& x, double& y, double& z)
 {
 	//intialize source
-	SoundProducer::CreateSource();
+	//SoundProducer::CreateSource();
 
 	name = thisName;
-	m_filepath = filepath;
-
-	if(buffer != 0)
-	{
-		SoundProducer::setBuffer(buffer);
-	}
 
 	//set position
 	producer_position.x = x;
@@ -123,22 +110,6 @@ void SoundProducer::SetPositionZ(double& z)
 
 double SoundProducer::GetPositionZ(){return producer_position.z;}
 
-void SoundProducer::setFilepathToSound(std::string& filepath){m_filepath = filepath;}
-
-std::string& SoundProducer::getFilepathToSound(){return m_filepath;}
-
-void SoundProducer::setBuffer(ALuint& thisBuffer)
-{
-	m_buffer = thisBuffer;
-
-	//attach new buffer to source if source is defined
-	if(m_source != 0)
-	{
-		alSourcei(m_source, AL_SOURCE_RELATIVE, AL_TRUE);
-		alSourcei(m_source, AL_BUFFER, m_buffer);
-	}
-}
-ALuint* SoundProducer::getBuffer(){return &m_buffer;}
 
 void SoundProducer::CreateSource()
 {

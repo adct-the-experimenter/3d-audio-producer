@@ -1,8 +1,8 @@
 #include "CreateSoundProducerDialog.h"
 
 #undef RAYGUI_IMPLEMENTATION
-#include "raygui/raygui.h"
 
+#include "raygui/raygui.h"
 
 
 CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
@@ -13,106 +13,58 @@ CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 }
 
 int x_value = 0;
+bool x_box_pressed = false;
+int y_value = 0;
+bool y_box_pressed = false;
+int z_value = 0;
+bool z_box_pressed = false;
+
+char char_name[20] = "name here";
+bool name_box_pressed = false;
+
+bool free_roam_box_stat = false;
 
 void CreateSoundProducerDialog::DrawDialog()
 {
-	//initialize text fields
+	
 	
 	bool exit = GuiWindowBox((Rectangle){300,100,400,400},"Create Sound Producer");
 	
 	if(exit){cancelClicked = true;}
 	
-	GuiValueBox((Rectangle){400,100,100,50}, "X", &x_value, -10, 10, true);
-	/*
-	wxFloatingPointValidator <double> validator(2,nullptr,wxNUM_VAL_ZERO_AS_BLANK);
-    validator.SetRange(-10.00,10.00);     // set allowable range
-    
-    textFieldName = new wxTextCtrl(this,-1, "Name", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER);
-    
-	textFieldX = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 60), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validator,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldY = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 80), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validator,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldZ = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validator,          // associate the text box with the desired validator
-								wxT("")); 
 	
-	//initialize text to the left of fields
-	wxStaticText* NameText = new wxStaticText(this, -1, wxT("Name :"), wxPoint(40, 20));
-	wxStaticText* positionText = new wxStaticText(this, -1, wxT("Position :"), wxPoint(20, 40));
-	wxStaticText* xPositionText = new wxStaticText(this, -1, wxT("X :"), wxPoint(40, 60));
-	wxStaticText* yPositionText = new wxStaticText(this, -1, wxT("Y :"), wxPoint(40, 80));
-	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100)); 
-    
-    //initialize Ok and Cancel buttons 
-	okButton = new wxButton(this, CreateSoundProducerDialog::ID_OK, wxT("Ok"), 
-							wxDefaultPosition, wxSize(70, 30));
-
-	cancelButton = new wxButton(this, CreateSoundProducerDialog::ID_CANCEL, wxT("Cancel"), 
-								wxDefaultPosition, wxSize(70, 30));
-								
-	//add checkmark box to determine if sound producer can roam freely in world or is controlled by sound producer track
-	checkBoxFreeRoam = new wxCheckBox(this, wxID_ANY, wxT("Free Roam"), wxDefaultPosition, wxSize(30,30));
-
-	//Make vertical box to put horizontal boxes in
-	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
+	if( GuiTextBox((Rectangle){400,200,100,50}, char_name, 20, name_box_pressed) )
+	{
+		name_box_pressed = !name_box_pressed;
+	}
 	
-	//make horizontal box to put ok and cancel buttons in
-	wxBoxSizer *hbox5 = new wxBoxSizer(wxHORIZONTAL);
-
-	hbox5->Add(okButton, 1);
-	hbox5->Add(cancelButton, 1, wxLEFT, 5);
+	if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &x_value, -10, 10, x_box_pressed) )
+	{
+		x_box_pressed = !x_box_pressed;
+	}
+	if( GuiValueBox((Rectangle){500,300,50,50}, "Y:", &y_value, -10, 10, y_box_pressed) )
+	{
+		y_box_pressed = !y_box_pressed;
+	}
+	if( GuiValueBox((Rectangle){600,300,50,50}, "Z:", &z_value, -10, 10, z_box_pressed) )
+	{
+		z_box_pressed = !z_box_pressed;
+	}
 	
-	//add panel of text fields in vertical box
+	free_roam_box_stat = GuiCheckBox((Rectangle){ 400, 400, 20, 20 }, "Free Roam:", free_roam_box_stat);
 	
-	wxBoxSizer *hboxName = new wxBoxSizer(wxHORIZONTAL);
-	hboxName->Add(NameText);
-	hboxName->Add(textFieldName);
+	okClicked = GuiButton( (Rectangle){ 400, 450, 70, 30 }, GuiIconText(0, "OK") );
 	
-	vbox->Add(hboxName, 1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(positionText);
-	
-	wxBoxSizer *hboxX = new wxBoxSizer(wxHORIZONTAL);
-	hboxX->Add(xPositionText);
-	hboxX->Add(textFieldX);
-	
-	vbox->Add(hboxX,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxY = new wxBoxSizer(wxHORIZONTAL);
-	hboxY->Add(yPositionText);
-	hboxY->Add(textFieldY);
-	
-	vbox->Add(hboxY,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxZ = new wxBoxSizer(wxHORIZONTAL);
-	hboxZ->Add(zPositionText);
-	hboxZ->Add(textFieldZ);
-	
-	vbox->Add(hboxZ,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(checkBoxFreeRoam,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(hbox5, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-
-	SetSizerAndFit(vbox);
-	*/
+	cancelClicked = GuiButton( (Rectangle){ 500, 450, 70, 30 }, GuiIconText(0, "Cancel") );
+	if(exit){cancelClicked = true;}
 	
 	if(okClicked)
 	{
+		name = std::string(char_name);
 		xPosition = (double)x_value;
+		yPosition = (double)y_value;
+		zPosition = (double)z_value;
+		tempFreeRoamBool = free_roam_box_stat;
 	}
 }
 
@@ -139,6 +91,9 @@ void CreateSoundProducerDialog::resetConfig()
 	zPosition = 0;
 	
 	x_value = 0;
+	y_value = 0;
+	z_value = 0;
 	okClicked = false;
 	cancelClicked = false;
+	tempFreeRoamBool = false;
 }

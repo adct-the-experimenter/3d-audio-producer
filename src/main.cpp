@@ -56,15 +56,17 @@ void ApplicationLoop()
 
 	ClearBackground(RAYWHITE);
 	
-	//draw GUI elements
-	editor.DrawGUI_Items();
-	
 	//draw 3d elements
 	BeginMode3D(*editor.GetPointerToCamera());
 	
 	editor.Draw3DModels();
 	
 	EndMode3D();
+	
+	//draw GUI elements
+	editor.DrawGUI_Items();
+	
+	
 	
 	EndDrawing();
 }
