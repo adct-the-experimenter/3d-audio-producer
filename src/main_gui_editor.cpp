@@ -10,6 +10,8 @@
 
 #include "CreateSoundProducerDialog.h"
 
+#define GUI_FILE_DIALOG_IMPLEMENTATION
+#include "raygui/gui_file_dialog.h"
 
 //#include "EditMultipleSoundProducersDialog.h"
 //#include "HRTF-Test-Dialog.h"
@@ -29,9 +31,12 @@
 
 bool init_listener_once = false;
 
+GuiFileDialogState fileDialogState;
+
 MainGuiEditor::MainGuiEditor()
 {
-	
+	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+	fileDialogState.position = {200,200};
 }
 
 MainGuiEditor::~MainGuiEditor()
@@ -300,11 +305,7 @@ void MainGuiEditor::DrawGUI_Items()
 	MainGuiEditor::draw_object_creation_menu();
 	
 	//draw sound bank
-	GuiDrawRectangle((Rectangle){625,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
-	GuiDrawText("Sound Bank", (Rectangle){625,50,125,20}, 1, BLACK);
-	GuiDrawText("Sound Name", (Rectangle){625,70,125,20}, 1, BLACK);
-	GuiDrawText("File", (Rectangle){700,70,125,20}, 1, BLACK);
-	m_sound_bank.DrawGui_Item();
+	MainGuiEditor::draw_sound_bank();
 	
 	//active sound producer dropdown box
 	
@@ -407,6 +408,46 @@ void MainGuiEditor::draw_object_creation_menu()
 		}
 		default:{ break;}
 	}
+}
+
+std::array <std::string,10> filepath_textboxes;
+char fileNameToLoad[512] = { 0 };
+
+void MainGuiEditor::draw_sound_bank()
+{
+	GuiDrawRectangle((Rectangle){625,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawText("Sound Bank", (Rectangle){625,50,125,20}, 1, BLACK);
+	GuiDrawText("Sound Name", (Rectangle){625,70,125,20}, 1, BLACK);
+	GuiDrawText("File", (Rectangle){700,70,125,20}, 1, BLACK);
+	m_sound_bank.DrawGui_Item();
+	
+	if (fileDialogState.SelectFilePressed)
+	{
+		// Load image file (if supported extension)
+		if (IsFileExtension(fileDialogState.fileNameText, ".wav") || IsFileExtension(fileDialogState.fileNameText, ".flac"))
+		{
+			strcpy(fileNameToLoad, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+			
+		}
+
+		fileDialogState.SelectFilePressed = false;
+	}
+	if (fileDialogState.fileDialogActive){ GuiLock();}
+	
+	for(std::uint8_t i = 0; i < 10; i++)
+	{
+		//draw open file button
+		if( GuiButton( (Rectangle){ 750,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
+		{
+			fileDialogState.fileDialogActive = true; //activate file dialog
+			break; //stop loop
+		}
+	}
+	
+	GuiUnlock();
+	//if clicked on call GuiFIleDialog menu
+	GuiFileDialog(&fileDialogState);
+	
 }
 
 void MainGuiEditor::InitCamera()

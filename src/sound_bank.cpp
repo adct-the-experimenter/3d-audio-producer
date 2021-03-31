@@ -17,10 +17,9 @@ std::string DATADIR_STR = DATADIR_NAME;
 
 #include <unistd.h>
 
-#undef RAYGUI_IMPLEMENTATION            // Avoid including raygui implementation again
+#undef RAYGUI_IMPLEMENTATION
+
 #include "raygui/raygui.h"
-
-
 
 SoundBank::SoundBank()
 {
@@ -51,9 +50,6 @@ struct TextBoxParam
 
 std::array <TextBoxParam,10> name_textboxes;
 
-std::array <std::string,10> filepath_textboxes;
-
-
 void SoundBank::DrawGui_Item()
 {
 	//draw rectangle
@@ -73,11 +69,7 @@ void SoundBank::DrawGui_Item()
 			SoundBank::ChangeSoundNameForAccount( i , std::string(name_textboxes[i].char_name) );
 		}
 		
-		//draw open file button
-		if( GuiButton( (Rectangle){ 750,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
-		{
-			
-		}
+		
 		
 	}
 	

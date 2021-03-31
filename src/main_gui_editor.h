@@ -15,6 +15,7 @@
 
 #include "openalsoftaudioengine.h"
 
+
 #include "sound_bank.h"
 
 //#include "timeline-frame.h"
@@ -215,7 +216,9 @@ private:
 	Camera3D main_camera;
 	
 	//GUI draw and handling calls
+	
 	void draw_object_creation_menu();
+	void draw_sound_bank();
 	
 	SoundBank m_sound_bank;
 };
