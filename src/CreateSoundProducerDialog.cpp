@@ -5,6 +5,7 @@
 #include "raygui/raygui.h"
 
 
+
 CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 {
 	xPosition = 0.0; yPosition = 0.0; zPosition = 0.0;
@@ -26,7 +27,6 @@ bool free_roam_box_stat = false;
 
 void CreateSoundProducerDialog::DrawDialog()
 {
-	
 	
 	bool exit = GuiWindowBox((Rectangle){300,100,400,400},"Create Sound Producer");
 	

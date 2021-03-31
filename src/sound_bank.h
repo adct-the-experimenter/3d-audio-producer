@@ -9,11 +9,13 @@
 #include <string>
 #include <cstdint>
 
+
+
 struct SoundAccount
 {
 	std::string name; //name of sound
 	std::uint8_t account_number; //index in sound accounts array
-	ALuint buffer; //buffer holding data
+	std::string stream_file_path; //path to audio file
 };
 
 class SoundBank
@@ -25,16 +27,15 @@ public:
 	
 	//operations for handling sound accounts
 	
+	//change name of sound account
 	void ChangeSoundNameForAccount(std::uint8_t account_num,std::string new_name);
 	
-	void ChangeBufferForAccount(std::uint8_t account_num);
-	
+	//function to load audio data to account from a file
+	void LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t account_num);
 	
 	//used for querying sound
 	std::array <std::string,10> *GetAccountLookupTable();
-	
-	ALuint& GetBufferFromThisAccount(std::uint8_t account_num);
-	
+		
 	friend class ImmediateModeSoundPlayer;
 	
 private:
@@ -43,6 +44,5 @@ private:
 	
 	std::array <std::string,10> account_look_up;
 	
-	std::uint8_t last_account_num;
 };
 #endif

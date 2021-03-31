@@ -10,7 +10,6 @@
 
 #include "CreateSoundProducerDialog.h"
 
-//#include "raygui/gui_file_dialog.h"
 
 //#include "EditMultipleSoundProducersDialog.h"
 //#include "HRTF-Test-Dialog.h"
@@ -156,9 +155,16 @@ void MainGuiEditor::Draw3DModels()
 }
 
 float distanceToMove = 1.0f;
+bool disableHotkeys = false;
 
 void MainGuiEditor::HandleEvents()
 {
+	//if in sound bank area
+	if(GetMouseX() > 620){disableHotkeys = true;}
+	else{disableHotkeys = false;}
+	
+	if(disableHotkeys){return;}
+	
 	//if w key pressed
 	if( IsKeyDown(KEY_W) )
 	{
@@ -290,8 +296,15 @@ void MainGuiEditor::HandleEvents()
 
 void MainGuiEditor::DrawGUI_Items()
 {
-	
+	//draw object creation/edit menu
 	MainGuiEditor::draw_object_creation_menu();
+	
+	//draw sound bank
+	GuiDrawRectangle((Rectangle){625,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawText("Sound Bank", (Rectangle){625,50,125,20}, 1, BLACK);
+	GuiDrawText("Sound Name", (Rectangle){625,70,125,20}, 1, BLACK);
+	GuiDrawText("File", (Rectangle){700,70,125,20}, 1, BLACK);
+	m_sound_bank.DrawGui_Item();
 	
 	//active sound producer dropdown box
 	
@@ -329,7 +342,7 @@ void MainGuiEditor::draw_object_creation_menu()
 	
 	//draw GuiDropdownBox for choosing type to manipulate
 	
-	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Sound Producer;Standard Reverb Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
+	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Sound Producer;Standard Reverb Zone; EAX Reverb Zone; Echo Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
 	{
 		dropDownObjectTypeMode = !dropDownObjectTypeMode;
 	}

@@ -15,6 +15,8 @@
 
 #include "openalsoftaudioengine.h"
 
+#include "sound_bank.h"
+
 //#include "timeline-frame.h"
 //#include "soundproducer-track.h"
 //#include "listener-track.h"
@@ -28,6 +30,7 @@
 #include <memory> //for unique_ptr use
 
 #include <sstream> //for string stream
+
 
 
 class MainFrame
@@ -213,6 +216,8 @@ private:
 	
 	//GUI draw and handling calls
 	void draw_object_creation_menu();
+	
+	SoundBank m_sound_bank;
 };
 
 #endif // _WXSIMPLEVIEWERWX_H_

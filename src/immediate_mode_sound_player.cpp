@@ -13,6 +13,8 @@ ImmediateModeSoundPlayer::~ImmediateModeSoundPlayer()
 	
 }
 
+void ImmediateModeSoundPlayer::SetPointerToSoundBank(SoundBank* soundbank_ptr){m_sound_bank_ptr = soundbank_ptr;}
+
 void ImmediateModeSoundPlayer::DrawGui_Item()
 {
 	
@@ -20,31 +22,45 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 
 void ImmediateModeSoundPlayer::PlayAll()
 {
-	/*
-	//buffer audio for all sound producer sources with buffers
-	for(size_t i=0; i < soundProducerTracks_vec->size(); i++)
-	{
-		//ImmediateModeSoundPlayer::StartPlayerBuffering();
-	}
-
-	//play all sources in sync
 	if(m_state == IMSoundPlayerState::NONE)
 	{
-		//start play the sources
-		audioPlayer.PlayMultipleSources(&soundproducertracks_sources_vector);
+		m_current_time = 0;
+		
+		//initialize audio players for each sound producer
+		//ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(size_t num_producers)
+		//open each streaming file and get necessary info
+		//audioPlayer.OpenPlayerFile(m_sound_accounts[account_num].stream_file_path.c_str());
 	}
-	else if(m_state == IMSoundPlayerState::PLAYING)
+	else
 	{
-		//play updated buffers of sources
-		audioPlayer.PlayMultipleUpdatedPlayerBuffers(&soundproducertracks_sources_vector);
+		/*
+		
+		//buffer audio for all sound producer sources with buffers
+		for(size_t i=0; i < soundProducerTracks_vec->size(); i++)
+		{
+			//ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer& audioPlayer)
+		}
+
+		//play all sources in sync
+		if(m_state == IMSoundPlayerState::NONE)
+		{
+			//start play the sources
+			mainAudioPlayer.PlayMultipleSources(&soundproducertracks_sources_vector);
+		}
+		else if(m_state == IMSoundPlayerState::PLAYING)
+		{
+			//play updated buffers of sources
+			mainAudioPlayer.PlayMultipleUpdatedPlayerBuffers(&soundproducertracks_sources_vector);
+		}
+		
+		//buffering time is 500 milliseconds
+		m_current_time += 500;
+		*/
 	}
 	
-	//buffering time is 500 milliseconds
-	m_current_time += 500;
-	*/
 }
 
-void  ImmediateModeSoundPlayer::al_nssleep(unsigned long nsec)
+void ImmediateModeSoundPlayer::al_nssleep(unsigned long nsec)
 {
     struct timespec ts, rem;
     ts.tv_sec = nsec / 1000000000ul;
@@ -52,11 +68,11 @@ void  ImmediateModeSoundPlayer::al_nssleep(unsigned long nsec)
     while(nanosleep(&ts, &rem) == -1 && errno == EINTR){ts = rem;}
 }
 
-void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr)
+void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer& audioPlayer)
 {
 	if(sourceToManipulatePtr != nullptr)
 	{
-	
+		
 		//get current state and do things differently depending on current state
 		switch(m_state)
 		{
@@ -130,4 +146,13 @@ void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr
 	
 	//switch to player playing state
 	m_state = IMSoundPlayerState::PLAYING; 
+}
+
+void ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(size_t num_producers)
+{
+	if(num_producers != buffering_audio_players_vec.size())
+	{
+		buffering_audio_players_vec.clear();
+		buffering_audio_players_vec.resize(num_producers);
+	}
 }

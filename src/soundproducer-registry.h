@@ -5,7 +5,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include <list>
+#include <vector>
 
 //class to contain map of sound producer pointers and their keys
 
@@ -22,7 +22,7 @@ public:
 	void RemoveSoundProducerFromRegistry(SoundProducer* thisSoundProducer);
 	
 	//function to return list of sound producers to edit
-	wxArrayString& GetSoundProducersToEditList();
+	std::vector <std::string>& GetSoundProducersToEditList();
 	
 	//function to remove a name from the list of sound producers to edit
 	//use if a name is already being edited by a track
@@ -35,19 +35,7 @@ public:
 	//function to add all names of soundproducers in map to editor list
 	//use with RemoveThisNameFromEditingList to get back a soundproducer to editing list after it is not edited in soundproducer track
 	void AddAllSoundProducersToEditingList(); 
-	
-	//function to add reference to combo box to combo_box_ptr_vec
-	void AddReferenceToComboBox(wxComboBox* thisComboBox);
-	
-	//function to remove a combo box pointer from container, use when soundproducer track is removed
-	void RemoveLastComboBoxReference();
-	
-	//function to update all comboboxes list, used for updating list after removal of a selection that is being edited by a soundproducer track
-	void UpdateAllComboBoxesList();
-	
-	//function to remove a string name from all combo boxes except for one
-	void RemoveThisNameFromAllComboBoxesExceptThisOne(std::string thisName, wxComboBox* thisCombobox);
-	
+
 	//function to clear all names from registry
 	void ClearAllSoundproducerNames();
 	
@@ -62,17 +50,16 @@ public:
 private:
 
 	//list of names for combo box
-	wxArrayString soundproducers_to_edit_wxstring;
+	std::vector <std::string> soundproducers_to_edit_string;
 	
 	//pointer to vector of sound producers to edit
 	std::vector <std::unique_ptr <SoundProducer> > *sound_producer_vector_ref; 
 	
 	//vector of pointers to combo boxes
 	//used to update all combo boxes
-	std::vector <wxComboBox*> combo_box_ptr_vec;
+	//std::vector <wxComboBox*> combo_box_ptr_vec;
 	
-	//dictionary to keep track of which wxstring associated with index
-	//std::unordered_map <std::string, std::vector <std::unique_ptr <SoundProducer> >::iterator> map_soundproducer;
+	//dictionary to keep track of which string associated with index
 	std::unordered_map <std::string, size_t> map_soundproducer; 
 	
 	std::vector <ALuint*> sound_producer_sources_vec;

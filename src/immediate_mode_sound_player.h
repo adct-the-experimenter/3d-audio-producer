@@ -14,6 +14,8 @@ public:
 	//draw gui elements
 	void DrawGui_Item();
 	
+	void SetPointerToSoundBank(SoundBank* soundbank_ptr);
+	
 	enum class IMSoundPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, REWINDING, FAST_FORWARDING };
 	
 private:
@@ -32,12 +34,21 @@ private:
 	
 	//thread for effect
 	
-	void LoadBufferStreaming(ALuint* sourceToManipulatePtr);
+	void InitAudioPlayersForEachSoundProducer(size_t num_producers);
 	
-	OpenALSoftPlayer audioPlayer;
+	//function to load buffer for
+	//must call open streaming files before this.
+	void LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer& audioPlayer);
+	
+	OpenALSoftPlayer mainAudioPlayer;
+	
+	std::vector <OpenALSoftPlayer> buffering_audio_players_vec;
+	
 	double m_current_time;
 	
 	void al_nssleep(unsigned long nsec);
+	
+	SoundBank* m_sound_bank_ptr;
 };
 
 #endif

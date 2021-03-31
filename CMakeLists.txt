@@ -54,7 +54,7 @@ set(SOURCES src/main.cpp
 			#src/soundproducer-track-manager.cpp
 			#src/soundproducer-track.cpp
 			#src/listener-track.cpp
-			#src/soundproducer-registry.cpp
+			src/soundproducer-registry.cpp
 			src/immediate_mode_sound_player.cpp src/sound_bank.cpp
 			src/CreateSoundProducerDialog.cpp #src/EditMultipleSoundProducersDialog.cpp 
 			#src/Change-HRTF-Dialog.cpp src/HRTF-Test-Dialog.cpp 
@@ -71,7 +71,7 @@ set(SOURCES src/main.cpp
 			#src/timeline-track-editor/src/mono-audio-track.cpp
 			#src/timeline-track-editor/src/audio-track.cpp
 			#src/timeline-track-editor/src/audio-graph.cpp
-			#src/timeline-track-editor/src/audio-stream-container.cpp
+			src/timeline-track-editor/src/audio-stream-container.cpp
 			src/timeline-track-editor/src/openalsoft-player.cpp
 			#src/timeline-track-editor/src/double-track.cpp
 			#src/timeline-track-editor/src/editor-graph.cpp

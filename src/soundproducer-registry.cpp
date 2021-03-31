@@ -1,18 +1,3 @@
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifdef WIN32
-#include <winsock2.h>
-#endif
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
-
 #include "soundproducer-registry.h"
 
 
@@ -34,7 +19,7 @@ SoundProducer* SoundProducerRegistry::GetPointerToSoundProducerWithThisName(std:
 	return sound_producer_vector_ref->at(index).get();
 }
 
-wxArrayString& SoundProducerRegistry::GetSoundProducersToEditList(){return soundproducers_to_edit_wxstring;}
+std::vector <std::string>& SoundProducerRegistry::GetSoundProducersToEditList(){return soundproducers_to_edit_string;}
 
 void SoundProducerRegistry::AddRecentSoundProducerMadeToRegistry()
 {
@@ -55,9 +40,9 @@ void SoundProducerRegistry::AddRecentSoundProducerMadeToRegistry()
 
 			if(thisSoundProducer != nullptr)
 			{
-				wxString thisString(thisSoundProducer->GetNameString());
+				std::string thisString = thisSoundProducer->GetNameString();
 
-				soundproducers_to_edit_wxstring.Add(thisString);
+				soundproducers_to_edit_string.push_back(thisString);
 
 				map_soundproducer.emplace(thisSoundProducer->GetNameString(),index);
 			}
@@ -70,8 +55,9 @@ void SoundProducerRegistry::AddRecentSoundProducerMadeToRegistry()
 
 void SoundProducerRegistry::RemoveSoundProducerFromRegistry(SoundProducer* thisSoundProducer)
 {
-	wxString thisString(thisSoundProducer->GetNameString());
-	soundproducers_to_edit_wxstring.Remove(thisString);
+	std::string thisString = thisSoundProducer->GetNameString();
+	
+	//soundproducers_to_edit_string.Remove(thisString);
 
 	//get index of sound producer to remove
 	size_t index_to_rm  = 0;
@@ -95,85 +81,39 @@ void SoundProducerRegistry::RemoveSoundProducerFromRegistry(SoundProducer* thisS
 
 void SoundProducerRegistry::RemoveThisNameFromEditingList(std::string thisName)
 {
-	soundproducers_to_edit_wxstring.Remove(thisName);
+	//soundproducers_to_edit_string.Remove(thisName);
 }
 
 
 void SoundProducerRegistry::AddThisNameToEditingList(std::string thisName)
 {
-	soundproducers_to_edit_wxstring.Add(thisName);
+	//soundproducers_to_edit_string.Add(thisName);
 }
 
 void SoundProducerRegistry::AddAllSoundProducersToEditingList()
 {
 	if(sound_producer_vector_ref != nullptr)
 	{
-		soundproducers_to_edit_wxstring.Clear();
+		soundproducers_to_edit_string.clear();
 		for(size_t i=0; i < sound_producer_vector_ref->size(); i++)
 		{
-			wxString thisString(sound_producer_vector_ref->at(i)->GetNameString());
+			std::string thisString = sound_producer_vector_ref->at(i)->GetNameString();
 
-			soundproducers_to_edit_wxstring.Add(thisString);
+			soundproducers_to_edit_string.push_back(thisString);
 		}
 	}
 
 }
 
-void SoundProducerRegistry::AddReferenceToComboBox(wxComboBox* thisComboBox)
-{
-	combo_box_ptr_vec.push_back(thisComboBox);
-}
-
-void SoundProducerRegistry::RemoveLastComboBoxReference()
-{
-	combo_box_ptr_vec.pop_back();
-}
-
-void SoundProducerRegistry::UpdateAllComboBoxesList()
-{
-	for(size_t i=0; i < combo_box_ptr_vec.size(); i++)
-	{
-		wxString currentNameSelected = combo_box_ptr_vec[i]->GetStringSelection();
-
-		combo_box_ptr_vec[i]->Clear();
-		combo_box_ptr_vec[i]->Append(soundproducers_to_edit_wxstring);
-
-		int select_index = combo_box_ptr_vec[i]->FindString(currentNameSelected,true); //case sensitive = true
-		combo_box_ptr_vec[i]->SetSelection(select_index);
-	}
-}
-
-void SoundProducerRegistry::RemoveThisNameFromAllComboBoxesExceptThisOne(std::string thisName, wxComboBox* thisComboBox)
-{
-	SoundProducerRegistry::AddAllSoundProducersToEditingList();
-
-	SoundProducerRegistry::RemoveThisNameFromEditingList(thisName);
-
-	for(size_t i=0; i < combo_box_ptr_vec.size(); i++)
-	{
-		if(combo_box_ptr_vec[i] != thisComboBox)
-		{
-			wxString currentSelectionString = combo_box_ptr_vec[i]->GetStringSelection();
-
-			combo_box_ptr_vec[i]->Clear();
-			combo_box_ptr_vec[i]->Append(soundproducers_to_edit_wxstring);
-
-			int select_index = combo_box_ptr_vec[i]->FindString(currentSelectionString,true); //case sensitive = true
-			combo_box_ptr_vec[i]->SetSelection(select_index);
-		}
-	}
-}
 
 void SoundProducerRegistry::ClearAllSoundproducerNames()
 {
-	soundproducers_to_edit_wxstring.clear();
-	
+	soundproducers_to_edit_string.clear();	
 }
 
 void SoundProducerRegistry::ClearAll()
 {
-	soundproducers_to_edit_wxstring.clear();
-	combo_box_ptr_vec.clear();
+	soundproducers_to_edit_string.clear();
 }
 
 void SoundProducerRegistry::AddSourceOfLastSoundProducerToSoundProducerRegistry()
