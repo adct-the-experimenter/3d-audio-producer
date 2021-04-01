@@ -17,9 +17,13 @@ std::string DATADIR_STR = DATADIR_NAME;
 
 #include <unistd.h>
 
-#undef RAYGUI_IMPLEMENTATION
-
 #include "raygui/raygui.h"
+
+#include "raygui/gui_file_dialog.h"
+
+#include <cstring>
+
+GuiFileDialogState fileDialogState;
 
 SoundBank::SoundBank()
 {
@@ -44,6 +48,9 @@ SoundBank::SoundBank()
 		m_sound_accounts[i].stream_file_path = filepath_stream;
 	}
 	
+	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+	fileDialogState.position = {200,200};
+	
 }
 
 struct TextBoxParam
@@ -53,6 +60,10 @@ struct TextBoxParam
 };
 
 std::array <TextBoxParam,10> name_textboxes;
+
+std::array <std::string,10> filepath_textboxes;
+char fileNameToLoad[512] = { 0 };
+std::uint8_t current_file_button_edit = 0;
 
 void SoundBank::DrawGui_Item()
 {
@@ -74,6 +85,43 @@ void SoundBank::DrawGui_Item()
 		}
 			
 	}
+	
+	
+	
+	
+	if (fileDialogState.SelectFilePressed)
+	{
+		// Load image file (if supported extension)
+		if (IsFileExtension(fileDialogState.fileNameText, ".wav") || IsFileExtension(fileDialogState.fileNameText, ".flac"))
+		{
+			strcpy(fileNameToLoad, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+			std::string filepath = std::string(fileNameToLoad);
+			filepath_textboxes[current_file_button_edit] = filepath;
+			std::cout << "filepath in main gui editor: " << filepath << std::endl;
+			//load audio data
+			SoundBank::LoadAudioDataFromFileToAccount(filepath,current_file_button_edit);
+		}
+
+		fileDialogState.SelectFilePressed = false;
+	}
+	
+	if (fileDialogState.fileDialogActive){ GuiLock();}
+	
+	for(std::uint8_t i = 0; i < 10; i++)
+	{
+		//draw open file button
+		if( GuiButton( (Rectangle){ 750,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
+		{
+			current_file_button_edit = i;
+			fileDialogState.fileDialogActive = true; //activate file dialog
+			break; //stop loop
+		}
+	}
+	
+	GuiUnlock();
+	
+	//if clicked on call GuiFileDialog menu
+	GuiFileDialog(&fileDialogState);
 	
 	
 }

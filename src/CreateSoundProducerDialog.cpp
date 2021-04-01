@@ -1,6 +1,5 @@
 #include "CreateSoundProducerDialog.h"
 
-#undef RAYGUI_IMPLEMENTATION
 
 #include "raygui/raygui.h"
 
