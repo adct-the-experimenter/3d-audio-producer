@@ -8,7 +8,7 @@
 
 
 #ifndef DATADIR
-    #define DATADIR "../src/timeline-track-editor/resources/"
+    #define DATADIR "../data/resources/"
 #endif
 
 #define DATADIR_NAME STR(DATADIR)
@@ -31,9 +31,13 @@ SoundBank::SoundBank()
 		std::string datadir; 
 	
 		datadir = DATADIR_STR;
+		if(datadir == "")
+		{
+			datadir = "../data/resources/";
+		}
 		
 		#ifdef WIN32
-		datadir = "../src/timeline-track-editor/resources/";
+		datadir = "../data/resources/";
 		#endif
 		
 		std::string filepath_stream = datadir + "stream-file" + std::to_string(i) + ".wav";
@@ -68,10 +72,9 @@ void SoundBank::DrawGui_Item()
 			name_textboxes[i].name_box_pressed = !name_textboxes[i].name_box_pressed;
 			SoundBank::ChangeSoundNameForAccount( i , std::string(name_textboxes[i].char_name) );
 		}
-		
-		
-		
+			
 	}
+	
 	
 }
 
@@ -82,7 +85,7 @@ void SoundBank::ChangeSoundNameForAccount(std::uint8_t account_num,std::string n
 }
 	
 //used for querying sound
-std::array <std::string,10> *SoundBank::GetAccountLookupTable(){return & account_look_up;}
+std::array <std::string,10> &SoundBank::GetAccountLookupTable(){return account_look_up;}
 
 #define	BUFFER_LEN	1024
 #define	MAX_CHANNELS	2

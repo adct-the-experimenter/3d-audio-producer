@@ -5,13 +5,17 @@
 #include "raygui/raygui.h"
 
 
-
 CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 {
 	xPosition = 0.0; yPosition = 0.0; zPosition = 0.0;
 	okClicked = false; cancelClicked = false;
 	tempFreeRoamBool = false;
+	m_sound_bank_ptr = nullptr;
+	sound_choices = "";
 }
+
+
+void CreateSoundProducerDialog::SetPointerToSoundBank(SoundBank* thisSoundBank){m_sound_bank_ptr = thisSoundBank;}
 
 int x_value = 0;
 bool x_box_pressed = false;
@@ -19,16 +23,21 @@ int y_value = 0;
 bool y_box_pressed = false;
 int z_value = 0;
 bool z_box_pressed = false;
+std::uint8_t account_num;
 
 char char_name[20] = "name here";
 bool name_box_pressed = false;
 
 bool free_roam_box_stat = false;
 
+bool dropDownSoundMode = false;
+int dropDownSoundActive = 0;
+
+
 void CreateSoundProducerDialog::DrawDialog()
 {
 	
-	bool exit = GuiWindowBox((Rectangle){300,100,400,400},"Create Sound Producer");
+	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Create Sound Producer");
 	
 	if(exit){cancelClicked = true;}
 	
@@ -53,9 +62,17 @@ void CreateSoundProducerDialog::DrawDialog()
 	
 	free_roam_box_stat = GuiCheckBox((Rectangle){ 400, 400, 20, 20 }, "Free Roam:", free_roam_box_stat);
 	
-	okClicked = GuiButton( (Rectangle){ 400, 450, 70, 30 }, GuiIconText(0, "OK") );
+	if(m_sound_bank_ptr)
+	{
+		if( GuiDropdownBox((Rectangle){ 400,400,140,30 }, sound_choices.c_str(), &dropDownSoundActive, dropDownSoundMode) )
+		{
+			dropDownSoundMode = !dropDownSoundMode;
+		}
+	}
 	
-	cancelClicked = GuiButton( (Rectangle){ 500, 450, 70, 30 }, GuiIconText(0, "Cancel") );
+	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
+	
+	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
 	if(exit){cancelClicked = true;}
 	
 	if(okClicked)
@@ -65,6 +82,7 @@ void CreateSoundProducerDialog::DrawDialog()
 		yPosition = (double)y_value;
 		zPosition = (double)z_value;
 		tempFreeRoamBool = free_roam_box_stat;
+		sound_bank_account_num = account_num;
 	}
 }
 
@@ -93,7 +111,28 @@ void CreateSoundProducerDialog::resetConfig()
 	x_value = 0;
 	y_value = 0;
 	z_value = 0;
+	sound_bank_account_num = 0;
 	okClicked = false;
 	cancelClicked = false;
 	tempFreeRoamBool = false;
+	
+}
+
+void CreateSoundProducerDialog::InitSoundBankChoices()
+{
+	
+	if(m_sound_bank_ptr)
+	{
+		//clear previous sound choices
+		sound_choices = "";
+		
+		//put choices into specific format
+		std::array <std::string,10> account_look_up = m_sound_bank_ptr->GetAccountLookupTable();
+		
+		for(size_t i = 0; i < account_look_up.size(); i++ )
+		{
+			sound_choices += std::to_string(i) + " | " + account_look_up[i] + ";";
+		}
+		
+	}
 }

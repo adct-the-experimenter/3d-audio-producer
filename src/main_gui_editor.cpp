@@ -32,11 +32,13 @@
 bool init_listener_once = false;
 
 GuiFileDialogState fileDialogState;
+CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
 
 MainGuiEditor::MainGuiEditor()
 {
 	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
 	fileDialogState.position = {200,200};
+	
 }
 
 MainGuiEditor::~MainGuiEditor()
@@ -301,11 +303,12 @@ void MainGuiEditor::HandleEvents()
 
 void MainGuiEditor::DrawGUI_Items()
 {
-	//draw object creation/edit menu
-	MainGuiEditor::draw_object_creation_menu();
 	
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
+	
+	//draw object creation/edit menu
+	MainGuiEditor::draw_object_creation_menu();
 	
 	//active sound producer dropdown box
 	
@@ -318,7 +321,6 @@ bool dropDownObjectTypeMode = false;
 int dropDownObjectTypeActive = 0;
 bool objectManipulationState = false;
 
-CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
 
 //state 
 enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER };
@@ -354,6 +356,9 @@ void MainGuiEditor::draw_object_creation_menu()
 		//if create object button clicked on
 		if(createObjectClicked)
 		{
+			create_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+			create_sp_dialog.InitSoundBankChoices();
+			
 			switch(dropDownObjectTypeActive)
 			{
 				//sound producer
@@ -412,6 +417,7 @@ void MainGuiEditor::draw_object_creation_menu()
 
 std::array <std::string,10> filepath_textboxes;
 char fileNameToLoad[512] = { 0 };
+std::uint8_t current_file_button_edit = 0;
 
 void MainGuiEditor::draw_sound_bank()
 {
@@ -419,7 +425,7 @@ void MainGuiEditor::draw_sound_bank()
 	GuiDrawText("Sound Bank", (Rectangle){625,50,125,20}, 1, BLACK);
 	GuiDrawText("Sound Name", (Rectangle){625,70,125,20}, 1, BLACK);
 	GuiDrawText("File", (Rectangle){700,70,125,20}, 1, BLACK);
-	m_sound_bank.DrawGui_Item();
+	
 	
 	if (fileDialogState.SelectFilePressed)
 	{
@@ -427,11 +433,16 @@ void MainGuiEditor::draw_sound_bank()
 		if (IsFileExtension(fileDialogState.fileNameText, ".wav") || IsFileExtension(fileDialogState.fileNameText, ".flac"))
 		{
 			strcpy(fileNameToLoad, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-			
+			std::string filepath = std::string(fileNameToLoad);
+			filepath_textboxes[current_file_button_edit] = filepath;
+			std::cout << "filepath in main gui editor: " << filepath << std::endl;
+			//load audio data
+			m_sound_bank.LoadAudioDataFromFileToAccount(filepath,current_file_button_edit);
 		}
 
 		fileDialogState.SelectFilePressed = false;
 	}
+	
 	if (fileDialogState.fileDialogActive){ GuiLock();}
 	
 	for(std::uint8_t i = 0; i < 10; i++)
@@ -439,14 +450,18 @@ void MainGuiEditor::draw_sound_bank()
 		//draw open file button
 		if( GuiButton( (Rectangle){ 750,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
 		{
+			current_file_button_edit = i;
 			fileDialogState.fileDialogActive = true; //activate file dialog
 			break; //stop loop
 		}
 	}
 	
 	GuiUnlock();
-	//if clicked on call GuiFIleDialog menu
+	
+	//if clicked on call GuiFileDialog menu
 	GuiFileDialog(&fileDialogState);
+	
+	m_sound_bank.DrawGui_Item();
 	
 }
 

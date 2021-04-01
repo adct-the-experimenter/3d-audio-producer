@@ -140,3 +140,7 @@ void SoundProducer::DrawModel()
 {
 	DrawCube(producer_position,2.0f, 2.0f, 2.0f, RED);
 }
+
+void SoundProducer::SetAccountNumber(std::uint8_t num){account_number = num;}
+
+std::uint8_t SoundProducer::GetAccountNumber(){return account_number;}

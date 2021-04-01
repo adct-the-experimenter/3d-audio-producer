@@ -27,6 +27,8 @@ struct SoundProducerSaveData
 	double y;
 	double z;
 	
+	//account number from sound bank
+	std::uint8_t account_number;
 };
 
 
@@ -63,6 +65,9 @@ public:
 	void SetFreeRoamBool(bool state);
 	bool GetFreeRoamBool();
 	
+	void SetAccountNumber(std::uint8_t num);
+	std::uint8_t GetAccountNumber();
+	
 	void DrawModel();
 	
 private:
@@ -87,6 +92,10 @@ private:
 
 	//option for allowing sound producer to be moved by keys
 	bool freeRoam;
+	
+	//account number from sound bank. 
+	//Tells sound player which file to buffer to source of sound producer
+	std::uint8_t account_number;
 
 };
 

@@ -34,7 +34,7 @@ public:
 	void LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t account_num);
 	
 	//used for querying sound
-	std::array <std::string,10> *GetAccountLookupTable();
+	std::array <std::string,10> &GetAccountLookupTable();
 		
 	friend class ImmediateModeSoundPlayer;
 	

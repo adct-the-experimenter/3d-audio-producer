@@ -6,7 +6,7 @@ MainGuiEditor editor;
 
 
 
-const std::int16_t screenWidth = 800;
+const std::int16_t screenWidth = 850;
 const std::int16_t screenHeight = 600;
 
 void InitRaylibSystem();
