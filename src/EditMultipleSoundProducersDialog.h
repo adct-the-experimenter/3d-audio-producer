@@ -3,73 +3,56 @@
 
 #include <memory>
 
+#include "sound_bank.h"
 #include "soundproducer.h"
 
 #include "openalsoftaudioengine.h" //for loading buffer and creating source of sound producer
 
-class EditMultipleSoundProducersDialog : public wxDialog
+#include <string>
+
+class EditMultipleSoundProducersDialog
 {
 
 public:
-	EditMultipleSoundProducersDialog(const wxString& title,
-									std::vector <std::unique_ptr <SoundProducer>> *sound_producer_vector,
-									OpenAlSoftAudioEngine* audioEngine);
-
-
-	void OnOk(wxCommandEvent& event );
-
-	void OnCancel(wxCommandEvent& event);
-
-	void onApply(wxCommandEvent& event);
-
-	void OnBrowse(wxCommandEvent& event);
-
-	void Exit();
-
-	enum
-	{
-		ID_OK = wxID_HIGHEST + 1,
-		ID_APPLY,
-		ID_CANCEL,
-		ID_RENAME,
-		ID_LISTBOX
-	};
-
+	EditMultipleSoundProducersDialog(const std::string& title);
+	
+	void Init(std::vector <std::unique_ptr <SoundProducer>> *sound_producer_vector);
+	
+	void DrawDialog();
 
 	bool OkClickedOn();
-
+	bool CancelClickedOn();
+	
+	void SetPointerToSoundBank(SoundBank* thisSoundBank);
+	
+	//function to put choices for sound dropdown box
+	void InitSoundBankChoices();
+	
+	void resetConfig();
+	
 private:
 
 	std::vector <std::unique_ptr <SoundProducer> > *sound_producer_vector_ref; //pointer to vector of sound producers to edit
-
-	wxButton* okButton;
-	wxButton* cancelButton;
-	wxButton* applyButton;
-
-	wxTextCtrl* textFieldX;
-	wxTextCtrl* textFieldY;
-	wxTextCtrl* textFieldZ;
-
-	wxListBox* listbox;
-
-	OpenAlSoftAudioEngine* ptrAudioEngine;
-	wxTextCtrl* textFieldSoundFilePath;
-	wxButton* browseButton;
-	std::string soundFilePath;
-	ALuint buffer;
 	
-	wxCheckBox* checkBoxFreeRoam;
-	bool tempFreeRoamBool; 
-
-	void initPrivateVariables();
-
 	bool okClicked; //bool to indicate if ok button was clicked on
-
+	bool cancelClicked;
+	
+	void SoundProducerSelectedInListBox(size_t choice);
 	void ChangeSoundProducerAttributes();
+	
+	//sound producer attributes
+	std::string name;
+	double xPosition;
+	double yPosition;
+	double zPosition;
+	bool tempFreeRoamBool;
+	std::uint8_t sound_bank_account_num;
 
-	void SoundProducerSelectedInListBox(wxCommandEvent& event );
-
-	DECLARE_EVENT_TABLE()
+	//index of the current sound producer being edited
+	size_t current_sound_producer_editing_index;
+	
+	SoundBank* m_sound_bank_ptr;
+	std::string sound_choices;
 
 };
 

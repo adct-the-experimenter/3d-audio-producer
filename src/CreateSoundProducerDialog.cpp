@@ -116,7 +116,6 @@ void CreateSoundProducerDialog::resetConfig()
 	okClicked = false;
 	cancelClicked = false;
 	tempFreeRoamBool = false;
-	sound_bank_account_num = 0;
 }
 
 void CreateSoundProducerDialog::InitSoundBankChoices()

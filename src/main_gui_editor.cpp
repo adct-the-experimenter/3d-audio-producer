@@ -9,13 +9,14 @@
 #undef RAYGUI_IMPLEMENTATION
 
 #include "CreateSoundProducerDialog.h"
+#include "EditMultipleSoundProducersDialog.h"
 
 #include "immediate_mode_sound_player.h"
 
 #define GUI_FILE_DIALOG_IMPLEMENTATION
 #include "raygui/gui_file_dialog.h"
 
-//#include "EditMultipleSoundProducersDialog.h"
+
 //#include "HRTF-Test-Dialog.h"
 //#include "Change-HRTF-Dialog.h"
 //#include "EditListenerDialog.h"
@@ -36,11 +37,12 @@ bool init_listener_once = false;
 //Gui items to initialize
 
 CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
 ImmediateModeSoundPlayer im_sound_player;
 
 MainGuiEditor::MainGuiEditor()
 {
-	
+	edit_sp_dialog.Init(&sound_producer_vector);
 	
 }
 
@@ -333,7 +335,7 @@ bool objectManipulationState = false;
 
 
 //state 
-enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER };
+enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -386,7 +388,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			{
 				
 				//sound producer
-				case 1:{break;}
+				case 1:{ g_state = GuiState::EDIT_SOUND_PRODUCER; break;}
 				//standard reverb zone
 				case 2:{break;}
 				default:{break;}
@@ -422,10 +424,27 @@ void MainGuiEditor::draw_object_creation_menu()
 			
 			break;
 		}
+		case GuiState::EDIT_SOUND_PRODUCER:
+		{
+			edit_sp_dialog.DrawDialog();
+			
+			if(edit_sp_dialog.OkClickedOn())
+			{						
+				g_state = GuiState::NONE;
+				edit_sp_dialog.resetConfig();
+			}
+			
+			if(edit_sp_dialog.CancelClickedOn())
+			{
+				g_state = GuiState::NONE;
+				edit_sp_dialog.resetConfig();
+			}
+			
+			break;
+		}
 		default:{ break;}
 	}
 }
-
 
 
 void MainGuiEditor::draw_sound_bank()
