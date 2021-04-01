@@ -56,6 +56,9 @@ private:
 	SoundBank* m_sound_bank_ptr;
 	
 	SoundProducerRegistry* m_sound_producer_reg_ptr;
+	
+	//amonut of time to increment for playback
+	double time_res_seconds;
 };
 
 #endif
