@@ -3,6 +3,7 @@
 
 #include "sound_bank.h"
 #include "openalsoft-player.h"
+#include "soundproducer-registry.h"
 
 class ImmediateModeSoundPlayer
 {
@@ -11,10 +12,14 @@ public:
 	ImmediateModeSoundPlayer();
 	~ImmediateModeSoundPlayer();
 	
+	void RunStateForPlayer();
+	
 	//draw gui elements
 	void DrawGui_Item();
 	
 	void SetPointerToSoundBank(SoundBank* soundbank_ptr);
+	
+	void SetPointerToSoundProducerRegistry(SoundProducerRegistry* sound_producer_reg);
 	
 	enum class IMSoundPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, REWINDING, FAST_FORWARDING };
 	
@@ -49,6 +54,8 @@ private:
 	void al_nssleep(unsigned long nsec);
 	
 	SoundBank* m_sound_bank_ptr;
+	
+	SoundProducerRegistry* m_sound_producer_reg_ptr;
 };
 
 #endif

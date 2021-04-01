@@ -1,11 +1,16 @@
 #include "immediate_mode_sound_player.h"
 
+#undef RAYGUI_IMPLEMENTATION
 
+#include "raygui/raygui.h"
 
 ImmediateModeSoundPlayer::ImmediateModeSoundPlayer()
 {
 	m_state = IMSoundPlayerState::NONE;
 	m_current_time = 0;
+	
+	m_sound_bank_ptr = nullptr;
+	m_sound_producer_reg_ptr = nullptr;
 }
 
 ImmediateModeSoundPlayer::~ImmediateModeSoundPlayer()
@@ -15,8 +20,41 @@ ImmediateModeSoundPlayer::~ImmediateModeSoundPlayer()
 
 void ImmediateModeSoundPlayer::SetPointerToSoundBank(SoundBank* soundbank_ptr){m_sound_bank_ptr = soundbank_ptr;}
 
+void ImmediateModeSoundPlayer::SetPointerToSoundProducerRegistry(SoundProducerRegistry* sound_producer_reg){m_sound_producer_reg_ptr = sound_producer_reg;}
+
+void ImmediateModeSoundPlayer::RunStateForPlayer()
+{
+	switch(m_state)
+	{
+		case IMSoundPlayerState::NONE:{ break;}
+		case IMSoundPlayerState::PLAYING:{ ImmediateModeSoundPlayer::PlayAll(); break;}
+		case IMSoundPlayerState::PAUSED:{ break;}
+		case IMSoundPlayerState::FAST_FORWARDING:{ break;}
+		case IMSoundPlayerState::REWINDING:{ break;}
+	}
+}
+
 void ImmediateModeSoundPlayer::DrawGui_Item()
 {
+	//draw play button
+	if(GuiButton( (Rectangle){ 350, 50, 50, 30 }, GuiIconText(0, "Play") ))
+	{
+		m_state = IMSoundPlayerState::PLAYING;
+	}
+	
+	//draw pause button
+	if(GuiButton( (Rectangle){ 400, 50, 50, 30 }, GuiIconText(0, "Stop") ))
+	{
+		ImmediateModeSoundPlayer::PauseAll();
+		m_state = IMSoundPlayerState::PAUSED;
+	}
+	
+	//draw stop button
+	if(GuiButton( (Rectangle){ 450, 50, 50, 30 }, GuiIconText(0, "Pause") ))
+	{
+		ImmediateModeSoundPlayer::StopAll();
+		m_state = IMSoundPlayerState::NONE;
+	}
 	
 }
 
@@ -24,40 +62,69 @@ void ImmediateModeSoundPlayer::PlayAll()
 {
 	if(m_state == IMSoundPlayerState::NONE)
 	{
-		m_current_time = 0;
 		
-		//initialize audio players for each sound producer
-		//ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(size_t num_producers)
-		//open each streaming file and get necessary info
-		//audioPlayer.OpenPlayerFile(m_sound_accounts[account_num].stream_file_path.c_str());
+		if(m_sound_producer_reg_ptr && m_sound_bank_ptr)
+		{
+			//initialize audio players for each sound producer
+			size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
+			ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(num_producers);
+			
+			//open streaming file linked to sound bank account of sound producers
+			for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
+			{
+				std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+				std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
+				
+				if(stream_filepath != "")
+				{
+					buffering_audio_players_vec[it].OpenPlayerFile(stream_filepath.c_str());
+				}
+				
+			}
+			
+		}
+		
 	}
 	else
 	{
-		/*
 		
-		//buffer audio for all sound producer sources with buffers
-		for(size_t i=0; i < soundProducerTracks_vec->size(); i++)
+		//buffer audio for all sound producer sources with buffer audio players
+		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 		{
-			//ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer& audioPlayer)
+			ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
+			ImmediateModeSoundPlayer::LoadBufferStreaming(sourceToManipulatePtr,buffering_audio_players_vec[it]);
 		}
 
 		//play all sources in sync
 		if(m_state == IMSoundPlayerState::NONE)
 		{
 			//start play the sources
-			mainAudioPlayer.PlayMultipleSources(&soundproducertracks_sources_vector);
+			mainAudioPlayer.PlayMultipleSources(&m_sound_producer_reg_ptr->sound_producer_sources_vec);
 		}
 		else if(m_state == IMSoundPlayerState::PLAYING)
 		{
 			//play updated buffers of sources
-			mainAudioPlayer.PlayMultipleUpdatedPlayerBuffers(&soundproducertracks_sources_vector);
+			mainAudioPlayer.PlayMultipleUpdatedPlayerBuffers(&m_sound_producer_reg_ptr->sound_producer_sources_vec);
 		}
 		
 		//buffering time is 500 milliseconds
 		m_current_time += 500;
-		*/
+		
 	}
 	
+}
+
+//pause playing sounds
+void ImmediateModeSoundPlayer::PauseAll()
+{
+	mainAudioPlayer.PauseMultipleSources(&m_sound_producer_reg_ptr->sound_producer_sources_vec);
+}
+	
+//stop and restart all sounds
+void ImmediateModeSoundPlayer::StopAll()
+{
+	mainAudioPlayer.StopMultipleSources(&m_sound_producer_reg_ptr->sound_producer_sources_vec);
+	m_current_time = 0;
 }
 
 void ImmediateModeSoundPlayer::al_nssleep(unsigned long nsec)

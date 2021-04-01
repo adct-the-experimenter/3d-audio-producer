@@ -10,6 +10,8 @@
 
 #include "CreateSoundProducerDialog.h"
 
+#include "immediate_mode_sound_player.h"
+
 #define GUI_FILE_DIALOG_IMPLEMENTATION
 #include "raygui/gui_file_dialog.h"
 
@@ -31,8 +33,10 @@
 
 bool init_listener_once = false;
 
+//Gui items to initialize
 GuiFileDialogState fileDialogState;
 CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+ImmediateModeSoundPlayer im_sound_player;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -104,6 +108,8 @@ bool MainGuiEditor::OnInit()
 		//connect mainframe to openal soft audio engine
 		frame->SetAudioEngineReference(&audio_engine);
 		
+		
+		
 		//initialize effects manager
 		//effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager( frame->GetReferenceToSoundProducerTrackManager(), listener.get() ) );
 		
@@ -111,7 +117,8 @@ bool MainGuiEditor::OnInit()
 		
 		//connect mainframe to effects manager
 		//frame->SetEffectsManagerReference(effects_manager_ptr.get());
-		
+		im_sound_player.SetPointerToSoundBank(&m_sound_bank);
+	
 	}
 
 
@@ -310,6 +317,10 @@ void MainGuiEditor::DrawGUI_Items()
 	//draw object creation/edit menu
 	MainGuiEditor::draw_object_creation_menu();
 	
+	//draw immediate mode sound player
+	im_sound_player.RunStateForPlayer();
+	im_sound_player.DrawGui_Item();
+	
 	//active sound producer dropdown box
 	
 	//draw gui dropdownbox for choosing sound producer to manipulate with hot keys
@@ -397,7 +408,8 @@ void MainGuiEditor::draw_object_creation_menu()
 				double x,y,z;
 				create_sp_dialog.getNewPosition(x,y,z);
 				bool freeRoam = create_sp_dialog.getFreeRoamBool();
-				frame->CreateSoundProducer(name,x, y, z, freeRoam);
+				std::uint8_t account_num =  create_sp_dialog.getAccountNumber();
+				frame->CreateSoundProducer(name,x, y, z, freeRoam, account_num);
 									
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
@@ -488,6 +500,8 @@ MainFrame::MainFrame(const std::string& title,
 {
 	MainFrame::SetAudioEngineReference(thisAudioEngine);
 	
+	
+	im_sound_player.SetPointerToSoundProducerRegistry(&soundproducer_registry);
 	//create file menu item
 	
     //create help menu item
@@ -542,7 +556,7 @@ void MainFrame::SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundPr
 {
 	sound_producer_vector_ref = sound_producer_vector;
 
-	//soundproducer_registry.SetReferenceToSoundProducerVector(sound_producer_vector_ref);
+	soundproducer_registry.SetReferenceToSoundProducerVector(sound_producer_vector_ref);
 }
 
 void MainFrame::SetListenerReference(Listener* thisListener)
@@ -874,16 +888,17 @@ void MainFrame::OnCreateSoundProducer(wxCommandEvent& event)
 */
 
 void MainFrame::CreateSoundProducer(std::string& name,double& x, double& y, double& z, 
-									bool freeRoam)
+									bool freeRoam, std::uint8_t account_num)
 {
 	sound_producer_vector_ref->push_back( std::unique_ptr <SoundProducer>(new SoundProducer()) );
 
 	sound_producer_vector_ref->back()->InitSoundProducer(name,x,y,z);
 	sound_producer_vector_ref->back()->SetFreeRoamBool(freeRoam);
-	
+	sound_producer_vector_ref->back()->SetAccountNumber(account_num);
 
-	//soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
+	soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
 	
+	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
 	//m_sp_toolbar_combobox->Append(name);
 
 	//soundproducer_registry.UpdateAllComboBoxesList();

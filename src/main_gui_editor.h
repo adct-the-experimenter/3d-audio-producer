@@ -10,7 +10,7 @@
 #include "listener.h"
 //#include "listener-external.h"
 
-//#include "soundproducer-registry.h"
+#include "soundproducer-registry.h"
 
 
 #include "openalsoftaudioengine.h"
@@ -26,6 +26,7 @@
 
 //#include "SaveSystem.h"
 //#include "LoadSystem.h"
+
 
 #include <iostream>
 #include <memory> //for unique_ptr use
@@ -121,7 +122,7 @@ private:
 	
 	//void OnCreateSoundProducer(wxCommandEvent& event); //function for menu to create and place sound producer
 	
-	void CreateSoundProducer(std::string& name, double& x, double& y, double& z, bool freeRoam);
+	void CreateSoundProducer(std::string& name, double& x, double& y, double& z, bool freeRoam, std::uint8_t account_num);
 	
 	/*
 	void OnEditMultipleSoundProducers(wxCommandEvent& event); //function for menu to edit current available sound producers
@@ -141,7 +142,7 @@ private:
     void OnEditMultipleEchoZones(wxCommandEvent& event); //function for menu to edit current available echo zones
     */
     
-    //SoundProducerRegistry soundproducer_registry;
+    SoundProducerRegistry soundproducer_registry;
     
     //wxBoxSizer* m_add_rm_box_sizer;
     

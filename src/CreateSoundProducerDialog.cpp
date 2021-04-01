@@ -102,6 +102,8 @@ bool CreateSoundProducerDialog::CancelClickedOn(){ return cancelClicked;}
 
 bool CreateSoundProducerDialog::getFreeRoamBool(){return tempFreeRoamBool;}
 
+std::uint8_t CreateSoundProducerDialog::getAccountNumber(){return sound_bank_account_num;}
+
 void CreateSoundProducerDialog::resetConfig()
 {
 	xPosition = 0;
@@ -115,7 +117,7 @@ void CreateSoundProducerDialog::resetConfig()
 	okClicked = false;
 	cancelClicked = false;
 	tempFreeRoamBool = false;
-	
+	sound_bank_account_num = 0;
 }
 
 void CreateSoundProducerDialog::InitSoundBankChoices()

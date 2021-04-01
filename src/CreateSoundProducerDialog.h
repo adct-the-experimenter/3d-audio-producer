@@ -23,6 +23,8 @@ public:
 	
 	bool getFreeRoamBool();
 	
+	std::uint8_t getAccountNumber();
+	
 	void resetConfig();
 	
 	void SetPointerToSoundBank(SoundBank* thisSoundBank);

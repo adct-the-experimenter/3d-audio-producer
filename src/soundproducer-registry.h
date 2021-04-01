@@ -47,6 +47,8 @@ public:
 	
 	void RemoveSourceOfLastTrackFromSoundProducerTrackManager();
 	
+	friend class ImmediateModeSoundPlayer;
+	
 private:
 
 	//list of names for combo box
