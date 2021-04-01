@@ -74,14 +74,14 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 	}
 	
 	//draw pause button
-	if(GuiButton( (Rectangle){ 400, 50, 50, 30 }, GuiIconText(0, "Stop") ))
+	if(GuiButton( (Rectangle){ 400, 50, 50, 30 }, GuiIconText(0, "Pause") ))
 	{
 		if(m_state != IMSoundPlayerState::PAUSED){ImmediateModeSoundPlayer::PauseAll();}
 		m_state = IMSoundPlayerState::PAUSED;
 	}
 	
 	//draw stop button
-	if(GuiButton( (Rectangle){ 450, 50, 50, 30 }, GuiIconText(0, "Pause") ))
+	if(GuiButton( (Rectangle){ 450, 50, 50, 30 }, GuiIconText(0, "Stop") ))
 	{
 		ImmediateModeSoundPlayer::StopAll();
 		m_state = IMSoundPlayerState::NONE;
@@ -283,5 +283,10 @@ void ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(size_t num_p
 	{
 		buffering_audio_players_vec.clear();
 		buffering_audio_players_vec.resize(num_producers);
+		
+		for(size_t i = 0; i < buffering_audio_players_vec.size(); i++)
+		{
+			buffering_audio_players_vec[i].InitBuffersForStreaming();
+		}
 	}
 }
