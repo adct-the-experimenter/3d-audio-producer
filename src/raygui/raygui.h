@@ -1589,7 +1589,8 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
             framesCounter++;
 
             int keyCount = (int)strlen(textValue);
-
+			bool minus = false;
+			
             // Only allow keys in range [48..57]
             if (keyCount < VALUEBOX_MAX_CHARS)
             {
@@ -1602,6 +1603,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
                         keyCount++;
                         valueHasChanged = true;
                     }
+                    
                 }
             }
 
@@ -1626,7 +1628,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
             }
 
             if (valueHasChanged) *value = TextToInteger(textValue);
-
+			
             if (IsKeyPressed(KEY_ENTER) || (!CheckCollisionPointRec(mousePoint, bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) pressed = true;
         }
         else

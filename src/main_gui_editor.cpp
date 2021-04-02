@@ -169,7 +169,7 @@ void MainGuiEditor::Draw3DModels()
 	
 }
 
-float distanceToMove = 1.0f;
+float distanceToMove = 0.1f;
 bool disableHotkeys = false;
 
 void MainGuiEditor::HandleEvents()
@@ -384,6 +384,9 @@ void MainGuiEditor::draw_object_creation_menu()
 		//if edit object button clicked on
 		if(editObjectClicked)
 		{
+			edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+			edit_sp_dialog.InitGUI();
+			
 			switch(dropDownObjectTypeActive)
 			{
 				

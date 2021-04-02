@@ -25,8 +25,8 @@ public:
 	
 	void SetPointerToSoundBank(SoundBank* thisSoundBank);
 	
-	//function to put choices for sound dropdown box
-	void InitSoundBankChoices();
+	//function to initialize text boxes such as sound bank 
+	void InitGUI();
 	
 	void resetConfig();
 	

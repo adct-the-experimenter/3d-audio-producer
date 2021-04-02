@@ -59,7 +59,7 @@ void CreateSoundProducerDialog::DrawDialog()
 		z_box_pressed = !z_box_pressed;
 	}
 	
-	free_roam_box_stat = GuiCheckBox((Rectangle){ 400, 400, 20, 20 }, "Free Roam:", free_roam_box_stat);
+	free_roam_box_stat = GuiCheckBox((Rectangle){ 400, 460, 20, 20 }, "Free Roam:", free_roam_box_stat);
 	
 	if(m_sound_bank_ptr)
 	{

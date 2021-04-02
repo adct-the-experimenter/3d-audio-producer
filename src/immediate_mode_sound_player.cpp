@@ -67,7 +67,7 @@ void ImmediateModeSoundPlayer::RunStateForPlayer()
 void ImmediateModeSoundPlayer::DrawGui_Item()
 {
 	//draw play button
-	if(GuiButton( (Rectangle){ 350, 50, 50, 30 }, GuiIconText(0, "Play") ))
+	if(GuiButton( (Rectangle){ 330, 50, 50, 30 }, GuiIconText(0, "Play") ))
 	{
 		ImmediateModeSoundPlayer::PlayAll();
 		m_state = IMSoundPlayerState::PLAYING;
@@ -81,7 +81,7 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 	}
 	
 	//draw stop button
-	if(GuiButton( (Rectangle){ 450, 50, 50, 30 }, GuiIconText(0, "Stop") ))
+	if(GuiButton( (Rectangle){ 470, 50, 50, 30 }, GuiIconText(0, "Stop") ))
 	{
 		ImmediateModeSoundPlayer::StopAll();
 		m_state = IMSoundPlayerState::NONE;
