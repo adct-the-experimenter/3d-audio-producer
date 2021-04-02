@@ -6,7 +6,7 @@ Listen to 3D audio through stereo headphones or surround sound system.
 
 This is a fork of the binaural-audio-editor project, but wxwidgets and openscenegraph are replaced with raylib.
 
-## Much work has to be done before this is stable and ready for use.
+Features from binaural-audio-editor will be ported to 3d audio producer.
 
 [![Open Source Helpers](https://www.codetriage.com/adct-the-experimenter/binaural-audio-editor/badges/users.svg)](https://www.codetriage.com/adct-the-experimenter/binaural-audio-editor)
 
@@ -40,7 +40,7 @@ This is a fork of the binaural-audio-editor project, but wxwidgets and openscene
 
 ### Control Listener
   
-  TODO
+  Use W,A,S,D,Q,E keys to control position of the listener.
   
 ### Control SoundProducers
   
