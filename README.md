@@ -1,14 +1,13 @@
 
 # 3D Audio Producer
 
-This is an audio application that produces 3D audio from 2D mono audio samples and positional information given through the graphical user interface. 
-Listen to 3D audio through stereo headphones or surround sound system.
+This is a fork of the binaural-audio-editor project, but wxwidgets and openscenegraph are replaced with raygui and raylib.
 
-This is a fork of the binaural-audio-editor project, but wxwidgets and openscenegraph are replaced with raylib.
+This project is an audio application that produces 3D audio from 2D mono audio samples and positional information given through the graphical user interface. 
+Listen to 3D audio through stereo headphones or surround sound system.
 
 Features from binaural-audio-editor will be ported to 3d audio producer.
 
-[![Open Source Helpers](https://www.codetriage.com/adct-the-experimenter/binaural-audio-editor/badges/users.svg)](https://www.codetriage.com/adct-the-experimenter/binaural-audio-editor)
 
 ## Required Libraries
 - OpenAL Soft https://github.com/kcat/openal-soft
@@ -40,7 +39,7 @@ Features from binaural-audio-editor will be ported to 3d audio producer.
 
 ### Control Listener
   
-  Use W,A,S,D,Q,E keys to control position of the listener.
+  Use W,A,S,D,Q,E keys to move the listener in 3d space.
   
 ### Control SoundProducers
   
