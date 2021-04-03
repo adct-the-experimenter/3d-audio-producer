@@ -174,6 +174,8 @@ void MainGuiEditor::Draw3DModels()
 float distanceToMove = 0.1f;
 bool disableHotkeys = false;
 
+bool dialogInUse = false;
+
 // Picking line ray
 Ray picker_ray = { 0 };
 bool picker_ray_launched = false;
@@ -189,11 +191,11 @@ void MainGuiEditor::HandleEvents()
 	}
 	else{picker_ray_launched = false;}
 	
-	if(disableHotkeys){return;}
-
 	//if in sound bank area
 	if(GetMouseX() > 620){disableHotkeys = true;}
 	else{disableHotkeys = false;}
+	
+	if(disableHotkeys || dialogInUse){return;}
 	
 	
 	//if w key pressed
@@ -372,6 +374,10 @@ void MainGuiEditor::logic()
 		
 		if(!collision){soundproducer_picked = -1;}
 	}
+	
+	//run state for immediate mode sound player
+	im_sound_player.RunStateForPlayer();
+	
 }
 
 void MainGuiEditor::DrawGUI_Items()
@@ -384,7 +390,7 @@ void MainGuiEditor::DrawGUI_Items()
 	MainGuiEditor::draw_object_creation_menu();
 	
 	//draw immediate mode sound player
-	im_sound_player.RunStateForPlayer();
+	
 	im_sound_player.DrawGui_Item();
 	
 	//active sound producer dropdown box
@@ -439,7 +445,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			switch(dropDownObjectTypeActive)
 			{
 				//sound producer
-				case 1:{ g_state = GuiState::CREATE_SOUND_PRODUCER; disableHotkeys = true; break;}
+				case 1:{ g_state = GuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
 				//standard reverb zone
 				case 2:{break;}
 				default:{break;}
@@ -456,7 +462,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			{
 				
 				//sound producer
-				case 1:{ g_state = GuiState::EDIT_SOUND_PRODUCER; disableHotkeys = true; break;}
+				case 1:{ g_state = GuiState::EDIT_SOUND_PRODUCER; dialogInUse = true; break;}
 				//standard reverb zone
 				case 2:{break;}
 				default:{break;}
@@ -468,6 +474,7 @@ void MainGuiEditor::draw_object_creation_menu()
 	{
 		editKeyPressed = false;
 		g_state = GuiState::EDIT_SOUND_PRODUCER;
+		dialogInUse = true;
 		edit_sp_dialog.SetCurrentSoundProducerEditedIndex(size_t(soundproducer_picked));
 		edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
 		edit_sp_dialog.InitGUI();
@@ -491,14 +498,14 @@ void MainGuiEditor::draw_object_creation_menu()
 									
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
-				disableHotkeys = false;
+				dialogInUse = false;
 			}
 			
 			if(create_sp_dialog.CancelClickedOn())
 			{
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
-				disableHotkeys = false;
+				dialogInUse = false;
 			}
 			
 			break;
@@ -511,14 +518,14 @@ void MainGuiEditor::draw_object_creation_menu()
 			{						
 				g_state = GuiState::NONE;
 				edit_sp_dialog.resetConfig();
-				disableHotkeys = false;
+				dialogInUse = false;
 			}
 			
 			if(edit_sp_dialog.CancelClickedOn())
 			{
 				g_state = GuiState::NONE;
 				edit_sp_dialog.resetConfig();
-				disableHotkeys = false;
+				dialogInUse = false;
 			}
 			
 			break;

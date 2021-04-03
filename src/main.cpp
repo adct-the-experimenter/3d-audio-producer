@@ -82,6 +82,8 @@ void InitRaylibSystem()
     InitWindow(screenWidth, screenHeight, "3d Audio Producer");
 	
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    
+    SetConfigFlags(FLAG_VSYNC_HINT);
 
 }
 
