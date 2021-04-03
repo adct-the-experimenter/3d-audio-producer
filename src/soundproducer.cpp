@@ -13,6 +13,10 @@ SoundProducer::SoundProducer()
 	track_source_ptr = nullptr;
 	
 	freeRoam = false;
+	
+	picked_for_selection = false;
+	
+	account_number = 0;
 }
 
 SoundProducer::~SoundProducer()
@@ -138,9 +142,18 @@ bool SoundProducer::GetFreeRoamBool(){return freeRoam;}
 
 void SoundProducer::DrawModel()
 {
-	DrawCube(producer_position,2.0f, 2.0f, 2.0f, RED);
+	if(!picked_for_selection)
+	{
+		DrawCube(producer_position,2.0f, 2.0f, 2.0f, RED);
+	}
+	else
+	{
+		DrawCube(producer_position,2.0f, 2.0f, 2.0f, YELLOW);
+	}
 }
 
 void SoundProducer::SetAccountNumber(std::uint8_t num){account_number = num;}
 
 std::uint8_t SoundProducer::GetAccountNumber(){return account_number;}
+
+void SoundProducer::SetPickedBool(bool state){picked_for_selection = state;}

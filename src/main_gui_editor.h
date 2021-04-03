@@ -168,6 +168,8 @@ public:
     bool OnInit();
     
     void HandleEvents();
+    
+    void logic();
         
     void DrawGUI_Items();
     void Draw3DModels();

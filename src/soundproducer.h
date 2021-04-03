@@ -70,6 +70,8 @@ public:
 	
 	void DrawModel();
 	
+	void SetPickedBool(bool state);
+	
 private:
 	//Name of Sound Producer
 	std::string name;
@@ -96,6 +98,10 @@ private:
 	//account number from sound bank. 
 	//Tells sound player which file to buffer to source of sound producer
 	std::uint8_t account_number;
+	
+	//bool to indicate if sound producer has been clicked on for selection
+	//used to draw cube a different color if picked.
+	bool picked_for_selection;
 
 };
 

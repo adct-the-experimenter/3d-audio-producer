@@ -162,6 +162,8 @@ void MainGuiEditor::Draw3DModels()
 	{
 		for(size_t i = 0; i < sound_producer_vector.size(); i++)
 		{
+			
+			//draw model of sound producer
 			sound_producer_vector[i]->DrawModel();
 		}
 	}
@@ -172,13 +174,27 @@ void MainGuiEditor::Draw3DModels()
 float distanceToMove = 0.1f;
 bool disableHotkeys = false;
 
+// Picking line ray
+Ray picker_ray = { 0 };
+bool picker_ray_launched = false;
+
+bool editKeyPressed = false;
+
 void MainGuiEditor::HandleEvents()
 {
+	if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+	{
+		picker_ray = GetMouseRay(GetMousePosition(), main_camera);
+		picker_ray_launched = true;
+	}
+	else{picker_ray_launched = false;}
+	
+	if(disableHotkeys){return;}
+
 	//if in sound bank area
 	if(GetMouseX() > 620){disableHotkeys = true;}
 	else{disableHotkeys = false;}
 	
-	if(disableHotkeys){return;}
 	
 	//if w key pressed
 	if( IsKeyDown(KEY_W) )
@@ -210,6 +226,13 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(listener){listener->MoveUp(distanceToMove);}
 	}
+	
+	//if key 1 is pressed
+	if(IsKeyDown(KEY_ONE))
+	{
+		editKeyPressed = true;
+	}
+	else{editKeyPressed = false;}
 	
 	/*
 		//if b key pressed
@@ -309,6 +332,48 @@ void MainGuiEditor::HandleEvents()
 		*/
 }
 
+//represents the index of sound producer chosen
+//signed integer used so that -1 can be used.
+std::int32_t soundproducer_picked = -1;
+
+void MainGuiEditor::logic()
+{
+	//if picker ray launched
+	if(picker_ray_launched)
+	{
+		bool collision = false;
+		//for each soundproducer, check if picker ray hits sound producer
+		if(sound_producer_vector.size() > 0)
+		{
+			for(size_t i = 0; i < sound_producer_vector.size(); i++)
+			{
+				
+				double sp_x,sp_y,sp_z;
+				sp_x = sound_producer_vector[i]->GetPositionX();
+				sp_y = sound_producer_vector[i]->GetPositionY();
+				sp_z = sound_producer_vector[i]->GetPositionZ();
+				
+				float cube_width = 2.0f;
+				
+				// Check collision between ray and box
+				collision = CheckCollisionRayBox( picker_ray,
+						(BoundingBox){
+							(Vector3){ sp_x - cube_width/2, sp_y - cube_width/2, sp_z - cube_width/2 },
+							(Vector3){ sp_x + cube_width/2, sp_y + cube_width/2, sp_z + cube_width/2 }}
+						);
+				
+				sound_producer_vector[i]->SetPickedBool(collision);
+				
+				//break loop if one collision has happened
+				if(collision){soundproducer_picked = i; break;}
+			}
+				
+		}
+		
+		if(!collision){soundproducer_picked = -1;}
+	}
+}
+
 void MainGuiEditor::DrawGUI_Items()
 {
 	
@@ -374,7 +439,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			switch(dropDownObjectTypeActive)
 			{
 				//sound producer
-				case 1:{ g_state = GuiState::CREATE_SOUND_PRODUCER; break;}
+				case 1:{ g_state = GuiState::CREATE_SOUND_PRODUCER; disableHotkeys = true; break;}
 				//standard reverb zone
 				case 2:{break;}
 				default:{break;}
@@ -391,12 +456,21 @@ void MainGuiEditor::draw_object_creation_menu()
 			{
 				
 				//sound producer
-				case 1:{ g_state = GuiState::EDIT_SOUND_PRODUCER; break;}
+				case 1:{ g_state = GuiState::EDIT_SOUND_PRODUCER; disableHotkeys = true; break;}
 				//standard reverb zone
 				case 2:{break;}
 				default:{break;}
 			}
 		}
+	}
+	
+	if(soundproducer_picked != -1 && editKeyPressed)
+	{
+		editKeyPressed = false;
+		g_state = GuiState::EDIT_SOUND_PRODUCER;
+		edit_sp_dialog.SetCurrentSoundProducerEditedIndex(size_t(soundproducer_picked));
+		edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+		edit_sp_dialog.InitGUI();
 	}
 	
 	switch(g_state)
@@ -417,12 +491,14 @@ void MainGuiEditor::draw_object_creation_menu()
 									
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
+				disableHotkeys = false;
 			}
 			
 			if(create_sp_dialog.CancelClickedOn())
 			{
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
+				disableHotkeys = false;
 			}
 			
 			break;
@@ -435,12 +511,14 @@ void MainGuiEditor::draw_object_creation_menu()
 			{						
 				g_state = GuiState::NONE;
 				edit_sp_dialog.resetConfig();
+				disableHotkeys = false;
 			}
 			
 			if(edit_sp_dialog.CancelClickedOn())
 			{
 				g_state = GuiState::NONE;
 				edit_sp_dialog.resetConfig();
+				disableHotkeys = false;
 			}
 			
 			break;

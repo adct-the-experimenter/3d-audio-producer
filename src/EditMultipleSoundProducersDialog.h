@@ -28,6 +28,8 @@ public:
 	//function to initialize text boxes such as sound bank 
 	void InitGUI();
 	
+	void SetCurrentSoundProducerEditedIndex(size_t index);
+	
 	void resetConfig();
 	
 private:

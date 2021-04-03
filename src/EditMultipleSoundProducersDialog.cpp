@@ -201,7 +201,13 @@ void EditMultipleSoundProducersDialog::InitGUI()
 		}
 		
 		//initialize values in GUI text boxes based on first choice
-		EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(0);
+		EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
 		
 	}
+}
+
+void EditMultipleSoundProducersDialog::SetCurrentSoundProducerEditedIndex(size_t index)
+{
+	current_sound_producer_editing_index = index;
+	editsp_dropDownSoundProducerActive = current_sound_producer_editing_index;
 }

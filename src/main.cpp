@@ -50,7 +50,9 @@ void ApplicationLoop()
 	//handle events
 	editor.HandleEvents();
 	
+	//logic 
 	UpdateCamera(editor.GetPointerToCamera());
+	editor.logic();
 	
 	//draw
 	BeginDrawing();

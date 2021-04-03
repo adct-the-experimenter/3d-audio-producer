@@ -37,6 +37,18 @@ Features from binaural-audio-editor will be ported to 3d audio producer.
 
 ## Instructions
 
+## Control Camera
+
+Mouse Wheel to Zoom in-out
+
+Mouse Wheel Pressed to Pan
+
+Alt + Mouse Wheel Pressed to Rotate
+
+Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom
+
+Z to zoom to (0, 0, 0)
+
 ### Control Listener
   
   Use W,A,S,D,Q,E keys to move the listener in 3d space.
