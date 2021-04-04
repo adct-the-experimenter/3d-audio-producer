@@ -203,6 +203,7 @@ private:
 	
 	void draw_object_creation_menu();
 	void draw_sound_bank();
+	void draw_hrtf_menu();
 	
 	SoundBank m_sound_bank;
 };

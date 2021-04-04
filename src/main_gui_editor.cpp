@@ -11,6 +11,8 @@
 #include "CreateSoundProducerDialog.h"
 #include "EditMultipleSoundProducersDialog.h"
 #include "EditListenerDialog.h"
+#include "HRTF-Test-Dialog.h"
+//#include "Change-HRTF-Dialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -19,8 +21,7 @@
 
 
 
-//#include "HRTF-Test-Dialog.h"
-//#include "Change-HRTF-Dialog.h"
+
 
 //#include "setup-serial-dialog.h"
 
@@ -42,6 +43,7 @@ CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
 EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
 EditListenerDialog edit_lt_dialog("Edit Listener");
 ImmediateModeSoundPlayer im_sound_player;
+HRTFTestDialog hrtf_test_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -401,7 +403,8 @@ void MainGuiEditor::DrawGUI_Items()
 	
 	//draw gui dropdownbox for choosing sound producer to manipulate with hot keys
 	
-	
+	//draw HRTF edit menu
+	MainGuiEditor::draw_hrtf_menu();
 }
 
 bool dropDownObjectTypeMode = false;
@@ -410,7 +413,7 @@ bool objectManipulationState = false;
 
 
 //state 
-enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, EDIT_LISTENER };
+enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, EDIT_LISTENER, TEST_HRTF };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -576,6 +579,43 @@ void MainGuiEditor::draw_sound_bank()
 	
 }
 
+void MainGuiEditor::draw_hrtf_menu()
+{
+	GuiDrawRectangle((Rectangle){20,10,150,60}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawText("HRTF", (Rectangle){20,10,125,20}, 1, BLACK);
+	
+	//draw button Change
+	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 30, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Change") );
+	//draw button Test
+	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 95, 30, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Test") );
+	
+	
+	if(testHRTFButtonClicked)
+	{
+		g_state = GuiState::TEST_HRTF;
+		dialogInUse = true;
+		hrtf_test_dialog.SetPointerToAudioEngine(&audio_engine);
+		hrtf_test_dialog.InitGUI();
+	}
+	
+	switch(g_state)
+	{
+		case GuiState::TEST_HRTF:
+		{
+			hrtf_test_dialog.DrawDialog();
+			
+			if(hrtf_test_dialog.OkClickedOn())
+			{
+				g_state = GuiState::NONE;
+				dialogInUse = false;
+				hrtf_test_dialog.resetConfig();
+			}
+			break;
+		}
+		default:{break;}
+	}
+}
+
 void MainGuiEditor::InitCamera()
 {
 	main_camera = { 0 };
@@ -601,25 +641,8 @@ MainFrame::MainFrame(const std::string& title,
 	
 	
 	im_sound_player.SetPointerToSoundProducerRegistry(&soundproducer_registry);
-	//create file menu item
 	
-    //create help menu item
-
-    //create sound producers menu item
-
-    //create the edit multiple sound producers menu item
-
-    //create playback menu item
-
-    //Create hrtf menu item
-
-    //create listener menu item
-    
-    //create effects menu items
-    
-    //create and set menu bar with items file and help
 	
-    
     //initliaze save system
     //save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
 	
@@ -1004,46 +1027,6 @@ void MainFrame::CreateSoundProducer(std::string& name,double& x, double& y, doub
 }
 
 /*
-void MainFrame::OnEditMultipleSoundProducers(wxCommandEvent& event)
-{
-	std::unique_ptr <EditMultipleSoundProducersDialog> soundProducerEditDialog(new EditMultipleSoundProducersDialog( wxT("Edit Sound Producers"),
-																													sound_producer_vector_ref,
-																													audioEnginePtr)
-																				);
-
-    soundProducerEditDialog->Show(true);
-
-}
-
-void MainFrame::OnTestHRTF(wxCommandEvent& event)
-{
-	std::unique_ptr <HRTFTestDialog> hrtfTestDialog(new HRTFTestDialog( wxT("Test HRTF"),
-																		audioEnginePtr)
-													);
-
-    hrtfTestDialog->Show(true);
-
-}
-
-void MainFrame::OnChangeHRTF(wxCommandEvent& event)
-{
-	std::unique_ptr <ChangeHRTFDialog> hrtfChangeDialog(new ChangeHRTFDialog( wxT("Change HRTF"),
-																		audioEnginePtr)
-													);
-
-    hrtfChangeDialog->Show(true);
-}
-
-void MainFrame::OnEditListener(wxCommandEvent& event)
-{
-	if(listenerPtr == nullptr){std::cout << "Listener Raw Pointer is null in OnEditListener. \n";}
-
-	std::unique_ptr <EditListenerDialog> editListenerDialog(new EditListenerDialog( wxT("Edit Listener"),
-																		listenerPtr)
-															);
-
-    editListenerDialog->Show(true);
-}
 
 void MainFrame::OnSetupSerial(wxCommandEvent& event)
 {

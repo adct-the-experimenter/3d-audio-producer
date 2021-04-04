@@ -1,78 +1,47 @@
 #include "HRTF-Test-Dialog.h"
 
-HRTFTestDialog::HRTFTestDialog(const wxString & title,OpenAlSoftAudioEngine* audioEngine)
-       : wxDialog(NULL, -1, title, wxDefaultPosition, wxSize(500, 250), wxRESIZE_BORDER)
+#include "raygui/raygui.h"
+
+HRTFTestDialog::HRTFTestDialog()
 {
-	
-	ptrAudioEngine = audioEngine;
-	
-	HRTFTestDialog::initPrivateVariables();
-	
-    
-	textBox = new wxTextCtrl(this,-1, "", wxPoint(95, 140), wxSize(300,300),
-							wxTE_READONLY | wxTE_MULTILINE, wxDefaultValidator,      
-							wxT("")); 
-	textBox->Clear();
-	
+	okClicked = false;
+}
+
+void HRTFTestDialog::SetPointerToAudioEngine(OpenAlSoftAudioEngine* audioEngine){ptrAudioEngine = audioEngine;}
+
+std::string testResult = "";
+char* textToDisplay = nullptr;
+
+void HRTFTestDialog::InitGUI()
+{
 	//Test HRTF and put test results in textBox
 	ptrAudioEngine->TestHRTF();
 	
-	wxString thisTestResult(ptrAudioEngine->getHRTFTestResult());
-	textBox->WriteText(thisTestResult);
+	testResult = ptrAudioEngine->getHRTFTestResult();
 	
 	ptrAudioEngine->clear_testHRTFResults();
+	textToDisplay = const_cast<char*>(testResult.c_str());
 	
-
-	//initialize Ok and Cancel buttons 
-	okButton = new wxButton(this, HRTFTestDialog::ID_OK, wxT("Ok"), 
-							wxDefaultPosition, wxSize(70, 30)
-							);
-
-	//make horizontal box to put ok and cancel buttons in
-	wxBoxSizer *hboxBottom = new wxBoxSizer(wxHORIZONTAL);
-
-	
-	hboxBottom->Add(okButton, 0);
-	
-	//Make vertical box to put everything in
-	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-	
-	//add panel of text fields in vertical box
-	vbox->Add(textBox, 1, wxEXPAND | wxALL, 10);
-	vbox->Add(hboxBottom, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-	
-	SetSizerAndFit(vbox);
-
-	//center and show elements in dialog
-	Centre();
-	ShowModal();
-
-	//destroy when done showing
-	Destroy(); 
 }
 
-void HRTFTestDialog::initPrivateVariables()
+void HRTFTestDialog::DrawDialog()
 {
-	textBox = nullptr; 
-	okButton = nullptr; 
+	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"HRTF Test");
+	
+	//draw text box
+	
+	GuiTextBoxMulti((Rectangle){350,200,300,300}, textToDisplay, 12, false);
+	
+	//draw ok button
+	okClicked = GuiButton( (Rectangle){ 450, 500, 70, 30 }, GuiIconText(0, "OK") );
+	if(exit){okClicked = true;}
+	
 }
 
+bool HRTFTestDialog::OkClickedOn(){return okClicked;}
 
-void HRTFTestDialog::OnOk(wxCommandEvent& event )
+void HRTFTestDialog::resetConfig()
 {
-	HRTFTestDialog::Exit();
+	testResult.clear();
+	okClicked = false;
 }
-
-
-void HRTFTestDialog::Exit()
-{
-	if(okButton != nullptr){ delete okButton;}
-	if(textBox != nullptr){delete textBox;}
-    
-    Close( true ); //close window
-}
-
-//Event table for main frame specific events
-BEGIN_EVENT_TABLE(HRTFTestDialog, wxDialog)
-    EVT_BUTTON				(ID_OK, HRTFTestDialog::OnOk)
-END_EVENT_TABLE()
