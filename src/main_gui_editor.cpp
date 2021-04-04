@@ -10,6 +10,7 @@
 
 #include "CreateSoundProducerDialog.h"
 #include "EditMultipleSoundProducersDialog.h"
+#include "EditListenerDialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -17,9 +18,10 @@
 #include "raygui/gui_file_dialog.h"
 
 
+
 //#include "HRTF-Test-Dialog.h"
 //#include "Change-HRTF-Dialog.h"
-//#include "EditListenerDialog.h"
+
 //#include "setup-serial-dialog.h"
 
 
@@ -38,6 +40,7 @@ bool init_listener_once = false;
 
 CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
 EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
+EditListenerDialog edit_lt_dialog("Edit Listener");
 ImmediateModeSoundPlayer im_sound_player;
 
 MainGuiEditor::MainGuiEditor()
@@ -135,18 +138,20 @@ void MainGuiEditor::initListener()
 
 		//std::cout << "\nListener initialized. Listener x:" << listener->getPositionX() << std::endl;
 
-		if(listener.get() == nullptr){std::cout << "listener raw pointer is null in osgMainGuiEditorWxApp init! \n";}
+		if(listener.get() == nullptr){std::cout << "listener raw pointer is null in main gui editor initListener! \n";}
 		else{std::cout << "\nListener raw pointer:" << listener.get() << std::endl;}
 
 		//initialize listener external
 		if(listener.get() != nullptr)
 		{
+			edit_lt_dialog.SetPointerToListener(listener.get());
 			//std::unique_ptr <ListenerExternal> thisListenerExternal( new ListenerExternal(listener.get()) );
 			//listenerExternal = std::move(thisListenerExternal);
 		}
 
-
+		
 		init_listener_once = true;
+		
 	}
 }
 
@@ -390,7 +395,6 @@ void MainGuiEditor::DrawGUI_Items()
 	MainGuiEditor::draw_object_creation_menu();
 	
 	//draw immediate mode sound player
-	
 	im_sound_player.DrawGui_Item();
 	
 	//active sound producer dropdown box
@@ -406,7 +410,7 @@ bool objectManipulationState = false;
 
 
 //state 
-enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER };
+enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, EDIT_LISTENER };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -428,7 +432,7 @@ void MainGuiEditor::draw_object_creation_menu()
 	
 	//draw GuiDropdownBox for choosing type to manipulate
 	
-	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Sound Producer;Standard Reverb Zone; EAX Reverb Zone; Echo Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
+	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Listener;Sound Producer;Standard Reverb Zone; EAX Reverb Zone; Echo Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
 	{
 		dropDownObjectTypeMode = !dropDownObjectTypeMode;
 	}
@@ -445,9 +449,9 @@ void MainGuiEditor::draw_object_creation_menu()
 			switch(dropDownObjectTypeActive)
 			{
 				//sound producer
-				case 1:{ g_state = GuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
+				case 2:{ g_state = GuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
 				//standard reverb zone
-				case 2:{break;}
+				case 3:{break;}
 				default:{break;}
 			}
 		}
@@ -455,16 +459,28 @@ void MainGuiEditor::draw_object_creation_menu()
 		//if edit object button clicked on
 		if(editObjectClicked)
 		{
-			edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
-			edit_sp_dialog.InitGUI();
 			
 			switch(dropDownObjectTypeActive)
 			{
-				
+				//listener
+				case 1:
+				{ 
+					g_state = GuiState::EDIT_LISTENER;
+					dialogInUse = true;
+					edit_lt_dialog.InitGUI();
+					break;
+				}
 				//sound producer
-				case 1:{ g_state = GuiState::EDIT_SOUND_PRODUCER; dialogInUse = true; break;}
+				case 2:
+				{ 
+					g_state = GuiState::EDIT_SOUND_PRODUCER; 
+					dialogInUse = true;
+					edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+					edit_sp_dialog.InitGUI();
+					break;
+				}
 				//standard reverb zone
-				case 2:{break;}
+				case 3:{break;}
 				default:{break;}
 			}
 		}
@@ -482,6 +498,19 @@ void MainGuiEditor::draw_object_creation_menu()
 	
 	switch(g_state)
 	{
+		case GuiState::EDIT_LISTENER:
+		{
+			edit_lt_dialog.DrawDialog();
+			
+			if(edit_lt_dialog.OkClickedOn() || create_sp_dialog.CancelClickedOn())
+			{
+				g_state = GuiState::NONE;
+				create_sp_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			
+			break;
+		}
 		case GuiState::CREATE_SOUND_PRODUCER:
 		{
 			create_sp_dialog.DrawDialog();

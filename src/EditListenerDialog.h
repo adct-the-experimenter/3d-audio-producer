@@ -5,55 +5,28 @@
 
 #include "listener.h"
 
-class EditListenerDialog : public wxDialog
+class EditListenerDialog
 {
 
 public:
-	EditListenerDialog(const wxString& title, Listener* listener);
+	EditListenerDialog(const std::string& title);
 	
+	void SetPointerToListener(Listener* listener);
+	void InitGUI();
+	void DrawDialog();
 	
-	void OnOk(wxCommandEvent& event );
-
-	void OnCancel(wxCommandEvent& event);
+	void resetConfig();
 	
-	void OnApply(wxCommandEvent& event);
-	
-	void OnBrowse(wxCommandEvent& event);
-
-	void Exit();
-	
-	enum 
-	{
-		ID_OK = wxID_HIGHEST + 1,
-		ID_APPLY,
-		ID_CANCEL
-	};
-	
+	bool OkClickedOn();
+	bool CancelClickedOn();
 	
 private:
 
-	wxButton* okButton;
-	wxButton* cancelButton;	
-	wxButton* applyButton;
-	
-	wxTextCtrl* textFieldX;
-	wxTextCtrl* textFieldY;
-	wxTextCtrl* textFieldZ;
-	
-
-	wxCheckBox* checkBoxFreeRoam;
-	bool tempFreeRoamBool; 
-	void OnFreeRoamCheckBoxClicked(wxCommandEvent& event);
-	
-	wxCheckBox* checkBoxExternalDeviceOrientation;
-	bool tempExternalDeviceOrientation; 
-	void OnExternalDeviceOrientationCheckBoxClicked(wxCommandEvent& event);
-	
 	Listener* ptrListener;
-	
-	void initPrivateVariables(); 
-	
 	void ChangeListenerAttributes();
+	
+	bool okClicked; //bool to indicate if ok button was clicked on
+	bool cancelClicked;
 	
 };
 

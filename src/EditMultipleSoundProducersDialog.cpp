@@ -5,8 +5,7 @@
 
 #include <cstring>
 
-EditMultipleSoundProducersDialog::EditMultipleSoundProducersDialog(const std::string& title
-																	)
+EditMultipleSoundProducersDialog::EditMultipleSoundProducersDialog(const std::string& title)
 {
 	current_sound_producer_editing_index = 0;
 }
