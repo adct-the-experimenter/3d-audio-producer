@@ -1,6 +1,5 @@
 #include "EditMultipleSoundProducersDialog.h"
 
-
 #include "raygui/raygui.h"
 
 #include <cstring>

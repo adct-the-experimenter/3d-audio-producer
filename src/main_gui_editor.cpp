@@ -12,7 +12,7 @@
 #include "EditMultipleSoundProducersDialog.h"
 #include "EditListenerDialog.h"
 #include "HRTF-Test-Dialog.h"
-//#include "Change-HRTF-Dialog.h"
+#include "Change-HRTF-Dialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -44,6 +44,7 @@ EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
 EditListenerDialog edit_lt_dialog("Edit Listener");
 ImmediateModeSoundPlayer im_sound_player;
 HRTFTestDialog hrtf_test_dialog;
+ChangeHRTFDialog change_hrtf_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -413,7 +414,7 @@ bool objectManipulationState = false;
 
 
 //state 
-enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, EDIT_LISTENER, TEST_HRTF };
+enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, EDIT_LISTENER, TEST_HRTF, CHANGE_HRTF };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -598,6 +599,14 @@ void MainGuiEditor::draw_hrtf_menu()
 		hrtf_test_dialog.InitGUI();
 	}
 	
+	if(changeHRTFButtonClicked)
+	{
+		g_state = GuiState::CHANGE_HRTF;
+		dialogInUse = true;
+		change_hrtf_dialog.SetPointerToAudioEngine(&audio_engine);
+		change_hrtf_dialog.InitGUI();
+	}
+	
 	switch(g_state)
 	{
 		case GuiState::TEST_HRTF:
@@ -609,6 +618,18 @@ void MainGuiEditor::draw_hrtf_menu()
 				g_state = GuiState::NONE;
 				dialogInUse = false;
 				hrtf_test_dialog.resetConfig();
+			}
+			break;
+		}
+		case GuiState::CHANGE_HRTF:
+		{
+			change_hrtf_dialog.DrawDialog();
+			
+			if(change_hrtf_dialog.OkClickedOn())
+			{
+				g_state = GuiState::NONE;
+				dialogInUse = false;
+				change_hrtf_dialog.resetConfig();
 			}
 			break;
 		}

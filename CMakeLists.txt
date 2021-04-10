@@ -57,8 +57,7 @@ set(SOURCES src/main.cpp
 			src/soundproducer-registry.cpp
 			src/immediate_mode_sound_player.cpp src/sound_bank.cpp
 			src/CreateSoundProducerDialog.cpp src/EditMultipleSoundProducersDialog.cpp 
-			#src/Change-HRTF-Dialog.cpp 
-			src/HRTF-Test-Dialog.cpp 
+			src/Change-HRTF-Dialog.cpp src/HRTF-Test-Dialog.cpp 
 			src/EditListenerDialog.cpp
 			#src/setup-serial-dialog.cpp
 			#src/listener-external.cpp
