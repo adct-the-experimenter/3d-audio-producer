@@ -506,7 +506,7 @@ void MainGuiEditor::draw_object_creation_menu()
 		{
 			edit_lt_dialog.DrawDialog();
 			
-			if(edit_lt_dialog.OkClickedOn() || create_sp_dialog.CancelClickedOn())
+			if(edit_lt_dialog.OkClickedOn() || edit_lt_dialog.CancelClickedOn())
 			{
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
@@ -547,19 +547,13 @@ void MainGuiEditor::draw_object_creation_menu()
 		{
 			edit_sp_dialog.DrawDialog();
 			
-			if(edit_sp_dialog.OkClickedOn())
+			if(edit_sp_dialog.OkClickedOn() || edit_sp_dialog.CancelClickedOn())
 			{						
 				g_state = GuiState::NONE;
 				edit_sp_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
-			if(edit_sp_dialog.CancelClickedOn())
-			{
-				g_state = GuiState::NONE;
-				edit_sp_dialog.resetConfig();
-				dialogInUse = false;
-			}
 			
 			break;
 		}

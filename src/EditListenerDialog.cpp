@@ -46,7 +46,6 @@ void EditListenerDialog::DrawDialog()
 	if(exit){cancelClicked = true;}
 	
 	
-	
 	if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &editlt_x_value, -10, 10, editlt_x_box_pressed) )
 	{
 		editlt_x_box_pressed = !editlt_x_box_pressed;
@@ -116,6 +115,9 @@ void EditListenerDialog::resetConfig()
 
 	editlt_extOrientationBool = false;
 	editlt_ext_orient_box_stat = false;
+	
+	okClicked = false;
+	cancelClicked = false;
 }
 
 bool EditListenerDialog::OkClickedOn(){ return okClicked;}
