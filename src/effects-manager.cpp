@@ -50,6 +50,8 @@ void EffectsManager::CreateEchoZone(std::string& name, double& x, double& y, dou
 
 void EffectsManager::SetPointerToListener(Listener* listener){m_listener_ptr = listener;}
 
+void EffectsManager::SetPointerToSoundProducerRegistry(SoundProducerRegistry* sound_producer_reg){m_sound_producer_reg_ptr = sound_producer_reg;}
+
 std::vector <EffectZone*> *EffectsManager::GetReferenceToEffectZoneVector(){return &effect_zones_vector;}
 
 EffectZone* EffectsManager::GetPointerToEffectZone(size_t& index){return effect_zones_vector[index];}
@@ -61,9 +63,9 @@ EchoZone* EffectsManager::GetPointerToEchoZone(size_t& index){return &echo_zones
 
 void EffectsManager::PerformReverbThreadOperation()
 {
-	/*
+	
 	//if there are effect zones
-	if( effect_zones_vector.size() > 0)
+	if( effect_zones_vector.size() > 0 && m_sound_producer_reg_ptr != nullptr)
 	{
 		//for each effect zone
 		for(size_t i = 0; i < effect_zones_vector.size(); i++)
@@ -72,23 +74,23 @@ void EffectsManager::PerformReverbThreadOperation()
 			EffectZone* thisZone = effect_zones_vector[i];
 			
 			//check if zone is initialized
-			//if( thisZone->getTransformNode() != nullptr)
-			//{
+			if( thisZone->GetWidth() != 0)
+			{
 				if(EffectsManager::IsListenerInThisEffectZone(thisZone))
 				{
 					//if listener is in the reverb zone
 					
 					//check if sound producers are inside the zone
-					if(m_track_manager_ptr->soundProducerTracks_vec->size() > 0)
+					if(m_sound_producer_reg_ptr->sound_producer_sources_vec.size() > 0)
 					{
-						for(size_t i = 0; i < m_track_manager_ptr->soundProducerTracks_vec->size(); i++)
+						for(size_t i = 0; i < m_sound_producer_reg_ptr->sound_producer_vector_ref->size(); i++)
 						{
-							SoundProducerTrack* thisSoundProducerTrack = m_track_manager_ptr->soundProducerTracks_vec->at(i);
+							ALuint* source_ptr = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i)->getSource();
 							
 							//if no reverb is applied
-							if(!thisSoundProducerTrack->IsReverbApplied())
+							if(!EffectsManager::DoesSourceHaveEffectApplied(source_ptr))
 							{
-								SoundProducer* thisSoundProducer = thisSoundProducerTrack->GetReferenceToSoundProducerManipulated();
+								SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
 							
 								//if there is a sound producer attached to sound producer track
 								if(thisSoundProducer != nullptr)
@@ -98,7 +100,7 @@ void EffectsManager::PerformReverbThreadOperation()
 									{
 										//std::cout << "SoundProducer is inside the reverb zone!\n";
 										//apply reverb to source of sound producer track
-										EffectsManager::ApplyThisEffectZoneEffectToThisTrack(thisSoundProducerTrack,thisZone);
+										EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
 									}
 								}
 							}
@@ -114,67 +116,92 @@ void EffectsManager::PerformReverbThreadOperation()
 				{
 					//if listener is not in the reverb zone
 					
-					//check if sound producers are inside the zone
-					if(m_track_manager_ptr->soundProducerTracks_vec->size() > 0)
-					{
-						for(size_t i = 0; i < m_track_manager_ptr->soundProducerTracks_vec->size(); i++)
+					for(size_t i = 0; i < m_sound_producer_reg_ptr->sound_producer_vector_ref->size(); i++)
+					{						
+						SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
+						
+						ALuint* source_ptr = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i)->getSource(); 
+						
+						//if there is a sound producer attached to sound producer track
+						if(thisSoundProducer != nullptr)
 						{
-							SoundProducerTrack* thisSoundProducerTrack = m_track_manager_ptr->soundProducerTracks_vec->at(i);
-							
-							SoundProducer* thisSoundProducer = thisSoundProducerTrack->GetReferenceToSoundProducerManipulated();
-							
-							//if there is a sound producer attached to sound producer track
-							if(thisSoundProducer != nullptr)
+							//if sound producer is inside the zone
+							if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone)
+							   || EffectsManager::DoesSourceHaveEffectApplied(source_ptr))
 							{
-								//if sound producer is inside the zone
-								if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone)
-								   || thisSoundProducerTrack->IsReverbApplied())
-								{
-									//remove reverb effect from sound producer track
-									EffectsManager::RemoveEffectFromThisTrack(thisSoundProducerTrack);
-								}
+								//remove reverb effect from sound producer track
+								EffectsManager::RemoveEffectFromThisSource(source_ptr);
 							}
 						}
 					}
 					
 				}
 				
-			//}
+			}
 			
 		}
 		
 	}
-	*/
+	
 }
 
 bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
 {
-	/*
-	osg::BoundingSphere zone_box = thisZone->getTransformNode()->computeBound();
-	osg::BoundingSphere listener_box = m_listener_ptr->getTransformNode()->computeBound();
+	if(!m_listener_ptr){return false;}
 	
-	//if bounding box of listener intersects bounding box of reverb zone
-	if(zone_box.intersects(listener_box) )
+	double zone_width = thisZone->GetWidth();
+	double listener_width = 2.0f; //from sound producer class
+	
+	//all cubes, use same width in x,y,z direction
+	
+	if(CheckCollisionBoxes(
+            (BoundingBox){(Vector3){ m_listener_ptr->getPositionX() - listener_width/2,
+                                     m_listener_ptr->getPositionY() - listener_width/2,
+                                     m_listener_ptr->getPositionZ() - listener_width/2 },
+                          (Vector3){ m_listener_ptr->getPositionX() + listener_width/2,
+                                     m_listener_ptr->getPositionY() + listener_width/2,
+                                     m_listener_ptr->getPositionZ() + listener_width/2 }},
+            (BoundingBox){(Vector3){ thisZone->GetPositionX() - zone_width/2,
+                                     thisZone->GetPositionY() - zone_width/2,
+                                     thisZone->GetPositionZ() - zone_width/2 },
+                          (Vector3){ thisZone->GetPositionX() + zone_width/2,
+                                     thisZone->GetPositionY() + zone_width/2,
+                                     thisZone->GetPositionZ() + zone_width/2 }}  )
+        )
 	{
 		return true;
 	}
-	*/
+	
+	return false;
 	
 	return false;
 }
 
 bool EffectsManager::IsThisSoundProducerInsideEffectZone(SoundProducer* thisSoundProducer,EffectZone* thisZone)
 {
-	/*
-	osg::BoundingSphere zone_box = thisZone->getTransformNode()->computeBound();
-	osg::BoundingSphere sound_producer_box = thisZone->getTransformNode()->computeBound();
+	double zone_width = thisZone->GetWidth();
+	double producer_width = 2.0f; //from sound producer class
 	
-	//if bounding box of listener intersects bounding box of reverb zone
-	if(zone_box.intersects(sound_producer_box) )
+	//all cubes, use same width in x,y,z direction
+	
+	if(CheckCollisionBoxes(
+            (BoundingBox){(Vector3){ thisSoundProducer->GetPositionX() - producer_width/2,
+                                     thisSoundProducer->GetPositionY() - producer_width/2,
+                                     thisSoundProducer->GetPositionZ() - producer_width/2 },
+                          (Vector3){ thisSoundProducer->GetPositionX() + producer_width/2,
+                                     thisSoundProducer->GetPositionY() + producer_width/2,
+                                     thisSoundProducer->GetPositionZ() + producer_width/2 }},
+            (BoundingBox){(Vector3){ thisZone->GetPositionX() - zone_width/2,
+                                     thisZone->GetPositionY() - zone_width/2,
+                                     thisZone->GetPositionZ() - zone_width/2 },
+                          (Vector3){ thisZone->GetPositionX() + zone_width/2,
+                                     thisZone->GetPositionY() + zone_width/2,
+                                     thisZone->GetPositionZ() + zone_width/2 }}  )
+        )
 	{
 		return true;
 	}
-	*/
+	
 	return false;
 }
 
@@ -244,3 +271,18 @@ void EffectsManager::FreeEffects()
 	}
 }
 
+bool EffectsManager::DoesSourceHaveEffectApplied(ALuint* source)
+{
+	//alGetSource3i(ALuint source, ALenum param, ALint *v1, ALint *v2, ALint *v3);
+	ALint v1,v2,v3;
+	alGetSource3i(*source, AL_AUXILIARY_SEND_FILTER, &v1, &v2, &v3);
+	
+	if(v1 == AL_EFFECTSLOT_NULL)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	} 
+}

@@ -59,6 +59,8 @@ EffectZone::EffectZone()
 	zone_position = {0,0,0};
 	m_width = 0;
 	m_color = {245, 245, 245, 150};
+	
+	m_slot_ptr = nullptr;
 }
 
 EffectZone::~EffectZone()

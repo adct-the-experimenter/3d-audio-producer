@@ -4,6 +4,8 @@
 
 #include "raygui/raygui.h"
 
+#include <thread> //for uisng thread
+
 #define TIME_RESOLUTION 500
 
 ImmediateModeSoundPlayer::ImmediateModeSoundPlayer()
@@ -32,6 +34,7 @@ void ImmediateModeSoundPlayer::RunStateForPlayer()
 	{
 		case IMSoundPlayerState::NONE:
 		{
+			//stop operation 
 			if(m_state != IMSoundPlayerState::NONE)
 			{
 				m_state = IMSoundPlayerState::NONE;
@@ -91,6 +94,11 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 
 void ImmediateModeSoundPlayer::PlayAll()
 {
+	
+	//launch worker thread to apply certain effect if listener is in a certain effect zone
+    //std::thread t1(callable);
+  
+    
 	if(m_state == IMSoundPlayerState::NONE)
 	{
 		
@@ -117,6 +125,10 @@ void ImmediateModeSoundPlayer::PlayAll()
 			
 		}
 		
+		//wait worker thread to finish effect operation
+		//t1.join();
+  
+		
 	}
 	else
 	{
@@ -127,6 +139,9 @@ void ImmediateModeSoundPlayer::PlayAll()
 			ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
 			ImmediateModeSoundPlayer::LoadBufferStreaming(sourceToManipulatePtr,buffering_audio_players_vec[it]);
 		}
+		
+		//wait worker thread to finish effect operation
+		//t1.join();
 
 		//play all sources in sync
 		if(m_state == IMSoundPlayerState::NONE)

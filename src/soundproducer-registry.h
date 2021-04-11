@@ -48,6 +48,7 @@ public:
 	void RemoveSourceOfLastTrackFromSoundProducerTrackManager();
 	
 	friend class ImmediateModeSoundPlayer;
+	friend class EffectsManager;
 	
 private:
 
