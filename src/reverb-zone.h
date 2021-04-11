@@ -189,8 +189,8 @@ private:
 	ReverbStandardProperties m_standard_prop;
 	ReverbEAXProperties m_eax_prop;
 	
-	ZoneColor standardColor;
-	ZoneColor eaxColor;
+	Color standardColor;
+	Color eaxColor;
 	
 	StandardReverbZoneSaveData m_saveDataStandard;
 	EAXReverbZoneSaveData m_saveDataEAX;

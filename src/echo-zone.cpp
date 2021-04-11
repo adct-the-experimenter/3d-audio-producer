@@ -1,17 +1,4 @@
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
 
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifdef WIN32
-#include <winsock2.h>
-#endif
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
 
 #include "echo-zone.h"
 
@@ -75,7 +62,7 @@ EchoZone::EchoZone() : EffectZone()
 	echoZoneColor.r = 0.4f;
 	echoZoneColor.g = 0.3f;
 	echoZoneColor.b = 0.0f;
-	echoZoneColor.alpha = 0.3f;
+	echoZoneColor.a = 0.3f;
 	
 	EffectZone::SetColor(echoZoneColor);
 }

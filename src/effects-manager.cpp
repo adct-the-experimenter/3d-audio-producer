@@ -61,6 +61,7 @@ EchoZone* EffectsManager::GetPointerToEchoZone(size_t& index){return &echo_zones
 
 void EffectsManager::PerformReverbThreadOperation()
 {
+	/*
 	//if there are effect zones
 	if( effect_zones_vector.size() > 0)
 	{
@@ -71,8 +72,8 @@ void EffectsManager::PerformReverbThreadOperation()
 			EffectZone* thisZone = effect_zones_vector[i];
 			
 			//check if zone is initialized
-			if( thisZone->getTransformNode() != nullptr)
-			{
+			//if( thisZone->getTransformNode() != nullptr)
+			//{
 				if(EffectsManager::IsListenerInThisEffectZone(thisZone))
 				{
 					//if listener is in the reverb zone
@@ -138,15 +139,17 @@ void EffectsManager::PerformReverbThreadOperation()
 					
 				}
 				
-			}
+			//}
 			
 		}
 		
 	}
+	*/
 }
 
 bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
 {
+	/*
 	osg::BoundingSphere zone_box = thisZone->getTransformNode()->computeBound();
 	osg::BoundingSphere listener_box = m_listener_ptr->getTransformNode()->computeBound();
 	
@@ -155,12 +158,14 @@ bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
 	{
 		return true;
 	}
+	*/
 	
 	return false;
 }
 
 bool EffectsManager::IsThisSoundProducerInsideEffectZone(SoundProducer* thisSoundProducer,EffectZone* thisZone)
 {
+	/*
 	osg::BoundingSphere zone_box = thisZone->getTransformNode()->computeBound();
 	osg::BoundingSphere sound_producer_box = thisZone->getTransformNode()->computeBound();
 	
@@ -169,16 +174,32 @@ bool EffectsManager::IsThisSoundProducerInsideEffectZone(SoundProducer* thisSoun
 	{
 		return true;
 	}
-	
+	*/
 	return false;
 }
 
+void EffectsManager::ApplyThisEffectZoneEffectToThisSource(ALuint* source, EffectZone* thisZone)
+{
+	// Connect the source to the effect slot. This tells the source to use the
+	// effect slot 'slot', on send #0 with the AL_FILTER_NULL filter object.
+	
+	alSource3i(*source, AL_AUXILIARY_SEND_FILTER, (ALint)(*thisZone->GetEffectsSlotPointer()), 0, AL_FILTER_NULL);
+	assert(alGetError()== AL_NO_ERROR && "Failed to setup effect for sound source send 0.");
+}
+
+void EffectsManager::RemoveEffectFromThisSource(ALuint* source)
+{
+	alSource3i(*source,AL_AUXILIARY_SEND_FILTER,AL_EFFECTSLOT_NULL, 0, 0); 
+	assert(alGetError()==AL_NO_ERROR && "Failed to disable source send 0.");
+}
+
+/*
 void EffectsManager::ApplyThisEffectZoneEffectToThisTrack(SoundProducerTrack* thisSoundProducerTrack, EffectZone* thisZone)
 {
 	
-	/* Connect the source to the effect slot. This tells the source to use the
-	 * effect slot 'slot', on send #0 with the AL_FILTER_NULL filter object.
-	 */
+	// Connect the source to the effect slot. This tells the source to use the
+	// effect slot 'slot', on send #0 with the AL_FILTER_NULL filter object.
+	//
 	
 	ALuint* thisSource = thisSoundProducerTrack->GetReferenceToTrackSource();
 	 
@@ -202,6 +223,7 @@ std::vector <SoundProducerTrack*> *EffectsManager::GetReferenceToSoundProducerTr
 {
 	return m_track_manager_ptr->soundProducerTracks_vec;
 }
+*/
 
 void EffectsManager::FreeEffects()
 {

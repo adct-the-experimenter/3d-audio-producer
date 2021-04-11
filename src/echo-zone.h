@@ -84,7 +84,7 @@ private:
 	
 	EchoZoneProperties m_echo_prop;
 	
-	ZoneColor echoZoneColor;
+	Color echoZoneColor;
 	
 	EchoZoneSaveData m_saveData;
 };

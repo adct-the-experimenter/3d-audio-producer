@@ -47,10 +47,10 @@ set(SOURCES src/main.cpp
 			#src/CreateStandardReverbZoneDialog.cpp src/EditMultipleStandardReverbZonesDialog.cpp 
 			#src/CreateEAXReverbZoneDialog.cpp src/EditMultipleEAXReverbZonesDialog.cpp 
 			#src/CreateEchoZoneDialog.cpp src/EditMultipleEchoZonesDialog.cpp
-			#src/echo-zone.cpp
-			#src/reverb-zone.cpp
+			src/echo-zone.cpp
+			src/reverb-zone.cpp
 			src/effect-zone.cpp
-			#src/effects-manager.cpp
+			src/effects-manager.cpp
 			#src/soundproducer-track-manager.cpp
 			#src/soundproducer-track.cpp
 			#src/listener-track.cpp

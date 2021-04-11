@@ -1,18 +1,3 @@
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifdef WIN32
-#include <winsock2.h>
-#endif
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
-
 #include "reverb-zone.h"
 
 /*
@@ -77,12 +62,12 @@ ReverbZone::ReverbZone() : EffectZone()
 	standardColor.r = 0.9f;
 	standardColor.g = 0.8f;
 	standardColor.b = 0.0f;
-	standardColor.alpha = 0.3f;
+	standardColor.a = 0.3f;
 	
 	eaxColor.r = 0.6f;
 	eaxColor.g = 0.0f;
 	eaxColor.b = 0.1f;
-	eaxColor.alpha = 0.3f;
+	eaxColor.a = 0.3f;
 	
 }
 

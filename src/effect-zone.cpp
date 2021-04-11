@@ -68,7 +68,7 @@ EffectZone::~EffectZone()
 
 void EffectZone::DrawModel()
 {
-	DrawCube(zone_position,m_width, m_width, m_width, YELLOW);
+	DrawCube(zone_position,m_width, m_width, m_width, m_color);
 }
 
 void EffectZone::InitEffectZone(std::string& thisName,

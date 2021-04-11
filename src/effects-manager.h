@@ -1,6 +1,7 @@
 #ifndef EFFECTS_MANAGER_H
 #define EFFECTS_MANAGER_H
 
+#include "soundproducer-registry.h"
 
 #include "reverb-zone.h"
 #include "echo-zone.h"
@@ -57,7 +58,7 @@ public:
 private:
 	
 	//pointer to manager that contains all soundproducer tracks used
-	SoundProducerTrackManager* m_track_manager_ptr;
+	//SoundProducerTrackManager* m_track_manager_ptr;
 	
 	//pointer to listener
 	Listener* m_listener_ptr;
@@ -80,12 +81,14 @@ private:
 	bool IsThisSoundProducerInsideEffectZone(SoundProducer* thisSoundProducer,EffectZone* thisZone);
 	
 	//function to apply reverb effect of a zone to sound producer track
-	void ApplyThisEffectZoneEffectToThisTrack(SoundProducerTrack* thisSoundProducerTrack, EffectZone* thisZone);
+	//void ApplyThisEffectZoneEffectToThisTrack(SoundProducerTrack* thisSoundProducerTrack, EffectZone* thisZone);
+	void ApplyThisEffectZoneEffectToThisSource(ALuint* source, EffectZone* thisZone);
 	
 	//function to remove effect applied to the sound producer track
-	void RemoveEffectFromThisTrack(SoundProducerTrack* thisSoundProducerTrack);
+	//void RemoveEffectFromThisTrack(SoundProducerTrack* thisSoundProducerTrack);
+	void RemoveEffectFromThisSource(ALuint* source);
 	
-	std::vector <SoundProducerTrack*> *GetReferenceToSoundProducerTracksVector();
+	//std::vector <SoundProducerTrack*> *GetReferenceToSoundProducerTracksVector();
 };
 
 
