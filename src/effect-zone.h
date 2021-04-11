@@ -14,17 +14,9 @@
 #include <vector>
 #include <iostream>
 
-#include <osg/ShapeDrawable> //for object to render on screen
-#include <osg/PositionAttitudeTransform> //for matrix transform that moves object rendered
-#include <osg/Geode> //for object rendered to be moved on screen by matrix transform
+#include "raylib.h"
 
-struct ZoneColor
-{
-	float r; //red
-	float g; //green
-	float b; //blue
-	float alpha; //transparency
-};
+
 
 class EffectZone
 {
@@ -32,6 +24,8 @@ class EffectZone
 public:
 	EffectZone();
 	~EffectZone();
+	
+	void DrawModel();
 	
 	//name of zone
 	
@@ -56,20 +50,14 @@ public:
 							
 	void InitEffectZoneWithGraphicalObject(std::string& thisName,
 							double& x, double& y, double& z, double& width,
-							ZoneColor& color);
+							Color& color);
 	
 	
-	//3d Object properties
-	osg::ShapeDrawable* getRenderObject();
-
-	osg::Geode* getGeodeNode();
-
-	osg::PositionAttitudeTransform* getTransformNode();
 	
 	void ChangeWidth(double width);
 	double GetWidth();
 	
-	void SetColor(ZoneColor color);
+	void SetColor(Color color);
 	
 	//OpenAL Soft effects properties
 	
@@ -88,27 +76,15 @@ private:
 
 	ALuint* m_slot_ptr;
     
-	//Name of echo Zone
+	//Name of effect Zone
 	std::string name;
 	
-	//position of echo zone
-	std::vector <double> position_vector;
-	enum POSITION_INDEX { X=0,Y=1,Z=2 };
+	//position of effect zone
+	Vector3 zone_position;
 	
 	double m_width;
 	
-	//ShapeDrawable object to render
-	osg::ref_ptr<osg::ShapeDrawable> m_renderObject;
-
-	osg::ref_ptr<osg::Box> m_box;
-
-	//holds geometry information for rendering, moved by transform of matrix
-	osg::ref_ptr<osg::Geode> m_geode;
-
-	//moves the geode
-	osg::ref_ptr<osg::PositionAttitudeTransform> m_paTransform;
-	
-	ZoneColor m_color;
+	Color m_color;
 };
 
 #endif

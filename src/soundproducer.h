@@ -78,7 +78,6 @@ private:
 
 	//position of Sound Producer
 	Vector3 producer_position;
-	enum POSITION_INDEX { X=0,Y=1,Z=2 };
 
 
 	//source to play buffer

@@ -1,14 +1,12 @@
 #include "effects-manager.h"
 
-EffectsManager::EffectsManager(SoundProducerTrackManager* track_manager, Listener* listener)
+EffectsManager::EffectsManager()
 {
-	m_track_manager_ptr = track_manager;
-	m_listener_ptr = listener;
+	m_listener_ptr = nullptr;
 }
 
 EffectsManager::~EffectsManager()
 {	
-	m_track_manager_ptr = nullptr;
 	m_listener_ptr = nullptr;
 }
 
@@ -50,6 +48,8 @@ void EffectsManager::CreateEchoZone(std::string& name, double& x, double& y, dou
 	
 }
 
+void EffectsManager::SetPointerToListener(Listener* listener){m_listener_ptr = listener;}
+
 std::vector <EffectZone*> *EffectsManager::GetReferenceToEffectZoneVector(){return &effect_zones_vector;}
 
 EffectZone* EffectsManager::GetPointerToEffectZone(size_t& index){return effect_zones_vector[index];}
@@ -61,9 +61,10 @@ EchoZone* EffectsManager::GetPointerToEchoZone(size_t& index){return &echo_zones
 
 void EffectsManager::PerformReverbThreadOperation()
 {
-	//if sound is being played and there are reverb zones
-	if(m_track_manager_ptr->IsSoundBeingPlayed() && effect_zones_vector.size() > 0)
+	//if there are effect zones
+	if( effect_zones_vector.size() > 0)
 	{
+		//for each effect zone
 		for(size_t i = 0; i < effect_zones_vector.size(); i++)
 		{
 			//check if listener is in reverb zone

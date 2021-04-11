@@ -2,7 +2,6 @@
 #define EFFECTS_MANAGER_H
 
 
-#include "soundproducer-track-manager.h"
 #include "reverb-zone.h"
 #include "echo-zone.h"
 
@@ -12,8 +11,10 @@
 class EffectsManager
 {
 public:
-	EffectsManager(SoundProducerTrackManager* track_manager, Listener* listener);
+	EffectsManager();
 	~EffectsManager();
+	
+	void SetPointerToListener(Listener* listener);
 	
 	//function to create reverb zone that uses standard effects
 	void CreateStandardReverbZone(std::string& name, double& x, double& y, double& z, double& width, ReverbStandardProperties& properties);

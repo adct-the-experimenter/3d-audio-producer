@@ -49,7 +49,7 @@ set(SOURCES src/main.cpp
 			#src/CreateEchoZoneDialog.cpp src/EditMultipleEchoZonesDialog.cpp
 			#src/echo-zone.cpp
 			#src/reverb-zone.cpp
-			#src/effect-zone.cpp
+			src/effect-zone.cpp
 			#src/effects-manager.cpp
 			#src/soundproducer-track-manager.cpp
 			#src/soundproducer-track.cpp

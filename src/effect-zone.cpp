@@ -1,18 +1,3 @@
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifdef WIN32
-#include <winsock2.h>
-#endif
-
-#ifndef WX_PRECOMP
-#include "wx/wx.h"
-#endif
-
 #include "effect-zone.h"
 
 /*
@@ -71,17 +56,19 @@ EffectZone::EffectZone()
 {	
 	
 	//initialize position vector
-	position_vector.resize(3);
-	position_vector[POSITION_INDEX::X] = 0;
-	position_vector[POSITION_INDEX::Y] = 0;
-	position_vector[POSITION_INDEX::Z] = 0;
-	
-	
+	zone_position = {0,0,0};
+	m_width = 0;
+	m_color = {245, 245, 245, 150};
 }
 
 EffectZone::~EffectZone()
 {
 	
+}
+
+void EffectZone::DrawModel()
+{
+	DrawCube(zone_position,m_width, m_width, m_width, YELLOW);
 }
 
 void EffectZone::InitEffectZone(std::string& thisName,
@@ -91,9 +78,9 @@ void EffectZone::InitEffectZone(std::string& thisName,
 	name = thisName;
 	
 	//set position
-	position_vector[POSITION_INDEX::X] = x;
-	position_vector[POSITION_INDEX::Y] = y;
-	position_vector[POSITION_INDEX::Z] = z;
+	zone_position.x = x;
+	zone_position.y = y;
+	zone_position.z = z;
 	
 	//set width
 	m_width = width;
@@ -101,37 +88,11 @@ void EffectZone::InitEffectZone(std::string& thisName,
 }
 
 void EffectZone::InitEffectZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width, ZoneColor& color)
+							double& x, double& y, double& z, double& width, Color& color)
 {
 	
 	EffectZone::InitEffectZone( thisName,x, y, z, width);
-	
-	//make box
-	//create ShapeDrawable object
-	m_renderObject = new osg::ShapeDrawable;
-	m_box = new osg::Box(osg::Vec3(0.0f, 0.0f, 0.0f),m_width);
-
-	//make ShapeDrawable object a box
-	//initialize box at certain position
-	m_renderObject->setShape(m_box);
-	//set color of ShapeDrawable object with box
-	m_renderObject->setColor( osg::Vec4(color.r, color.g, color.b, color.alpha) );
-
-	m_geode = new osg::Geode;
-	m_geode->addDrawable( m_renderObject.get() );
-	
-	//make transparent
-	osg::StateSet* ss = new osg::StateSet();
-	m_geode->setStateSet(ss);
-	m_geode->getStateSet()->setMode( GL_BLEND, osg::StateAttribute::ON );
-	m_geode->getStateSet()->setRenderingHint( osg::StateSet::TRANSPARENT_BIN );
-
-	// Create transformation node
-	m_paTransform = new osg::PositionAttitudeTransform;
-
-	//initialize transform and add geode to it
-	m_paTransform->setPosition( osg::Vec3(x,y,z));
-	m_paTransform->addChild(m_geode);
+	m_color = color;
 }
 
 
@@ -142,82 +103,34 @@ std::string EffectZone::GetNameString(){ return name;}
 
 void EffectZone::SetPositionX(double& x)
 {
-	position_vector[POSITION_INDEX::X] = x;
+	zone_position.x = x;
 
-	m_paTransform->setPosition(osg::Vec3(x,
-								position_vector[POSITION_INDEX::Y],
-								position_vector[POSITION_INDEX::Z]));
 }
 
-double EffectZone::GetPositionX(){return position_vector[POSITION_INDEX::X];}
+double EffectZone::GetPositionX(){return zone_position.x;}
 
 void EffectZone::SetPositionY(double& y)
 {
-	position_vector[POSITION_INDEX::Y] = y;
-
-	m_paTransform->setPosition(osg::Vec3(position_vector[POSITION_INDEX::X],
-								y,
-								position_vector[POSITION_INDEX::Z]));
+	zone_position.y = y;
 }
 
-double EffectZone::GetPositionY(){return position_vector[POSITION_INDEX::Y];}
+double EffectZone::GetPositionY(){return zone_position.y;}
 
 void EffectZone::SetPositionZ(double& z)
 {
-	position_vector[POSITION_INDEX::Z] = z;
-
-	m_paTransform->setPosition(osg::Vec3(position_vector[POSITION_INDEX::X],
-								position_vector[POSITION_INDEX::Y],
-								z));
+	zone_position.z = z;
 }
 
-double EffectZone::GetPositionZ(){return position_vector[POSITION_INDEX::Z];}
+double EffectZone::GetPositionZ(){return zone_position.z;}
 
 
-osg::ShapeDrawable* EffectZone::getRenderObject(){return m_renderObject;}
-
-osg::Geode* EffectZone::getGeodeNode(){return m_geode;}
-
-osg::PositionAttitudeTransform* EffectZone::getTransformNode(){return m_paTransform;}
-
-
-
-void EffectZone::ChangeWidth(double width)
-{
-	
-	m_width = width;
-	
-	//remove drawable of box from geode 
-	m_geode->removeDrawable( m_renderObject.get() );
-	
-	
-	//make box with new width
-	//create ShapeDrawable object
-	m_renderObject = new osg::ShapeDrawable;
-	m_box = new osg::Box(osg::Vec3(0.0f, 0.0f, 0.0f),m_width);
-
-	//make ShapeDrawable object a box
-	//initialize box at certain position
-	m_renderObject->setShape(m_box);
-	
-	//set color of ShapeDrawable object with box
-	m_renderObject->setColor( osg::Vec4(m_color.r, m_color.g, m_color.b, m_color.alpha) );
-	
-	//add new drawable to geode
-	m_geode->addDrawable( m_renderObject.get() );
-	
-}
+void EffectZone::ChangeWidth(double width){m_width = width;}
 
 double EffectZone::GetWidth(){return m_width;}
 
-void EffectZone::SetColor(ZoneColor color)
+void EffectZone::SetColor(Color color)
 {
 	m_color = color;
-	//set color of ShapeDrawable object with box
-	if(m_renderObject)
-	{
-		m_renderObject->setColor( osg::Vec4(color.r,color.g, color.b, color.alpha) );
-	}
 }
 
 void EffectZone::SetEffectsSlotPointer(ALuint* slot_ptr){m_slot_ptr = slot_ptr;}
