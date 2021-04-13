@@ -2,13 +2,15 @@
 
 #include "raygui/raygui.h"
 
+#include "raygui/raygui_extras.h"
+
 EditListenerDialog::EditListenerDialog(const std::string& title)
 {
 	
 }
 
 
-int editlt_x_value = 0;
+float editlt_x_value = 0;
 bool editlt_x_box_pressed = false;
 int editlt_y_value = 0;
 bool editlt_y_box_pressed = false;
@@ -28,7 +30,7 @@ void EditListenerDialog::InitGUI()
 	if(ptrListener == nullptr){std::cout << "listener pointer is nullptr! \n";}
 	else
 	{
-		editlt_x_value = int(ptrListener->getPositionX());
+		editlt_x_value = ptrListener->getPositionX();
 		editlt_y_value = int(ptrListener->getPositionY());
 		editlt_z_value = int(ptrListener->getPositionZ());
 		
@@ -39,6 +41,7 @@ void EditListenerDialog::InitGUI()
 	}
 }
 
+
 void EditListenerDialog::DrawDialog()
 {
 	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Edit Sound Producer");
@@ -46,7 +49,12 @@ void EditListenerDialog::DrawDialog()
 	if(exit){cancelClicked = true;}
 	
 	
-	if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &editlt_x_value, -10, 10, editlt_x_box_pressed) )
+	//if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &editlt_x_value, -10, 10, editlt_x_box_pressed) )
+	//{
+	//	editlt_x_box_pressed = !editlt_x_box_pressed;
+	//}
+	if( GuiTextBox_ValidValueFloat((Rectangle){400,300,50,50}, 20, editlt_x_box_pressed, 
+									&editlt_x_value, 0.0f, -10.0f, 10.0f ) )
 	{
 		editlt_x_box_pressed = !editlt_x_box_pressed;
 	}

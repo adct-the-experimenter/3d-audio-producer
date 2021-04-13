@@ -128,6 +128,7 @@
 *
 **********************************************************************************************/
 
+
 #ifndef RAYGUI_H
 #define RAYGUI_H
 
@@ -481,6 +482,8 @@ RAYGUIDEF void UnloadGuiStyle(GuiStyle style);                  // Unload style
 */
 
 RAYGUIDEF const char *GuiIconText(int iconId, const char *text); // Get text with icon id prepended (if supported)
+
+
 
 #if defined(RAYGUI_SUPPORT_ICONS)
 // Gui icons functionality
@@ -1671,6 +1674,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
 
     return pressed;
 }
+
 
 // Text Box control with multiple lines
 bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
@@ -3635,6 +3639,7 @@ static int TextToInteger(const char *text)
 
     return value*sign;
 }
+
 
 // Encode codepoint into utf8 text (char array length returned as parameter)
 static const char *CodepointToUtf8(int codepoint, int *byteLength)
