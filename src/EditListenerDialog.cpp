@@ -12,10 +12,19 @@ EditListenerDialog::EditListenerDialog(const std::string& title)
 
 float editlt_x_value = 0;
 bool editlt_x_box_pressed = false;
-int editlt_y_value = 0;
+char textBufferX[9];
+bool xValueChanged = false;
+
+float editlt_y_value = 0;
 bool editlt_y_box_pressed = false;
-int editlt_z_value = 0;
+char textBufferY[9];
+bool yValueChanged = false;
+
+float editlt_z_value = 0;
 bool editlt_z_box_pressed = false;
+char textBufferZ[9];
+bool zValueChanged = false;
+
 
 bool editlt_tempFreeRoamBool = false;
 bool editlt_free_roam_box_stat = false;
@@ -31,15 +40,20 @@ void EditListenerDialog::InitGUI()
 	else
 	{
 		editlt_x_value = ptrListener->getPositionX();
-		editlt_y_value = int(ptrListener->getPositionY());
-		editlt_z_value = int(ptrListener->getPositionZ());
+		sprintf(textBufferX, "%f", editlt_x_value);
 		
+		editlt_y_value = ptrListener->getPositionY();
+		sprintf(textBufferY, "%f", editlt_y_value);
+		
+		editlt_z_value = ptrListener->getPositionZ();
+		sprintf(textBufferZ, "%f", editlt_z_value);
 		
 		editlt_tempFreeRoamBool = ptrListener->GetListenerFreeRoamBool();
 		
 		editlt_extOrientationBool = ptrListener->GetListenerExternalDeviceOrientationBool();
 	}
 }
+
 
 
 void EditListenerDialog::DrawDialog()
@@ -49,20 +63,23 @@ void EditListenerDialog::DrawDialog()
 	if(exit){cancelClicked = true;}
 	
 	
-	//if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &editlt_x_value, -10, 10, editlt_x_box_pressed) )
-	//{
-	//	editlt_x_box_pressed = !editlt_x_box_pressed;
-	//}
 	if( GuiTextBox_ValidValueFloat((Rectangle){400,300,50,50}, 20, editlt_x_box_pressed, 
-									&editlt_x_value, 0.0f, -10.0f, 10.0f ) )
+									&editlt_x_value, 0.0f, -10.0f, 10.0f,
+									 textBufferX,&xValueChanged,"X:") )
 	{
 		editlt_x_box_pressed = !editlt_x_box_pressed;
 	}
-	if( GuiValueBox((Rectangle){500,300,50,50}, "Y:", &editlt_y_value, -10, 10, editlt_y_box_pressed) )
+	//if( GuiValueBox((Rectangle){500,300,50,50}, "Y:", &editlt_y_value, -10, 10, editlt_y_box_pressed) )
+	if( GuiTextBox_ValidValueFloat((Rectangle){500,300,50,50}, 20, editlt_y_box_pressed, 
+									&editlt_y_value, 0.0f, -10.0f, 10.0f,
+									 textBufferY,&yValueChanged,"Y:") )
 	{
 		editlt_y_box_pressed = !editlt_y_box_pressed;
 	}
-	if( GuiValueBox((Rectangle){600,300,50,50}, "Z:", &editlt_z_value, -10, 10, editlt_z_box_pressed) )
+	//if( GuiValueBox((Rectangle){600,300,50,50}, "Z:", &editlt_z_value, -10, 10, editlt_z_box_pressed) )
+	if( GuiTextBox_ValidValueFloat((Rectangle){600,300,50,50}, 20, editlt_z_box_pressed, 
+									&editlt_z_value, 0.0f, -10.0f, 10.0f,
+									 textBufferZ,&zValueChanged,"Z:") )
 	{
 		editlt_z_box_pressed = !editlt_z_box_pressed;
 	}
@@ -90,14 +107,10 @@ void EditListenerDialog::ChangeListenerAttributes()
 	if(ptrListener != nullptr)
 	{
 		//change position of selected sound producer based on what is in textfields
-		float xPosition, yPosition, zPosition;
-		xPosition = float(editlt_x_value);
-		yPosition = float(editlt_x_value);
-		zPosition = float(editlt_x_value);
 		
-		ptrListener->setPositionX(xPosition);
-		ptrListener->setPositionY(yPosition);
-		ptrListener->setPositionZ(zPosition);
+		ptrListener->setPositionX(editlt_x_value);
+		ptrListener->setPositionY(editlt_y_value);
+		ptrListener->setPositionZ(editlt_z_value);
 		
 		//change free roam status
 		ptrListener->SetListenerFreeRoamBool(editlt_tempFreeRoamBool);

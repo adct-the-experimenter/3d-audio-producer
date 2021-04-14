@@ -37,34 +37,29 @@ bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode,
 								float* current_value, float default_value, float min, float max);
 
 
-char str_value_buffer[20];
-char str_value_buffer_prev[20];
-bool str_value_changed = false;
 
 bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode, 
-								float* current_value, float default_value, float min, float max)
+								float* current_value, float default_value, float min, float max,
+								char* textBuffer,bool* valueChanged, const char* label)
 {
 	
 	
 	//draw Gui Text boxRectangle bounds, char *text, int textSize, bool editMode
-	bool active = GuiTextBox(rect, str_value_buffer, textSize, editMode);
+	bool active = GuiTextBox(rect, textBuffer, textSize, editMode);
+	DrawText(label, rect.x - 10, rect.y + rect.height/2, 10, BLACK);
 	
 	if(editMode)
 	{
 		//do writing here
-		
-		if(strcmp(str_value_buffer_prev,str_value_buffer) != 0)
-		{
-			str_value_changed = true;
-		}
+		*valueChanged = true;
 	}
 	else
 	{	
 		//if string value in text box changed
-		if(str_value_changed)
+		if(*valueChanged)
 		{
 			//check the result of atof
-			double atof_result = atof(str_value_buffer);
+			double atof_result = atof(textBuffer);
 			
 			//if result is zero, then set it to default value
 			if(atof_result == 0.0){ *current_value = default_value;}
@@ -76,11 +71,10 @@ bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode,
 			}
 			
 			//set text to current value
-			sprintf(str_value_buffer, "%f", *current_value);
-			strcpy(str_value_buffer_prev,str_value_buffer);
+			sprintf(textBuffer, "%f", *current_value);
 		}
 		
-		str_value_changed = false;
+		*valueChanged = false;
 	}
 	
 	
