@@ -16,21 +16,21 @@ CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 
 void CreateSoundProducerDialog::SetPointerToSoundBank(SoundBank* thisSoundBank){m_sound_bank_ptr = thisSoundBank;}
 
-int x_value = 0;
-bool x_box_pressed = false;
-int y_value = 0;
-bool y_box_pressed = false;
-int z_value = 0;
-bool z_box_pressed = false;
-std::uint8_t account_num;
+static int x_value = 0;
+static bool x_box_pressed = false;
+static int y_value = 0;
+static bool y_box_pressed = false;
+static int z_value = 0;
+static bool z_box_pressed = false;
+static std::uint8_t account_num;
 
-char char_name[20] = "name here";
-bool name_box_pressed = false;
+static char char_name[20] = "name here";
+static bool name_box_pressed = false;
 
-bool free_roam_box_stat = false;
+static bool free_roam_box_stat = false;
 
-bool dropDownSoundMode = false;
-int dropDownSoundActive = 0;
+static bool dropDownSoundMode = false;
+static int dropDownSoundActive = 0;
 
 
 void CreateSoundProducerDialog::DrawDialog()

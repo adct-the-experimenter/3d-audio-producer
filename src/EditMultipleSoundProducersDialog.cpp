@@ -16,8 +16,10 @@ void EditMultipleSoundProducersDialog::SetPointerToSoundBank(SoundBank* thisSoun
 
 int editsp_x_value = 0;
 bool editsp_x_box_pressed = false;
+
 int editsp_y_value = 0;
 bool editsp_y_box_pressed = false;
+
 int editsp_z_value = 0;
 bool editsp_z_box_pressed = false;
 

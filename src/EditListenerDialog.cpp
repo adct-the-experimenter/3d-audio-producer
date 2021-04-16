@@ -2,6 +2,7 @@
 
 #include "raygui/raygui.h"
 
+#define GUI_VALIDFLOATBOX
 #include "raygui/raygui_extras.h"
 
 EditListenerDialog::EditListenerDialog(const std::string& title)
@@ -65,21 +66,19 @@ void EditListenerDialog::DrawDialog()
 	
 	if( GuiTextBox_ValidValueFloat((Rectangle){400,300,50,50}, 20, editlt_x_box_pressed, 
 									&editlt_x_value, 0.0f, -10.0f, 10.0f,
-									 textBufferX,&xValueChanged,"X:") )
+									 textBufferX,&xValueChanged,"X:",10) )
 	{
 		editlt_x_box_pressed = !editlt_x_box_pressed;
 	}
-	//if( GuiValueBox((Rectangle){500,300,50,50}, "Y:", &editlt_y_value, -10, 10, editlt_y_box_pressed) )
 	if( GuiTextBox_ValidValueFloat((Rectangle){500,300,50,50}, 20, editlt_y_box_pressed, 
 									&editlt_y_value, 0.0f, -10.0f, 10.0f,
-									 textBufferY,&yValueChanged,"Y:") )
+									 textBufferY,&yValueChanged,"Y:",10) )
 	{
 		editlt_y_box_pressed = !editlt_y_box_pressed;
 	}
-	//if( GuiValueBox((Rectangle){600,300,50,50}, "Z:", &editlt_z_value, -10, 10, editlt_z_box_pressed) )
 	if( GuiTextBox_ValidValueFloat((Rectangle){600,300,50,50}, 20, editlt_z_box_pressed, 
 									&editlt_z_value, 0.0f, -10.0f, 10.0f,
-									 textBufferZ,&zValueChanged,"Z:") )
+									 textBufferZ,&zValueChanged,"Z:",10) )
 	{
 		editlt_z_box_pressed = !editlt_z_box_pressed;
 	}

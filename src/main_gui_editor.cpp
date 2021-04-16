@@ -13,6 +13,7 @@
 #include "EditListenerDialog.h"
 #include "HRTF-Test-Dialog.h"
 #include "Change-HRTF-Dialog.h"
+#include "CreateEchoZoneDialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -28,7 +29,7 @@
 
 //#include "CreateStandardReverbZoneDialog.h"
 //#include "CreateEAXReverbZoneDialog.h"
-//#include "CreateEchoZoneDialog.h"
+
 
 //#include "EditMultipleStandardReverbZonesDialog.h"
 //#include "EditMultipleEAXReverbZonesDialog.h"
@@ -45,6 +46,7 @@ EditListenerDialog edit_lt_dialog("Edit Listener");
 ImmediateModeSoundPlayer im_sound_player;
 HRTFTestDialog hrtf_test_dialog;
 ChangeHRTFDialog change_hrtf_dialog;
+CreateEchoZoneDialog create_echo_zone_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -414,7 +416,11 @@ bool objectManipulationState = false;
 
 
 //state 
-enum class GuiState : std::uint8_t { NONE=0, CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, EDIT_LISTENER, TEST_HRTF, CHANGE_HRTF };
+enum class GuiState : std::uint8_t { NONE=0, 
+									CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, 
+									EDIT_LISTENER, 
+									TEST_HRTF, CHANGE_HRTF, 
+									CREATE_ECHO_ZONE };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -456,6 +462,10 @@ void MainGuiEditor::draw_object_creation_menu()
 				case 2:{ g_state = GuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
 				//standard reverb zone
 				case 3:{break;}
+				//eax reverb zone
+				case 4:{break;}
+				//echo zone
+				case 5:{ g_state = GuiState::CREATE_ECHO_ZONE; dialogInUse = true; break;}
 				default:{break;}
 			}
 		}
@@ -554,7 +564,18 @@ void MainGuiEditor::draw_object_creation_menu()
 				dialogInUse = false;
 			}
 			
+			break;
+		}
+		case GuiState::CREATE_ECHO_ZONE:
+		{
+			create_echo_zone_dialog.DrawDialog();
 			
+			if(create_echo_zone_dialog.OkClickedOn() || create_echo_zone_dialog.CancelClickedOn())
+			{						
+				g_state = GuiState::NONE;
+				create_echo_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
 			break;
 		}
 		default:{ break;}

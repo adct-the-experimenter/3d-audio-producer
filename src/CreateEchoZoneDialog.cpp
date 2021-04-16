@@ -1,54 +1,107 @@
 #include "CreateEchoZoneDialog.h"
 
-CreateEchoZoneDialog::CreateEchoZoneDialog(const wxString& title,EffectsManager* effects_manager) : wxDialog(NULL, -1, title, wxDefaultPosition, wxSize(400, 600))
+#include "raygui/raygui.h"
+
+#include "raygui/raygui_extras.h"
+
+CreateEchoZoneDialog::CreateEchoZoneDialog() 
 {
 	okClicked = false;
-	
-	m_effects_manager_ptr = effects_manager;
-	
+	cancelClicked = false;
+		
 	spt_selection_index = -1;
+	
+}
+
+void CreateEchoZoneDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
+
+std::string& CreateEchoZoneDialog::getNewName(){return name;}
+
+void CreateEchoZoneDialog::getNewPosition(double& x, double& y, double& z)
+{
+	x = xPosition;
+	y = yPosition;
+	z = zPosition;
+}
+
+double& CreateEchoZoneDialog::getNewWidth(){return width;}
+	
+EchoZoneProperties& CreateEchoZoneDialog::getNewProperties(){return properties;}
+
+static bool ez_name_box_pressed = false;
+static char ez_char_name[20] = "name here";
+
+static float editez_x_value = 0;
+static bool editez_x_box_pressed = false;
+static char ez_textBufferX[9];
+static bool ez_xValueChanged = false;
+
+static float editez_y_value = 0;
+static bool editez_y_box_pressed = false;
+static char ez_textBufferY[9];
+static bool ez_yValueChanged = false;
+
+static float editez_z_value = 0;
+static bool editez_z_box_pressed = false;
+static char ez_textBufferZ[9];
+static bool ez_zValueChanged = false;
+
+static float editez_width_value = 0;
+static bool editez_width_box_pressed = false;
+static char ez_textBufferWidth[9];
+static bool ez_widthValueChanged = false;
+
+static float editez_delay_value = 0;
+static bool editez_delay_box_pressed = false;
+static char ez_textBufferDelay[9];
+static bool ez_delayValueChanged = false;
+
+void CreateEchoZoneDialog::DrawDialog()
+{
+	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Create Echo Zone");
+	
+	if(exit){cancelClicked = true;}
 	
 	//initialize text fields
 	
-	wxFloatingPointValidator <double> validatorFloat(3,nullptr,wxNUM_VAL_ZERO_AS_BLANK);
-    validatorFloat.SetRange(-100.00,100.00);     // set allowable range
+	if( GuiTextBox((Rectangle){350,130,100,50}, ez_char_name, 20, ez_name_box_pressed) )
+	{
+		ez_name_box_pressed = !ez_name_box_pressed;
+	}
     
-    textFieldName = new wxTextCtrl(this,-1, "Name", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER);
+    if( GuiTextBox_ValidValueFloat((Rectangle){350,200,50,50}, 20, editez_x_box_pressed, 
+									&editez_x_value, 0.0f, -10.0f, 10.0f,
+									 ez_textBufferX,&ez_xValueChanged,"X:",10) )
+	{
+		editez_x_box_pressed = !editez_x_box_pressed;
+	}
+	if( GuiTextBox_ValidValueFloat((Rectangle){450,200,50,50}, 20, editez_y_box_pressed, 
+									&editez_y_value, 0.0f, -10.0f, 10.0f,
+									 ez_textBufferY,&ez_yValueChanged,"Y:",10) )
+	{
+		editez_y_box_pressed = !editez_y_box_pressed;
+	}
+	if( GuiTextBox_ValidValueFloat((Rectangle){550,200,50,50}, 20, editez_z_box_pressed, 
+									&editez_z_value, 0.0f, -10.0f, 10.0f,
+									 ez_textBufferZ,&ez_zValueChanged,"Z:",10) )
+	{
+		editez_z_box_pressed = !editez_z_box_pressed;
+	}
     
-	textFieldX = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 60), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldY = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 80), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldZ = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
+    if( GuiTextBox_ValidValueFloat((Rectangle){350,270,50,50}, 20, editez_width_box_pressed, 
+									&editez_width_value, 0.0f, 1.0f, 30.0f,
+									 ez_textBufferWidth,&ez_widthValueChanged,"Width:",40) )
+	{
+		editez_width_box_pressed = !editez_width_box_pressed;
+	}
 	
-	validatorFloat.SetRange(2.0,30.00);     // set allowable range
-	textFieldWidth = new wxTextCtrl(this,-1, "2.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
-	
-	
-	validatorFloat.SetRange(0.0,0.207);     // set allowable range
-	textField_flDelay = new wxTextCtrl(this,-1, "0.1", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	 if( GuiTextBox_ValidValueFloat((Rectangle){350,340,50,50}, 20, editez_delay_box_pressed, 
+									&editez_delay_value, 0.1f, 0.0f, 0.207f,
+									 ez_textBufferDelay,&ez_delayValueChanged,"Delay:",40) )
+	{
+		editez_delay_box_pressed = !editez_delay_box_pressed;
+	}
+    /*
 	
 	validatorFloat.SetRange(0.0,0.404);     // set allowable range
 	textField_flLRDelay = new wxTextCtrl(this,-1, "0.1", 
@@ -78,33 +131,7 @@ CreateEchoZoneDialog::CreateEchoZoneDialog(const wxString& title,EffectsManager*
 								validatorFloat,          // associate the text box with the desired validator
 								wxT(""));
 	
-	
-	
-	//initialize text to the left of fields
-	wxStaticText* NameText = new wxStaticText(this, -1, wxT("Name :"), wxPoint(40, 20));
-	wxStaticText* positionText = new wxStaticText(this, -1, wxT("Position :"), wxPoint(20, 40));
-	wxStaticText* xPositionText = new wxStaticText(this, -1, wxT("X :"), wxPoint(40, 60));
-	wxStaticText* yPositionText = new wxStaticText(this, -1, wxT("Y :"), wxPoint(40, 80));
-	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100));
-	wxStaticText* widthText = new wxStaticText(this, -1, wxT("Width :"), wxPoint(40, 120));
-    
-    wxStaticText* echoText = new wxStaticText(this, -1, wxT("Echo Properties"), wxPoint(40, 120));
-    wxStaticText* flDelayText = new wxStaticText(this, -1, wxT("delay:"), wxPoint(40, 120));
-	wxStaticText* flLRDelayText = new wxStaticText(this, -1, wxT("LR delay:"), wxPoint(40, 120));
-	wxStaticText* flDampingText = new wxStaticText(this, -1, wxT("Damping:"), wxPoint(40, 120));
-	wxStaticText* flFeedbackText = new wxStaticText(this, -1, wxT("feedback:"), wxPoint(40, 120));
-	wxStaticText* flSpreadText = new wxStaticText(this, -1, wxT("spread:"), wxPoint(40, 120));
-	
-    wxStaticText* spPreviewText = new wxStaticText(this, -1, wxT("Sound Producer on Track To Preview :"), wxPoint(40, 20));
-    
-    //make horizontal box to put names in
-	wxBoxSizer* hboxSoundProducers = new wxBoxSizer(wxHORIZONTAL);
-	
-	//list box to contain names of Sound Producers to edit, single selection by default 
-	listboxSoundProducers = new wxListBox(this, ID_LISTBOX, 
-							wxPoint(0, 0), wxSize(100, 20)); 
-	
-	listboxSoundProducers->Bind(wxEVT_LISTBOX,&CreateEchoZoneDialog::SoundProducerTrackSelectedInListBox,this);
+
 	
 	//add contents of soundproducers to listbox
 	if(m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)
@@ -120,10 +147,6 @@ CreateEchoZoneDialog::CreateEchoZoneDialog(const wxString& title,EffectsManager*
 		}
 	}
 	
-	
-	//add listbox to name box
-	hboxSoundProducers->Add(listboxSoundProducers, 1, wxEXPAND | wxALL, 20);
-    
     
     //initialize Ok and Cancel buttons 
 	okButton = new wxButton(this, wxID_ANY, wxT("Ok"), 
@@ -140,121 +163,14 @@ CreateEchoZoneDialog::CreateEchoZoneDialog(const wxString& title,EffectsManager*
 								wxDefaultPosition, wxSize(70, 30));
 	
 	previewButton->Bind(wxEVT_BUTTON,&CreateEchoZoneDialog::OnPreview,this);
-	
-	//Make vertical box to put horizontal boxes in
-	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-	
-	//make horizontal box to put ok and cancel buttons in
-	wxBoxSizer *hbox5 = new wxBoxSizer(wxHORIZONTAL);
-	
-	hbox5->Add(previewButton,1);
-	hbox5->Add(okButton, 1);
-	hbox5->Add(cancelButton, 1, wxLEFT, 5);
-	
-	//add panel of text fields in vertical box
-	
-	wxBoxSizer *hboxName = new wxBoxSizer(wxHORIZONTAL);
-	hboxName->Add(NameText); hboxName->Add(textFieldName);
-	
-	vbox->Add(hboxName, 1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(positionText);
-	
-	wxBoxSizer *hboxX = new wxBoxSizer(wxHORIZONTAL);
-	hboxX->Add(xPositionText); hboxX->Add(textFieldX);
-	
-	vbox->Add(hboxX,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxY = new wxBoxSizer(wxHORIZONTAL);
-	hboxY->Add(yPositionText); hboxY->Add(textFieldY);
-	
-	vbox->Add(hboxY,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxZ = new wxBoxSizer(wxHORIZONTAL);
-	hboxZ->Add(zPositionText); hboxZ->Add(textFieldZ);
-	
-	vbox->Add(hboxZ,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxWidth = new wxBoxSizer(wxHORIZONTAL);
-	hboxWidth->Add(widthText); hboxWidth->Add(textFieldWidth);
-	
-	vbox->Add(hboxWidth,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(echoText);
-	
-	wxBoxSizer *hboxEchoRow1 = new wxBoxSizer(wxHORIZONTAL);
-	hboxEchoRow1->Add(flDelayText); hboxEchoRow1->Add(textField_flDelay); 
-	hboxEchoRow1->Add(flLRDelayText); hboxEchoRow1->Add(textField_flLRDelay);
-	
-	vbox->Add(hboxEchoRow1,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxEchoRow2 = new wxBoxSizer(wxHORIZONTAL);
-	hboxEchoRow2->Add(flDampingText); hboxEchoRow2->Add(textField_flDamping);
-	
-	vbox->Add(hboxEchoRow2,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxEchoRow3 = new wxBoxSizer(wxHORIZONTAL);
-	hboxEchoRow3->Add(flFeedbackText); hboxEchoRow3->Add(textField_flFeedback);
-	hboxEchoRow3->Add(flSpreadText); hboxEchoRow3->Add(textField_flSpread);
-	
-	vbox->Add(hboxEchoRow3,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(spPreviewText);
-	vbox->Add(hboxSoundProducers,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(hbox5, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-
-	SetSizerAndFit(vbox);
-	
-	//center and show elements in dialog
-	Centre();
-	ShowModal();
-
-	//destroy when done showing
-	Destroy(); 
+	*/
 }
 
-std::string& CreateEchoZoneDialog::getNewName(){return name;}
 
-void CreateEchoZoneDialog::getNewPosition(double& x, double& y, double& z)
+
+void CreateEchoZoneDialog::Preview()
 {
-	x = xPosition;
-	y = yPosition;
-	z = zPosition;
-}
-
-double& CreateEchoZoneDialog::getNewWidth(){return width;}
-	
-EchoZoneProperties& CreateEchoZoneDialog::getNewProperties(){return properties;}
-
-void CreateEchoZoneDialog::OnOk(wxCommandEvent& event )
-{
-	okClicked = true;
-	
-	//save reverb zone properties
-	name = textFieldName->GetLineText(0).ToStdString();
-	( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-	( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-	( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
-	( textFieldWidth->GetLineText(0) ).ToDouble(&width);
-	
-
-	( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-	( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-	( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
-	( textFieldWidth->GetLineText(0) ).ToDouble(&width);
-	
-	( textField_flDelay->GetLineText(0) ).ToDouble(&properties.flDelay);
-	( textField_flLRDelay->GetLineText(0) ).ToDouble(&properties.flLRDelay);
-	( textField_flDamping->GetLineText(0) ).ToDouble(&properties.flDamping);
-	( textField_flFeedback->GetLineText(0) ).ToDouble(&properties.flFeedback);
-	( textField_flSpread->GetLineText(0) ).ToDouble(&properties.flSpread);
-	
-	CreateEchoZoneDialog::Exit();
-}
-
-void CreateEchoZoneDialog::OnPreview(wxCommandEvent& event)
-{
+	/*
 	if(m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)
 	{
 		
@@ -319,35 +235,16 @@ void CreateEchoZoneDialog::OnPreview(wxCommandEvent& event)
 			wxMessageBox( wxT("Select a soundproducer!") );
 		}
 	}
+	*/
 	
 }
 
-void CreateEchoZoneDialog::SoundProducerTrackSelectedInListBox(wxCommandEvent& event )
-{
-	spt_selection_index = listboxSoundProducers->GetSelection();
-}
+bool CreateEchoZoneDialog::CancelClickedOn(){return cancelClicked;}
 
+bool CreateEchoZoneDialog::OkClickedOn(){return okClicked;}
 
-void CreateEchoZoneDialog::OnCancel(wxCommandEvent& event)
+void CreateEchoZoneDialog::resetConfig()
 {
 	okClicked = false;
-	CreateEchoZoneDialog::Exit();
+	cancelClicked = false;
 }
-
-void CreateEchoZoneDialog::Exit()
-{
-	if(okButton != nullptr){ delete okButton;}
-	if(cancelButton != nullptr){delete cancelButton;}
-	if(previewButton != nullptr){delete previewButton;}
-	
-	if(textFieldX != nullptr){ delete textFieldX;}
-	if(textFieldY != nullptr){ delete textFieldY;}
-	if(textFieldZ != nullptr){ delete textFieldZ;}
-	if(textFieldWidth != nullptr){ delete textFieldWidth;}
-	
- 
-    Close( true ); //close window
-}
-
-bool CreateEchoZoneDialog::OkClicked(){return okClicked;}
-

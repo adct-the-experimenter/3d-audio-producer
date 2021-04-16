@@ -32,21 +32,37 @@
 #include <stdlib.h>
 #include <string.h>
 
-//text box that only accepts number
+#ifndef GUI_VALIDFLOAT_H
+#define GUI_VALIDFLOAT_H
+
+#ifdef __cplusplus
+extern "C" {            // Prevents name mangling of functions
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
 bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode, 
-								float* current_value, float default_value, float min, float max);
+								float* current_value, float default_value, float min, float max,
+								char* textBuffer,bool* valueChanged, const char* label, int label_width);
+#endif
+
+#if defined(GUI_VALIDFLOATBOX)
+
+//text box that only accepts number
 
 
 
 bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode, 
 								float* current_value, float default_value, float min, float max,
-								char* textBuffer,bool* valueChanged, const char* label)
+								char* textBuffer,bool* valueChanged, const char* label, int label_width)
 {
 	
 	
 	//draw Gui Text boxRectangle bounds, char *text, int textSize, bool editMode
 	bool active = GuiTextBox(rect, textBuffer, textSize, editMode);
-	DrawText(label, rect.x - 10, rect.y + rect.height/2, 10, BLACK);
+	DrawText(label, rect.x - label_width, rect.y + rect.height/2, 10, BLACK);
 	
 	if(editMode)
 	{
@@ -81,3 +97,5 @@ bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode,
 	
 	return active;	
 }
+
+#endif

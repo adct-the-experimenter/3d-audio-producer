@@ -1,28 +1,20 @@
 #ifndef CREATE_ECHO_ZONE_H
 #define CREATE_ECHO_ZONE_H
 
-#include <wx/wx.h>
-
-#include <wx/valnum.h> //for wxFloatingPointValidator
-#include <wx/textctrl.h> //for wxTextCtrl
-#include <wx/listbox.h> //for list box
-
 #include "effects-manager.h"
 
 
-
-class CreateEchoZoneDialog : public wxDialog
+class CreateEchoZoneDialog
 {
 
 public:
-	CreateEchoZoneDialog(const wxString& title,EffectsManager* effects_manager);
+	CreateEchoZoneDialog();
 	
-
-	void OnOk(wxCommandEvent& event );
-
-	void OnCancel(wxCommandEvent& event);
+	void SetPointerToEffectsManager(EffectsManager* effects_manager);
 	
-	void OnPreview(wxCommandEvent& event);
+	void DrawDialog();
+	
+	void Preview();
 
 	void Exit();
 
@@ -36,47 +28,17 @@ public:
 	
 	EchoZoneProperties& getNewProperties();
 	
-	enum
-	{
-		ID_OK = wxID_HIGHEST + 1,
-		ID_PREVIEW,
-		ID_APPLY,
-		ID_CANCEL,
-		ID_RENAME,
-		ID_LISTBOX
-	};
+
+	bool CancelClickedOn();
+	bool OkClickedOn();
 	
-	bool OkClicked();
+	void resetConfig();
 	
 private:
 	EffectsManager* m_effects_manager_ptr;
 	
-	wxButton* okButton;
-	wxButton* cancelButton;
-	wxButton* previewButton;
-	
-	wxListBox* listboxSoundProducers;
 	int spt_selection_index;
 	
-	//text fields
-	wxTextCtrl* textFieldName;
-
-	wxTextCtrl* textFieldX;
-	wxTextCtrl* textFieldY;
-	wxTextCtrl* textFieldZ;
-	wxTextCtrl* textFieldWidth;
-	
-	
-	//AL_ECHO_DELAY
-	wxTextCtrl* textField_flDelay;
-	//AL_ECHO_LRDELAY
-	wxTextCtrl* textField_flLRDelay;
-	//AL_ECHO_DAMPING
-	wxTextCtrl* textField_flDamping;
-	//AL_ECHO_FEEDBACK
-	wxTextCtrl* textField_flFeedback;
-	//AL_ECHO_SPREAD
-	wxTextCtrl* textField_flSpread;
 	
 	//properties of zone to creates
 	
@@ -91,10 +53,7 @@ private:
 	void initPrivateVariables();
 	
 	bool okClicked;
-	
-	void SoundProducerTrackSelectedInListBox(wxCommandEvent& event );
-	
-	
+	bool cancelClicked;
 
 };
 
