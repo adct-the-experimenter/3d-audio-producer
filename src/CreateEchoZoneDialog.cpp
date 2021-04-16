@@ -33,28 +33,38 @@ static char ez_char_name[20] = "name here";
 
 static float editez_x_value = 0;
 static bool editez_x_box_pressed = false;
-static char ez_textBufferX[9];
+static char ez_textBufferX[9] = "0";
 static bool ez_xValueChanged = false;
 
 static float editez_y_value = 0;
 static bool editez_y_box_pressed = false;
-static char ez_textBufferY[9];
+static char ez_textBufferY[9] = "0";
 static bool ez_yValueChanged = false;
 
 static float editez_z_value = 0;
 static bool editez_z_box_pressed = false;
-static char ez_textBufferZ[9];
+static char ez_textBufferZ[9] = "0";
 static bool ez_zValueChanged = false;
 
-static float editez_width_value = 0;
+static float editez_width_value = 1.0;
 static bool editez_width_box_pressed = false;
 static char ez_textBufferWidth[9];
 static bool ez_widthValueChanged = false;
 
-static float editez_delay_value = 0;
+static float editez_delay_value = 0.1;
 static bool editez_delay_box_pressed = false;
-static char ez_textBufferDelay[9];
+static char ez_textBufferDelay[9] = "0.1";
 static bool ez_delayValueChanged = false;
+
+static float editez_lrdelay_value = 0.1;
+static bool editez_lrdelay_box_pressed = false;
+static char ez_textBufferLRDelay[9] = "0.1";
+static bool ez_lrdelayValueChanged = false;
+
+static float editez_damping_value = 0.5;
+static bool editez_damping_box_pressed = false;
+static char ez_textBufferDamping[9] = "0.5";
+static bool ez_dampingValueChanged = false;
 
 void CreateEchoZoneDialog::DrawDialog()
 {
@@ -95,27 +105,28 @@ void CreateEchoZoneDialog::DrawDialog()
 		editez_width_box_pressed = !editez_width_box_pressed;
 	}
 	
-	 if( GuiTextBox_ValidValueFloat((Rectangle){350,340,50,50}, 20, editez_delay_box_pressed, 
+	if( GuiTextBox_ValidValueFloat((Rectangle){350,340,50,50}, 20, editez_delay_box_pressed, 
 									&editez_delay_value, 0.1f, 0.0f, 0.207f,
 									 ez_textBufferDelay,&ez_delayValueChanged,"Delay:",40) )
 	{
 		editez_delay_box_pressed = !editez_delay_box_pressed;
 	}
-    /*
 	
-	validatorFloat.SetRange(0.0,0.404);     // set allowable range
-	textField_flLRDelay = new wxTextCtrl(this,-1, "0.1", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	validatorFloat.SetRange(0.0,0.99);     // set allowable range
-	textField_flDamping = new wxTextCtrl(this,-1, "0.5", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloat((Rectangle){450,340,50,50}, 20, editez_lrdelay_box_pressed, 
+									&editez_lrdelay_value, 0.1f, 0.0f, 0.407f,
+									 ez_textBufferLRDelay,&ez_lrdelayValueChanged,"LRDelay:",45) )
+	{
+		editez_lrdelay_box_pressed = !editez_lrdelay_box_pressed;
+	}
+	
+	if( GuiTextBox_ValidValueFloat((Rectangle){350,410,50,50}, 20, editez_damping_box_pressed, 
+									&editez_damping_value, 0.5f, 0.0f, 0.99f,
+									 ez_textBufferDamping,&ez_dampingValueChanged,"Damping:",45) )
+	{
+		editez_damping_box_pressed = !editez_damping_box_pressed;
+	}
+	
+    /*
 								
 	validatorFloat.SetRange(0.0,1.0);     // set allowable range
 	textField_flFeedback = new wxTextCtrl(this,-1, "0.5", 
