@@ -119,7 +119,8 @@ void EffectsManager::PerformReverbThreadOperation()
 									//if sound producer is inside the zone
 									if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone))
 									{
-										//std::cout << "SoundProducer is inside the reverb zone!\n";
+										std::cout << "SoundProducer and listener in the effect zone! Applying effect!\n";
+										
 										//apply reverb to source of sound producer track
 										EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
 									}
@@ -195,7 +196,6 @@ bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
 	
 	return false;
 	
-	return false;
 }
 
 bool EffectsManager::IsThisSoundProducerInsideEffectZone(SoundProducer* thisSoundProducer,EffectZone* thisZone)

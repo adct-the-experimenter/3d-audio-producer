@@ -118,8 +118,8 @@ bool MainGuiEditor::OnInit()
 		
 		//initialize effects manager
 		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager() );
-		
-		//create thread to check if listener is in reverb zone
+		create_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+		effects_manager_ptr->SetPointerToListener(listener.get());
 		
 		//connect mainframe to effects manager
 		frame->SetEffectsManagerReference(effects_manager_ptr.get());

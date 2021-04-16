@@ -44,8 +44,8 @@ public:
 	//function to free reverb zone effects
 	void FreeEffects();
 	
-	
-	friend class CheckListenerReverbZoneThread;
+	//function to perform the entire reverb thread operation of checking and setting reverb
+	void PerformReverbThreadOperation();
 	
 	friend class CreateEAXReverbZoneDialog;
 	friend class CreateStandardReverbZoneDialog;
@@ -74,8 +74,7 @@ private:
 	
 	std::vector <EchoZone> echo_zones_vector;
 	
-	//function to perform the entire reverb thread operation of checking and setting reverb
-	void PerformReverbThreadOperation();
+	
 	
 	//function to return bool of if a listener is in a reverb zone
 	bool IsListenerInThisEffectZone(EffectZone* thisZone);

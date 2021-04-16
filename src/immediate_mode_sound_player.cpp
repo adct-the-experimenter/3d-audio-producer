@@ -28,6 +28,14 @@ void ImmediateModeSoundPlayer::SetPointerToSoundBank(SoundBank* soundbank_ptr){m
 
 void ImmediateModeSoundPlayer::SetPointerToSoundProducerRegistry(SoundProducerRegistry* sound_producer_reg){m_sound_producer_reg_ptr = sound_producer_reg;}
 
+EffectsManager* local_effect_manager_ptr = nullptr;
+
+void ImmediateModeSoundPlayer::SetPointerToEffectsManager(EffectsManager* effects_manager)
+{
+	m_effects_manager_ptr = effects_manager;
+	local_effect_manager_ptr = effects_manager;
+}
+
 void ImmediateModeSoundPlayer::RunStateForPlayer()
 {
 	switch(m_state)
@@ -93,9 +101,14 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 	
 }
 
+
+
 void DetermineEffect()
 {
-    
+    if(local_effect_manager_ptr)
+    {
+		local_effect_manager_ptr->PerformReverbThreadOperation();
+	}
 }
 
 

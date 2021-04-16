@@ -5,6 +5,8 @@
 #include "openalsoft-player.h"
 #include "soundproducer-registry.h"
 
+#include "effects-manager.h"
+
 class ImmediateModeSoundPlayer
 {
 public:
@@ -20,6 +22,8 @@ public:
 	void SetPointerToSoundBank(SoundBank* soundbank_ptr);
 	
 	void SetPointerToSoundProducerRegistry(SoundProducerRegistry* sound_producer_reg);
+	
+	void SetPointerToEffectsManager(EffectsManager* effects_manager);
 	
 	enum class IMSoundPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, REWINDING, FAST_FORWARDING };
 	
@@ -56,6 +60,8 @@ private:
 	SoundBank* m_sound_bank_ptr;
 	
 	SoundProducerRegistry* m_sound_producer_reg_ptr;
+	
+	EffectsManager* m_effects_manager_ptr;
 	
 	//amonut of time to increment for playback
 	double time_res_seconds;
