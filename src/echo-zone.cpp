@@ -59,10 +59,10 @@ EchoZone::EchoZone() : EffectZone()
 	m_effect = 0;
 	m_slot = 0;
 	
-	echoZoneColor.r = 0.4f;
-	echoZoneColor.g = 0.3f;
-	echoZoneColor.b = 0.0f;
-	echoZoneColor.a = 0.3f;
+	echoZoneColor.r = 204;
+	echoZoneColor.g = 102;
+	echoZoneColor.b = 0;
+	echoZoneColor.a = 100;
 	
 	EffectZone::SetColor(echoZoneColor);
 }
@@ -76,7 +76,7 @@ EchoZone::~EchoZone()
 }
 
 void EchoZone::InitEchoZone(std::string& thisName,
-									double& x, double& y, double& z, double& width,
+									float& x, float& y, float& z, float& width,
 									EchoZoneProperties& properties)
 {
 	#define LOAD_PROC(T, x)  ((x) = (T)alGetProcAddress(#x))
@@ -155,7 +155,7 @@ void EchoZone::InitEchoZone(std::string& thisName,
 }
 
 void EchoZone::InitEchoZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							EchoZoneProperties& properties)
 {
 	
@@ -227,10 +227,10 @@ EchoZoneSaveData EchoZone::GetEchoZoneSaveData()
 	return m_saveData;
 }
 
-void EchoZone::SetPositionX(double& x){m_saveData.x = x; EffectZone::SetPositionX(x);}
+void EchoZone::SetPositionX(float& x){m_saveData.x = x; EffectZone::SetPositionX(x);}
 
-void EchoZone::SetPositionY(double& y){m_saveData.y = y; EffectZone::SetPositionY(y);} 
+void EchoZone::SetPositionY(float& y){m_saveData.y = y; EffectZone::SetPositionY(y);} 
 
-void EchoZone::SetPositionZ(double& z){m_saveData.z = z; EffectZone::SetPositionZ(z);} 
+void EchoZone::SetPositionZ(float& z){m_saveData.z = z; EffectZone::SetPositionZ(z);} 
 
-void EchoZone::ChangeWidth(double width){m_saveData.width = width; EffectZone::ChangeWidth(width);}
+void EchoZone::ChangeWidth(float width){m_saveData.width = width; EffectZone::ChangeWidth(width);}

@@ -35,27 +35,27 @@ public:
 	
 	//Position
 	
-	void SetPositionX(double& x); //set x position of sound producer
-	double GetPositionX(); //get x position of sound producer
-	void SetPositionY(double& y); //set y position of sound producer
-	double GetPositionY(); //get y position of sound producer
-	void SetPositionZ(double& z); //set z position of sound producer
-	double GetPositionZ(); //get z position of sound producer
+	void SetPositionX(float& x); //set x position of sound producer
+	float GetPositionX(); //get x position of sound producer
+	void SetPositionY(float& y); //set y position of sound producer
+	float GetPositionY(); //get y position of sound producer
+	void SetPositionZ(float& z); //set z position of sound producer
+	float GetPositionZ(); //get z position of sound producer
 	
 	
 	//functions to initialize effect zone
 	
 	void InitEffectZone(std::string& thisName,
-							double& x, double& y, double& z, double& width);
+							float& x, float& y, float& z, float& width);
 							
 	void InitEffectZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							Color& color);
 	
 	
 	
-	void ChangeWidth(double width);
-	double GetWidth();
+	void ChangeWidth(float width);
+	float GetWidth();
 	
 	void SetColor(Color color);
 	
@@ -82,7 +82,7 @@ private:
 	//position of effect zone
 	Vector3 zone_position;
 	
-	double m_width;
+	float m_width;
 	
 	Color m_color;
 };

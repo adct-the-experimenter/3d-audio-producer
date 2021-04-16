@@ -22,7 +22,7 @@
 //#include "soundproducer-track.h"
 //#include "listener-track.h"
 
-//#include "effects-manager.h"
+#include "effects-manager.h"
 
 //#include "SaveSystem.h"
 //#include "LoadSystem.h"
@@ -49,7 +49,7 @@ public:
     void SetListenerReference(Listener* listener);
     //void SetListenerExternalReference(ListenerExternal* listenerExt);
     
-    //void SetEffectsManagerReference(EffectsManager* effectsManager);
+    void SetEffectsManagerReference(EffectsManager* effectsManager);
     
     //SoundProducerTrackManager* GetReferenceToSoundProducerTrackManager();
     
@@ -85,13 +85,14 @@ private:
 	std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector_ref;
 	
 	Listener* listenerPtr;
+	
 	//ListenerExternal* listenerExternalPtr;
 	
 	//ListenerTrack* m_listener_track;
 	
 	//TimelineFrame* timeFrame;
 	
-	//EffectsManager* effectsManagerPtr;
+	EffectsManager* effectsManagerPtr;
 	
 	//std::unique_ptr <SoundProducerTrackManager> soundproducertrack_manager_ptr;
 	
@@ -191,7 +192,7 @@ private:
 	void initListener();
 	
 	//effects manager
-	//std::unique_ptr <EffectsManager> effects_manager_ptr;
+	std::unique_ptr <EffectsManager> effects_manager_ptr;
 	
 	//define listener reverb thread here
     	

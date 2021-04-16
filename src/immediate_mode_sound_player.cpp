@@ -38,6 +38,7 @@ void ImmediateModeSoundPlayer::RunStateForPlayer()
 			if(m_state != IMSoundPlayerState::NONE)
 			{
 				m_state = IMSoundPlayerState::NONE;
+				
 				for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 				{
 					std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
@@ -92,11 +93,17 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 	
 }
 
+void DetermineEffect()
+{
+    
+}
+
+
 void ImmediateModeSoundPlayer::PlayAll()
 {
 	
 	//launch worker thread to apply certain effect if listener is in a certain effect zone
-    //std::thread t1(callable);
+    //std::thread effect_worker_thread(DetermineEffect);
   
     
 	if(m_state == IMSoundPlayerState::NONE)
@@ -125,10 +132,9 @@ void ImmediateModeSoundPlayer::PlayAll()
 			
 		}
 		
-		//wait worker thread to finish effect operation
-		//t1.join();
-  
-		
+		//wait for worker thread to finish effect operation
+		//effect_worker_thread.join();
+  	
 	}
 	else
 	{
@@ -139,9 +145,7 @@ void ImmediateModeSoundPlayer::PlayAll()
 			ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
 			ImmediateModeSoundPlayer::LoadBufferStreaming(sourceToManipulatePtr,buffering_audio_players_vec[it]);
 		}
-		
-		//wait worker thread to finish effect operation
-		//t1.join();
+
 
 		//play all sources in sync
 		if(m_state == IMSoundPlayerState::NONE)
@@ -155,10 +159,14 @@ void ImmediateModeSoundPlayer::PlayAll()
 			mainAudioPlayer.PlayMultipleUpdatedPlayerBuffers(&m_sound_producer_reg_ptr->sound_producer_sources_vec);
 		}
 		
+		//wait for worker thread to finish effect operation
+		//effect_worker_thread.join();
+		
 		//buffering time is 500 milliseconds
 		m_current_time += time_res_seconds;
 		
 	}
+	
 	
 }
 

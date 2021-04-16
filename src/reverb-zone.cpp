@@ -231,7 +231,7 @@ ALuint ReverbZone::LoadEAXReverbEffect(const EFXEAXREVERBPROPERTIES *reverb)
 }
 
 void ReverbZone::InitStandardReverbZone(std::string& thisName,
-									double& x, double& y, double& z, double& width,
+									float& x, float& y, float& z, float& width,
 									ReverbStandardProperties& properties)
 {
 	#define LOAD_PROC(T, x)  ((x) = (T)alGetProcAddress(#x))
@@ -312,7 +312,7 @@ void ReverbZone::InitStandardReverbZone(std::string& thisName,
 }
 
 void ReverbZone::InitStandardReverbZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							ReverbStandardProperties& properties)
 {
 	
@@ -325,7 +325,7 @@ void ReverbZone::InitStandardReverbZoneWithGraphicalObject(std::string& thisName
 }
 
 void ReverbZone::InitEAXReverbZone(std::string& thisName,
-									double& x, double& y, double& z, double& width,
+									float& x, float& y, float& z, float& width,
 									ReverbEAXProperties& properties)
 {
 	#define LOAD_PROC(T, x)  ((x) = (T)alGetProcAddress(#x))
@@ -418,7 +418,7 @@ void ReverbZone::InitEAXReverbZone(std::string& thisName,
 }
 
 void ReverbZone::InitEAXReverbZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							ReverbEAXProperties& properties)
 {
 	
@@ -627,28 +627,28 @@ void ReverbZone::LoadEAXReverbZoneSaveData(EAXReverbZoneSaveData& data)
 	
 }
 
-void ReverbZone::SetPositionX(double& x)
+void ReverbZone::SetPositionX(float& x)
 {
 	m_saveDataStandard.x = x; 
 	m_saveDataEAX.x = x; 
 	EffectZone::SetPositionX(x);
 }
 
-void ReverbZone::SetPositionY(double& y)
+void ReverbZone::SetPositionY(float& y)
 {
 	m_saveDataStandard.y = y; 
 	m_saveDataEAX.y = y; 
 	EffectZone::SetPositionY(y);
 } 
 
-void ReverbZone::SetPositionZ(double& z)
+void ReverbZone::SetPositionZ(float& z)
 {
 	m_saveDataStandard.z = z; 
 	m_saveDataEAX.z = z; 
 	EffectZone::SetPositionZ(z);
 } 
 
-void ReverbZone::ChangeWidth(double width)
+void ReverbZone::ChangeWidth(float width)
 {
 	m_saveDataStandard.width = width; 
 	m_saveDataEAX.width = width; 

@@ -15,17 +15,19 @@ public:
 	EffectsManager();
 	~EffectsManager();
 	
+	void Draw3DModels();
+	
 	void SetPointerToListener(Listener* listener);
 	void SetPointerToSoundProducerRegistry(SoundProducerRegistry* sound_producer_reg);
 	
 	//function to create reverb zone that uses standard effects
-	void CreateStandardReverbZone(std::string& name, double& x, double& y, double& z, double& width, ReverbStandardProperties& properties);
+	void CreateStandardReverbZone(std::string& name, float& x, float& y, float& z, float& width, ReverbStandardProperties& properties);
 	
 	//function to create reverb zone that uses EAX effectss
-	void CreateEAXReverbZone(std::string& name, double& x, double& y, double& z, double& width, ReverbEAXProperties& properties);
+	void CreateEAXReverbZone(std::string& name, float& x, float& y, float& z, float& width, ReverbEAXProperties& properties);
 	
 	//function to create echo zone
-	void CreateEchoZone(std::string& name, double& x, double& y, double& z, double& width, EchoZoneProperties& properties);
+	void CreateEchoZone(std::string& name, float& x, float& y, float& z, float& width, EchoZoneProperties& properties);
 	
 	//function to return a pointer to reverb zone vector
 	std::vector <EffectZone*> *GetReferenceToEffectZoneVector();

@@ -17,14 +17,14 @@ void CreateEchoZoneDialog::SetPointerToEffectsManager(EffectsManager* effects_ma
 
 std::string& CreateEchoZoneDialog::getNewName(){return name;}
 
-void CreateEchoZoneDialog::getNewPosition(double& x, double& y, double& z)
+void CreateEchoZoneDialog::getNewPosition(float& x, float& y, float& z)
 {
 	x = xPosition;
 	y = yPosition;
 	z = zPosition;
 }
 
-double& CreateEchoZoneDialog::getNewWidth(){return width;}
+float& CreateEchoZoneDialog::getNewWidth(){return width;}
 	
 EchoZoneProperties& CreateEchoZoneDialog::getNewProperties(){return properties;}
 
@@ -48,7 +48,7 @@ static bool ez_zValueChanged = false;
 
 static float editez_width_value = 1.0;
 static bool editez_width_box_pressed = false;
-static char ez_textBufferWidth[9];
+static char ez_textBufferWidth[9] = "1.0";
 static bool ez_widthValueChanged = false;
 
 static float editez_delay_value = 0.1;
@@ -65,6 +65,16 @@ static float editez_damping_value = 0.5;
 static bool editez_damping_box_pressed = false;
 static char ez_textBufferDamping[9] = "0.5";
 static bool ez_dampingValueChanged = false;
+
+static float editez_feedback_value = 0.5;
+static bool editez_feedback_box_pressed = false;
+static char ez_textBufferFeedback[9] = "0.5";
+static bool ez_feedbackValueChanged = false;
+
+static float editez_spread_value = 0.5;
+static bool editez_spread_box_pressed = false;
+static char ez_textBufferSpread[9] = "0.5";
+static bool ez_spreadValueChanged = false;
 
 void CreateEchoZoneDialog::DrawDialog()
 {
@@ -112,7 +122,7 @@ void CreateEchoZoneDialog::DrawDialog()
 		editez_delay_box_pressed = !editez_delay_box_pressed;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){450,340,50,50}, 20, editez_lrdelay_box_pressed, 
+	if( GuiTextBox_ValidValueFloat((Rectangle){455,340,50,50}, 20, editez_lrdelay_box_pressed, 
 									&editez_lrdelay_value, 0.1f, 0.0f, 0.407f,
 									 ez_textBufferLRDelay,&ez_lrdelayValueChanged,"LRDelay:",45) )
 	{
@@ -126,23 +136,40 @@ void CreateEchoZoneDialog::DrawDialog()
 		editez_damping_box_pressed = !editez_damping_box_pressed;
 	}
 	
+	if( GuiTextBox_ValidValueFloat((Rectangle){455,410,50,50}, 20, editez_feedback_box_pressed, 
+									&editez_feedback_value, 0.5f, 0.0f, 1.00f,
+									 ez_textBufferFeedback,&ez_feedbackValueChanged,"Feedback",50) )
+	{
+		editez_feedback_box_pressed = !editez_feedback_box_pressed;
+	}
+	
+	if( GuiTextBox_ValidValueFloat((Rectangle){550,410,50,50}, 20, editez_spread_box_pressed, 
+									&editez_spread_value, -1.0f, -1.0f, 1.0f,
+									 ez_textBufferSpread,&ez_spreadValueChanged,"Spread",40) )
+	{
+		editez_spread_box_pressed = !editez_spread_box_pressed;
+	}
+	
+	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
+	
+	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
+	if(exit){cancelClicked = true;}
+	
+	if(okClicked)
+	{
+		name = std::string(ez_char_name);
+		xPosition = editez_x_value;
+		yPosition = editez_y_value;
+		zPosition = editez_z_value;
+		width = editez_width_value;
+		
+		properties.flDamping = editez_damping_value;
+		properties.flDelay = editez_delay_value;
+		properties.flFeedback = editez_feedback_value;
+		properties.flLRDelay = editez_lrdelay_value;
+		properties.flSpread = editez_spread_value;
+	}
     /*
-								
-	validatorFloat.SetRange(0.0,1.0);     // set allowable range
-	textField_flFeedback = new wxTextCtrl(this,-1, "0.5", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(-1.0,1.0);     // set allowable range
-	textField_flSpread = new wxTextCtrl(this,-1, "-1.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-
 	
 	//add contents of soundproducers to listbox
 	if(m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)

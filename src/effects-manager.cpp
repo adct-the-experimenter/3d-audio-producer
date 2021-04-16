@@ -3,6 +3,12 @@
 EffectsManager::EffectsManager()
 {
 	m_listener_ptr = nullptr;
+	
+	effect_zones_vector.clear();
+	standard_reverb_zones_vector.clear();
+	eax_reverb_zones_vector.clear();
+	echo_zones_vector.clear();
+	
 }
 
 EffectsManager::~EffectsManager()
@@ -10,8 +16,23 @@ EffectsManager::~EffectsManager()
 	m_listener_ptr = nullptr;
 }
 
+void EffectsManager::Draw3DModels()
+{
+	if(effect_zones_vector.size() > 0)
+	{
+		for(size_t i = 0; i < effect_zones_vector.size(); i++)
+		{
+			if(effect_zones_vector[i])
+			{
+				effect_zones_vector[i]->DrawModel();
+			}
+			
+		}
+	}
+	
+}
 
-void EffectsManager::CreateStandardReverbZone(std::string& name, double& x, double& y, double& z, double& width, ReverbStandardProperties& properties)
+void EffectsManager::CreateStandardReverbZone(std::string& name, float& x, float& y, float& z, float& width, ReverbStandardProperties& properties)
 {
 	ReverbZone r_zone;
 	
@@ -24,7 +45,7 @@ void EffectsManager::CreateStandardReverbZone(std::string& name, double& x, doub
 }
 
 
-void EffectsManager::CreateEAXReverbZone(std::string& name, double& x, double& y, double& z, double& width, ReverbEAXProperties& properties)
+void EffectsManager::CreateEAXReverbZone(std::string& name, float& x, float& y, float& z, float& width, ReverbEAXProperties& properties)
 {
 	ReverbZone r_zone;
 	
@@ -36,7 +57,7 @@ void EffectsManager::CreateEAXReverbZone(std::string& name, double& x, double& y
 	
 }
 
-void EffectsManager::CreateEchoZone(std::string& name, double& x, double& y, double& z, double& width, EchoZoneProperties& properties)
+void EffectsManager::CreateEchoZone(std::string& name, float& x, float& y, float& z, float& width, EchoZoneProperties& properties)
 {
 	EchoZone e_zone;
 	
@@ -149,8 +170,8 @@ bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
 {
 	if(!m_listener_ptr){return false;}
 	
-	double zone_width = thisZone->GetWidth();
-	double listener_width = 2.0f; //from sound producer class
+	float zone_width = thisZone->GetWidth();
+	float listener_width = 2.0f; //from sound producer class
 	
 	//all cubes, use same width in x,y,z direction
 	
@@ -179,8 +200,8 @@ bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
 
 bool EffectsManager::IsThisSoundProducerInsideEffectZone(SoundProducer* thisSoundProducer,EffectZone* thisZone)
 {
-	double zone_width = thisZone->GetWidth();
-	double producer_width = 2.0f; //from sound producer class
+	float zone_width = thisZone->GetWidth();
+	float producer_width = 2.0f; //from sound producer class
 	
 	//all cubes, use same width in x,y,z direction
 	

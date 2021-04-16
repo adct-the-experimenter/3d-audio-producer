@@ -6,47 +6,47 @@
 struct ReverbEAXProperties
 {
 	//AL_EAXREVERB_DENSITY, 
-	double flDensity;
+	float flDensity;
 	//AL_EAXREVERB_DIFFUSION, 
-	double flDiffusion;
+	float flDiffusion;
 	//AL_EAXREVERB_GAIN, 
-	double flGain;
+	float flGain;
 	//AL_EAXREVERB_GAINHF, 
-	double flGainHF;
+	float flGainHF;
 	//AL_EAXREVERB_GAINLF, 
-	double flGainLF;
+	float flGainLF;
 	//AL_EAXREVERB_DECAY_TIME, 
-	double flDecayTime;
+	float flDecayTime;
 	//AL_EAXREVERB_DECAY_HFRATIO, 
-	double flDecayHFRatio;
+	float flDecayHFRatio;
 	//AL_EAXREVERB_DECAY_LFRATIO, 
-	double flDecayLFRatio;
+	float flDecayLFRatio;
 	//AL_EAXREVERB_REFLECTIONS_GAIN, 
-	double flReflectionsGain;
+	float flReflectionsGain;
 	//AL_EAXREVERB_REFLECTIONS_DELAY, 
-	double flReflectionsDelay;
-	//alEffectfv(effect, AL_EAXREVERB_REFLECTIONS_PAN, double flReflectionsPan;
+	float flReflectionsDelay;
+	//alEffectfv(effect, AL_EAXREVERB_REFLECTIONS_PAN, float flReflectionsPan;
 	//AL_EAXREVERB_LATE_REVERB_GAIN, 
-	double flLateReverbGain;
+	float flLateReverbGain;
 	//AL_EAXREVERB_LATE_REVERB_DELAY, 
-	double flLateReverbDelay;
-	//alEffectfv(effect, AL_EAXREVERB_LATE_REVERB_PAN, double flLateReverbPan;
+	float flLateReverbDelay;
+	//alEffectfv(effect, AL_EAXREVERB_LATE_REVERB_PAN, float flLateReverbPan;
 	//AL_EAXREVERB_ECHO_TIME, 
-	double flEchoTime;
+	float flEchoTime;
 	//AL_EAXREVERB_ECHO_DEPTH, 
-	double flEchoDepth;
+	float flEchoDepth;
 	//AL_EAXREVERB_MODULATION_TIME, 
-	double flModulationTime;
+	float flModulationTime;
 	//AL_EAXREVERB_MODULATION_DEPTH, 
-	double flModulationDepth;
+	float flModulationDepth;
 	//AL_EAXREVERB_HFREFERENCE, 
-	double flHFReference;
+	float flHFReference;
 	//AL_EAXREVERB_LFREFERENCE, 
-	double flLFReference;
+	float flLFReference;
 	//AL_EAXREVERB_AIR_ABSORPTION_GAINHF, 
-	double flAirAbsorptionGainHF;
+	float flAirAbsorptionGainHF;
 	//AL_EAXREVERB_ROOM_ROLLOFF_FACTOR, 
-	double flRoomRolloffFactor;
+	float flRoomRolloffFactor;
 	//AL_EAXREVERB_DECAY_HFLIMIT, 
 	//int iDecayHFLimit; 
 };
@@ -57,12 +57,12 @@ struct EAXReverbZoneSaveData
 	std::string name;
 	
 	//position
-	double x;
-	double y;
-	double z;
+	float x;
+	float y;
+	float z;
 	
 	//size
-	double width;
+	float width;
 	
 	//properties
 	ReverbEAXProperties properties;
@@ -72,29 +72,29 @@ struct EAXReverbZoneSaveData
 struct ReverbStandardProperties
 {
 	//AL_REVERB_DENSITY, 
-	double flDensity;
+	float flDensity;
 	//AL_REVERB_DIFFUSION, 
-	double flDiffusion;
+	float flDiffusion;
 	//AL_REVERB_GAIN, 
-	double flGain;
+	float flGain;
 	//AL_REVERB_GAINHF, 
-	double flGainHF;
+	float flGainHF;
 	//AL_REVERB_DECAY_TIME, 
-	double flDecayTime;
+	float flDecayTime;
 	//AL_REVERB_DECAY_HFRATIO, 
-	double flDecayHFRatio;
+	float flDecayHFRatio;
 	//AL_REVERB_REFLECTIONS_GAIN, 
-	double flReflectionsGain;
+	float flReflectionsGain;
 	//AL_REVERB_REFLECTIONS_DELAY, 
-	double flReflectionsDelay;
+	float flReflectionsDelay;
 	//AL_REVERB_LATE_REVERB_GAIN, 
-	double flLateReverbGain;
+	float flLateReverbGain;
 	//AL_REVERB_LATE_REVERB_DELAY, 
-	double flLateReverbDelay;
+	float flLateReverbDelay;
 	//AL_REVERB_AIR_ABSORPTION_GAINHF, 
-	double flAirAbsorptionGainHF;
+	float flAirAbsorptionGainHF;
 	//AL_REVERB_ROOM_ROLLOFF_FACTOR, 
-	double flRoomRolloffFactor;
+	float flRoomRolloffFactor;
 	//AL_REVERB_DECAY_HFLIMIT, 
 	//int iDecayHFLimit;
 };
@@ -105,12 +105,12 @@ struct StandardReverbZoneSaveData
 	std::string name;
 	
 	//position
-	double x;
-	double y;
-	double z;
+	float x;
+	float y;
+	float z;
 	
 	//size
-	double width;
+	float width;
 	
 	//properties
 	ReverbStandardProperties properties;
@@ -131,19 +131,19 @@ public:
 	//functions to initialize reverb zones based on type
 	
 	void InitStandardReverbZone(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							ReverbStandardProperties& properties);
 							
 	void InitStandardReverbZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							ReverbStandardProperties& properties);
 							
 	void InitEAXReverbZone(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							ReverbEAXProperties& properties);
 							
 	void InitEAXReverbZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							ReverbEAXProperties& properties);
 	
 							
@@ -170,10 +170,10 @@ public:
 	void LoadEAXReverbZoneSaveData(EAXReverbZoneSaveData& data);
 	
 	//changed from effect zone to implement save data
-	void SetPositionX(double& x); 
-	void SetPositionY(double& y); 
-	void SetPositionZ(double& z); 
-	void ChangeWidth(double width);
+	void SetPositionX(float& x); 
+	void SetPositionY(float& y); 
+	void SetPositionZ(float& z); 
+	void ChangeWidth(float width);
 	
 private:
 

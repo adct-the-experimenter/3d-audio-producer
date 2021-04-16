@@ -6,15 +6,15 @@
 struct EchoZoneProperties
 {
 	//AL_ECHO_DELAY
-	double flDelay;
+	float flDelay;
 	//AL_ECHO_LRDELAY
-	double flLRDelay;
+	float flLRDelay;
 	//AL_ECHO_DAMPING
-	double flDamping;
+	float flDamping;
 	//AL_ECHO_FEEDBACK
-	double flFeedback;
+	float flFeedback;
 	//AL_ECHO_SPREAD
-	double flSpread;
+	float flSpread;
 };
 
 struct EchoZoneSaveData
@@ -23,12 +23,12 @@ struct EchoZoneSaveData
 	std::string name;
 	
 	//position
-	double x;
-	double y;
-	double z;
+	float x;
+	float y;
+	float z;
 	
 	//size
-	double width;
+	float width;
 	
 	//properties
 	
@@ -46,18 +46,18 @@ public:
 	//functions to initialize echo zones
 	
 	void InitEchoZone(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							EchoZoneProperties& properties);
 							
 	void InitEchoZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width,
+							float& x, float& y, float& z, float& width,
 							EchoZoneProperties& properties);
 
 	//changed from effect zone to implement save data
-	void SetPositionX(double& x); 
-	void SetPositionY(double& y); 
-	void SetPositionZ(double& z); 
-	void ChangeWidth(double width);
+	void SetPositionX(float& x); 
+	void SetPositionY(float& y); 
+	void SetPositionZ(float& z); 
+	void ChangeWidth(float width);
 	
 	//function to change reverb properties 
 	void ChangeEchoZoneProperties(EchoZoneProperties& properties);

@@ -70,11 +70,11 @@ EffectZone::~EffectZone()
 
 void EffectZone::DrawModel()
 {
-	DrawCube(zone_position,m_width, m_width, m_width, m_color);
+	DrawCube(zone_position, m_width, m_width, m_width, m_color);
 }
 
 void EffectZone::InitEffectZone(std::string& thisName,
-									double& x, double& y, double& z, double& width)
+									float& x, float& y, float& z, float& width)
 {   
 	//set name
 	name = thisName;
@@ -90,7 +90,7 @@ void EffectZone::InitEffectZone(std::string& thisName,
 }
 
 void EffectZone::InitEffectZoneWithGraphicalObject(std::string& thisName,
-							double& x, double& y, double& z, double& width, Color& color)
+							float& x, float& y, float& z, float& width, Color& color)
 {
 	
 	EffectZone::InitEffectZone( thisName,x, y, z, width);
@@ -103,32 +103,32 @@ void EffectZone::SetNameString(std::string& thisName){ name = thisName;}
 std::string EffectZone::GetNameString(){ return name;}
 
 
-void EffectZone::SetPositionX(double& x)
+void EffectZone::SetPositionX(float& x)
 {
 	zone_position.x = x;
 
 }
 
-double EffectZone::GetPositionX(){return zone_position.x;}
+float EffectZone::GetPositionX(){return zone_position.x;}
 
-void EffectZone::SetPositionY(double& y)
+void EffectZone::SetPositionY(float& y)
 {
 	zone_position.y = y;
 }
 
-double EffectZone::GetPositionY(){return zone_position.y;}
+float EffectZone::GetPositionY(){return zone_position.y;}
 
-void EffectZone::SetPositionZ(double& z)
+void EffectZone::SetPositionZ(float& z)
 {
 	zone_position.z = z;
 }
 
-double EffectZone::GetPositionZ(){return zone_position.z;}
+float EffectZone::GetPositionZ(){return zone_position.z;}
 
 
-void EffectZone::ChangeWidth(double width){m_width = width;}
+void EffectZone::ChangeWidth(float width){m_width = width;}
 
-double EffectZone::GetWidth(){return m_width;}
+float EffectZone::GetWidth(){return m_width;}
 
 void EffectZone::SetColor(Color color)
 {

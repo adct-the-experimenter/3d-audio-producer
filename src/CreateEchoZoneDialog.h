@@ -20,11 +20,11 @@ public:
 
 
 	//function to return position of new sound producer object
-	void getNewPosition(double& x, double& y, double& z);
+	void getNewPosition(float& x, float& y, float& z);
 
 	std::string& getNewName();
 
-	double& getNewWidth();
+	float& getNewWidth();
 	
 	EchoZoneProperties& getNewProperties();
 	
@@ -43,10 +43,10 @@ private:
 	//properties of zone to creates
 	
 	std::string name;
-	double xPosition;
-	double yPosition;
-	double zPosition;
-	double width;
+	float xPosition;
+	float yPosition;
+	float zPosition;
+	float width;
 	
 	EchoZoneProperties properties;
 	

@@ -58,8 +58,7 @@ MainGuiEditor::~MainGuiEditor()
 {
     
     //close listener reverb thread here
-	
-	//effects_manager_ptr->FreeEffects();
+	effects_manager_ptr->FreeEffects();
 	
 }
 
@@ -117,15 +116,13 @@ bool MainGuiEditor::OnInit()
 		//connect mainframe to openal soft audio engine
 		frame->SetAudioEngineReference(&audio_engine);
 		
-		
-		
 		//initialize effects manager
-		//effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager( frame->GetReferenceToSoundProducerTrackManager(), listener.get() ) );
+		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager() );
 		
 		//create thread to check if listener is in reverb zone
 		
 		//connect mainframe to effects manager
-		//frame->SetEffectsManagerReference(effects_manager_ptr.get());
+		frame->SetEffectsManagerReference(effects_manager_ptr.get());
 		im_sound_player.SetPointerToSoundBank(&m_sound_bank);
 	
 	}
@@ -178,6 +175,7 @@ void MainGuiEditor::Draw3DModels()
 		}
 	}
 	
+	effects_manager_ptr->Draw3DModels();
 	
 }
 
@@ -570,12 +568,30 @@ void MainGuiEditor::draw_object_creation_menu()
 		{
 			create_echo_zone_dialog.DrawDialog();
 			
-			if(create_echo_zone_dialog.OkClickedOn() || create_echo_zone_dialog.CancelClickedOn())
-			{						
+			if(create_echo_zone_dialog.OkClickedOn() )
+			{
+				//create echo zone
+				float x,y,z,width;
+				EchoZoneProperties properties;
+				
+				create_echo_zone_dialog.getNewPosition(x,y,z);
+				std::string name = create_echo_zone_dialog.getNewName();
+				width = create_echo_zone_dialog.getNewWidth();
+				properties = create_echo_zone_dialog.getNewProperties();
+				
+				effects_manager_ptr->CreateEchoZone(name,x,y,z,width,properties);
+				
 				g_state = GuiState::NONE;
 				create_echo_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
+			if(create_echo_zone_dialog.CancelClickedOn())
+			{
+				g_state = GuiState::NONE;
+				create_echo_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			
 			break;
 		}
 		default:{ break;}
@@ -733,7 +749,7 @@ void MainFrame::SetListenerExternalReference(ListenerExternal* thisListenerExter
 
 void MainFrame::SetAudioEngineReference(OpenAlSoftAudioEngine* audioEngine){ audioEnginePtr = audioEngine;}
 
-//void MainFrame::SetEffectsManagerReference(EffectsManager* effectsManager){effectsManagerPtr = effectsManager;}
+void MainFrame::SetEffectsManagerReference(EffectsManager* effectsManager){effectsManagerPtr = effectsManager;}
 
 //SoundProducerTrackManager* MainFrame::GetReferenceToSoundProducerTrackManager(){return soundproducertrack_manager_ptr.get();}
 
