@@ -3,6 +3,8 @@
 
 #include "raygui/raygui.h"
 
+#include "raygui/raygui_extras.h"
+
 #include <cstring>
 
 CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)

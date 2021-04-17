@@ -5,26 +5,19 @@
 #define GUI_VALIDFLOATBOX
 #include "raygui/raygui_extras.h"
 
+#include <string>
+
 EditListenerDialog::EditListenerDialog(const std::string& title)
 {
 	
 }
 
 
-float editlt_x_value = 0;
-bool editlt_x_box_pressed = false;
-char textBufferX[9];
-bool xValueChanged = false;
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-float editlt_y_value = 0;
-bool editlt_y_box_pressed = false;
-char textBufferY[9];
-bool yValueChanged = false;
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-float editlt_z_value = 0;
-bool editlt_z_box_pressed = false;
-char textBufferZ[9];
-bool zValueChanged = false;
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
 
 bool editlt_tempFreeRoamBool = false;
@@ -40,14 +33,11 @@ void EditListenerDialog::InitGUI()
 	if(ptrListener == nullptr){std::cout << "listener pointer is nullptr! \n";}
 	else
 	{
-		editlt_x_value = ptrListener->getPositionX();
-		sprintf(textBufferX, "%f", editlt_x_value);
+		xValueParam = InitValidFloatParamSettings(ptrListener->getPositionX(), 0.0f, -30.0f, 30.0f,std::to_string(ptrListener->getPositionX()).c_str() );
 		
-		editlt_y_value = ptrListener->getPositionY();
-		sprintf(textBufferY, "%f", editlt_y_value);
+		yValueParam = InitValidFloatParamSettings(ptrListener->getPositionY(), 0.0f, -30.0f, 30.0f,std::to_string(ptrListener->getPositionY()).c_str() );
 		
-		editlt_z_value = ptrListener->getPositionZ();
-		sprintf(textBufferZ, "%f", editlt_z_value);
+		zValueParam = InitValidFloatParamSettings(ptrListener->getPositionZ(), 0.0f, -30.0f, 30.0f,std::to_string(ptrListener->getPositionZ()).c_str() );
 		
 		editlt_tempFreeRoamBool = ptrListener->GetListenerFreeRoamBool();
 		
@@ -64,23 +54,17 @@ void EditListenerDialog::DrawDialog()
 	if(exit){cancelClicked = true;}
 	
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){400,300,50,50}, 20, editlt_x_box_pressed, 
-									&editlt_x_value, 0.0f, -10.0f, 10.0f,
-									 textBufferX,&xValueChanged,"X:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,300,50,50}, 20, &xValueParam,"X:",10) )
 	{
-		editlt_x_box_pressed = !editlt_x_box_pressed;
+		xValueParam.editMode = !xValueParam.editMode;
 	}
-	if( GuiTextBox_ValidValueFloat((Rectangle){500,300,50,50}, 20, editlt_y_box_pressed, 
-									&editlt_y_value, 0.0f, -10.0f, 10.0f,
-									 textBufferY,&yValueChanged,"Y:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,300,50,50}, 20, &yValueParam,"Y:",10) )
 	{
-		editlt_y_box_pressed = !editlt_y_box_pressed;
+		yValueParam.editMode = !yValueParam.editMode;
 	}
-	if( GuiTextBox_ValidValueFloat((Rectangle){600,300,50,50}, 20, editlt_z_box_pressed, 
-									&editlt_z_value, 0.0f, -10.0f, 10.0f,
-									 textBufferZ,&zValueChanged,"Z:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){600,300,50,50}, 20, &zValueParam,"Z:",10) )
 	{
-		editlt_z_box_pressed = !editlt_z_box_pressed;
+		zValueParam.editMode = !zValueParam.editMode;
 	}
 	
 	editlt_tempFreeRoamBool = GuiCheckBox((Rectangle){ 400, 400, 20, 20 }, "Free Roam:", editlt_tempFreeRoamBool);
@@ -107,9 +91,9 @@ void EditListenerDialog::ChangeListenerAttributes()
 	{
 		//change position of selected sound producer based on what is in textfields
 		
-		ptrListener->setPositionX(editlt_x_value);
-		ptrListener->setPositionY(editlt_y_value);
-		ptrListener->setPositionZ(editlt_z_value);
+		ptrListener->setPositionX(xValueParam.current_value);
+		ptrListener->setPositionY(yValueParam.current_value);
+		ptrListener->setPositionZ(zValueParam.current_value);
 		
 		//change free roam status
 		ptrListener->SetListenerFreeRoamBool(editlt_tempFreeRoamBool);
@@ -123,13 +107,6 @@ void EditListenerDialog::ChangeListenerAttributes()
 
 void EditListenerDialog::resetConfig()
 {
-	editlt_x_value = 0;
-	editlt_x_box_pressed = false;
-	editlt_y_value = 0;
-	editlt_y_box_pressed = false;
-	editlt_z_value = 0;
-	editlt_z_box_pressed = false;
-
 	editlt_tempFreeRoamBool = false;
 	editlt_free_roam_box_stat = false;
 

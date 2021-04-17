@@ -33,11 +33,11 @@ static char ez_char_name[20] = "name here";
 
 //InitValidFloatParamSettings(current,default,min,max,initialText)
 
-static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
 static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 
