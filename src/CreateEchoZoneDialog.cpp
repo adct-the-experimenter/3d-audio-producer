@@ -31,47 +31,25 @@ EchoZoneProperties& CreateEchoZoneDialog::getNewProperties(){return properties;}
 static bool ez_name_box_pressed = false;
 static char ez_char_name[20] = "name here";
 
-ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+//InitValidFloatParamSettings(current,default,min,max,initialText)
 
-static float editez_y_value = 0;
-static bool editez_y_box_pressed = false;
-static char ez_textBufferY[9] = "0";
-static bool ez_yValueChanged = false;
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
 
-static float editez_z_value = 0;
-static bool editez_z_box_pressed = false;
-static char ez_textBufferZ[9] = "0";
-static bool ez_zValueChanged = false;
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
 
-static float editez_width_value = 1.0;
-static bool editez_width_box_pressed = false;
-static char ez_textBufferWidth[9] = "1.0";
-static bool ez_widthValueChanged = false;
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
 
-static float editez_delay_value = 0.1;
-static bool editez_delay_box_pressed = false;
-static char ez_textBufferDelay[9] = "0.1";
-static bool ez_delayValueChanged = false;
+static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 
-static float editez_lrdelay_value = 0.1;
-static bool editez_lrdelay_box_pressed = false;
-static char ez_textBufferLRDelay[9] = "0.1";
-static bool ez_lrdelayValueChanged = false;
+static ValidFloatParamSettings delayValueParam = InitValidFloatParamSettings(0.1f, 0.1f, 0.0f, 0.207f, "0.1");
 
-static float editez_damping_value = 0.5;
-static bool editez_damping_box_pressed = false;
-static char ez_textBufferDamping[9] = "0.5";
-static bool ez_dampingValueChanged = false;
+static ValidFloatParamSettings lrDelayValueParam = InitValidFloatParamSettings(0.1f, 0.0f, 0.0f, 0.404f, "0.1");
 
-static float editez_feedback_value = 0.5;
-static bool editez_feedback_box_pressed = false;
-static char ez_textBufferFeedback[9] = "0.5";
-static bool ez_feedbackValueChanged = false;
+static ValidFloatParamSettings dampingValueParam = InitValidFloatParamSettings(0.5f, 0.5f, 0.0f, 0.99f, "0.1");
 
-static float editez_spread_value = 0.5;
-static bool editez_spread_box_pressed = false;
-static char ez_textBufferSpread[9] = "0.5";
-static bool ez_spreadValueChanged = false;
+static ValidFloatParamSettings feedbackValueParam = InitValidFloatParamSettings(0.5f, 0.5f, 0.0f, 1.0f, "0.5");
+
+static ValidFloatParamSettings spreadValueParam = InitValidFloatParamSettings(-1.0f, -1.0f, -1.0f, 1.0f, "-1.0");
 
 void CreateEchoZoneDialog::DrawDialog()
 {
@@ -86,67 +64,49 @@ void CreateEchoZoneDialog::DrawDialog()
 		ez_name_box_pressed = !ez_name_box_pressed;
 	}
     
-    //if( GuiTextBox_ValidValueFloat((Rectangle){350,200,50,50}, 20, editez_x_box_pressed, 
-	//								&editez_x_value, 0.0f, -10.0f, 10.0f,
-	//								 ez_textBufferX,&ez_xValueChanged,"X:",10) )
+    
 	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,200,50,50}, 20, &xValueParam, "X:", 10) )				
 	{
 		xValueParam.editMode = !xValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){450,200,50,50}, 20, editez_y_box_pressed, 
-									&editez_y_value, 0.0f, -10.0f, 10.0f,
-									 ez_textBufferY,&ez_yValueChanged,"Y:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){450,200,50,50}, 20, &yValueParam,"Y:",10) )
 	{
-		editez_y_box_pressed = !editez_y_box_pressed;
+		yValueParam.editMode = !yValueParam.editMode;
 	}
-	if( GuiTextBox_ValidValueFloat((Rectangle){550,200,50,50}, 20, editez_z_box_pressed, 
-									&editez_z_value, 0.0f, -10.0f, 10.0f,
-									 ez_textBufferZ,&ez_zValueChanged,"Z:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){550,200,50,50}, 20, &zValueParam,"Z:",10) )
 	{
-		editez_z_box_pressed = !editez_z_box_pressed;
+		zValueParam.editMode = !zValueParam.editMode;
 	}
     
-    if( GuiTextBox_ValidValueFloat((Rectangle){350,270,50,50}, 20, editez_width_box_pressed, 
-									&editez_width_value, 0.0f, 1.0f, 30.0f,
-									 ez_textBufferWidth,&ez_widthValueChanged,"Width:",40) )
+    if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,270,50,50}, 20, &widthValueParam,"Width:",40) )
 	{
-		editez_width_box_pressed = !editez_width_box_pressed;
+		widthValueParam.editMode = !widthValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){350,340,50,50}, 20, editez_delay_box_pressed, 
-									&editez_delay_value, 0.1f, 0.0f, 0.207f,
-									 ez_textBufferDelay,&ez_delayValueChanged,"Delay:",40) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,340,50,50}, 20, &delayValueParam,"Delay:",40) )
 	{
-		editez_delay_box_pressed = !editez_delay_box_pressed;
+		delayValueParam.editMode = !delayValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){455,340,50,50}, 20, editez_lrdelay_box_pressed, 
-									&editez_lrdelay_value, 0.1f, 0.0f, 0.407f,
-									 ez_textBufferLRDelay,&ez_lrdelayValueChanged,"LRDelay:",45) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){455,340,50,50}, 20, &lrDelayValueParam,"LRDelay:",45) )
 	{
-		editez_lrdelay_box_pressed = !editez_lrdelay_box_pressed;
+		lrDelayValueParam.editMode = !lrDelayValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){350,410,50,50}, 20, editez_damping_box_pressed, 
-									&editez_damping_value, 0.5f, 0.0f, 0.99f,
-									 ez_textBufferDamping,&ez_dampingValueChanged,"Damping:",45) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,410,50,50}, 20, &dampingValueParam,"Damping:",45) )
 	{
-		editez_damping_box_pressed = !editez_damping_box_pressed;
+		dampingValueParam.editMode = !dampingValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){455,410,50,50}, 20, editez_feedback_box_pressed, 
-									&editez_feedback_value, 0.5f, 0.0f, 1.00f,
-									 ez_textBufferFeedback,&ez_feedbackValueChanged,"Feedback",50) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){455,410,50,50}, 20, &feedbackValueParam,"Feedback",50) )
 	{
-		editez_feedback_box_pressed = !editez_feedback_box_pressed;
+		feedbackValueParam.editMode = !feedbackValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloat((Rectangle){550,410,50,50}, 20, editez_spread_box_pressed, 
-									&editez_spread_value, -1.0f, -1.0f, 1.0f,
-									 ez_textBufferSpread,&ez_spreadValueChanged,"Spread",40) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){550,410,50,50}, 20, &spreadValueParam,"Spread",40) )
 	{
-		editez_spread_box_pressed = !editez_spread_box_pressed;
+		spreadValueParam.editMode = !spreadValueParam.editMode;
 	}
 	
 	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
@@ -158,15 +118,15 @@ void CreateEchoZoneDialog::DrawDialog()
 	{
 		name = std::string(ez_char_name);
 		xPosition = xValueParam.current_value;
-		yPosition = editez_y_value;
-		zPosition = editez_z_value;
-		width = editez_width_value;
+		yPosition = yValueParam.current_value;
+		zPosition = zValueParam.current_value;
+		width = widthValueParam.current_value;
 		
-		properties.flDamping = editez_damping_value;
-		properties.flDelay = editez_delay_value;
-		properties.flFeedback = editez_feedback_value;
-		properties.flLRDelay = editez_lrdelay_value;
-		properties.flSpread = editez_spread_value;
+		properties.flDamping = dampingValueParam.current_value;
+		properties.flDelay = delayValueParam.current_value;
+		properties.flFeedback = feedbackValueParam.current_value;
+		properties.flLRDelay = lrDelayValueParam.current_value;
+		properties.flSpread = spreadValueParam.current_value;
 	}
     /*
 	
@@ -286,6 +246,20 @@ void CreateEchoZoneDialog::resetConfig()
 	cancelClicked = false;
 	
 	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	
+	widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
+	
+	delayValueParam = InitValidFloatParamSettings(0.1f, 0.1f, 0.0f, 0.207f, "0.1");
+
+	lrDelayValueParam = InitValidFloatParamSettings(0.1f, 0.0f, 0.0f, 0.404f, "0.1");
+
+	dampingValueParam = InitValidFloatParamSettings(0.5f, 0.5f, 0.0f, 0.99f, "0.1");
+
+	feedbackValueParam = InitValidFloatParamSettings(0.5f, 0.5f, 0.0f, 1.0f, "0.5");
+
+	spreadValueParam = InitValidFloatParamSettings(-1.0f, -1.0f, -1.0f, 1.0f, "-1.0");
 	
 	memset(ez_char_name, 0, sizeof(ez_char_name));
 	strncpy(ez_char_name, "name here", 20);
