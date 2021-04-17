@@ -10,12 +10,13 @@
 
 #include "effects-manager.h"
 
-class EditMultipleEchoZonesDialog : public wxDialog
+class EditMultipleEchoZonesDialog
 {
 
 public:
-	EditMultipleEchoZonesDialog(const wxString& title,EffectsManager* effects_manager);
+	EditMultipleEchoZonesDialog();
 
+	void SetPointerToEffectsManager(EffectsManager* effects_manager);
 
 	void OnOk(wxCommandEvent& event );
 
@@ -30,26 +31,18 @@ public:
 
 private:
 
-	EffectsManager* effects_manager_ptr; //pointer to vector of sound producers to edit
+	EffectsManager* m_effects_manager_ptr; //pointer to vector of sound producers to edit
 	
 	EchoZoneProperties tempEchoProp;
-	//ReverbEAXProperties tempEAXRevProp;
 	
 	std::string name;
 	double xPosition;
 	double yPosition;
 	double zPosition;
 	double width;
-	
-	wxButton* okButton;
-	wxButton* cancelButton;
-	wxButton* applyButton;
-	wxButton* previewButton;
 
 	int m_selection_index;
 	
-	wxListBox* listboxEchoZones;
-
 	void initPrivateVariables();
 
 	void ChangeEchoZoneAttributes();
@@ -60,26 +53,6 @@ private:
 	int spt_selection_index;
 	
 	void SoundProducerTrackSelectedInListBox(wxCommandEvent& event );
-	
-	//text fields
-
-	wxTextCtrl* textFieldX;
-	wxTextCtrl* textFieldY;
-	wxTextCtrl* textFieldZ;
-	wxTextCtrl* textFieldWidth;
-	
-	
-	
-	//AL_ECHO_DELAY
-	wxTextCtrl* textField_flDelay;
-	//AL_ECHO_LRDELAY
-	wxTextCtrl* textField_flLRDelay;
-	//AL_ECHO_DAMPING
-	wxTextCtrl* textField_flDamping;
-	//AL_ECHO_FEEDBACK
-	wxTextCtrl* textField_flFeedback;
-	//AL_ECHO_SPREAD
-	wxTextCtrl* textField_flSpread;
 
 };
 

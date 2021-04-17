@@ -55,7 +55,7 @@ Z to zoom to (0, 0, 0)
   
 ### Control SoundProducers
   
-  Select the sound producer(red cube) and then move the sound producer with W,A,S,D,Q,E keys.
+  Select the sound producer(red cube) and then move the sound producer with I,J,K,L,U,O keys.
 
 ### Coordinate System of 3D Audio Producer and OpenAL Soft
   Like OpenAL, the application uses a right handed coordinate system to move listener and sound producers, where in a frontal default view X (thumb) points right,  Y points up (index finger), and Z points towards the viewer/camera (middle finger). 
