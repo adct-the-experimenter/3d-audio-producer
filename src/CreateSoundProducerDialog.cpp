@@ -19,12 +19,12 @@ CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 
 void CreateSoundProducerDialog::SetPointerToSoundBank(SoundBank* thisSoundBank){m_sound_bank_ptr = thisSoundBank;}
 
-static int x_value = 0;
-static bool x_box_pressed = false;
-static int y_value = 0;
-static bool y_box_pressed = false;
-static int z_value = 0;
-static bool z_box_pressed = false;
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
 static std::uint8_t account_num;
 
 static char char_name[20] = "name here";
@@ -49,17 +49,17 @@ void CreateSoundProducerDialog::DrawDialog()
 		name_box_pressed = !name_box_pressed;
 	}
 	
-	if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &x_value, -10, 10, x_box_pressed) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,300,50,50}, 20, &xValueParam,"X:",10) )
 	{
-		x_box_pressed = !x_box_pressed;
+		xValueParam.editMode = !xValueParam.editMode;
 	}
-	if( GuiValueBox((Rectangle){500,300,50,50}, "Y:", &y_value, -10, 10, y_box_pressed) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,300,50,50}, 20, &yValueParam,"Y:",10) )
 	{
-		y_box_pressed = !y_box_pressed;
+		yValueParam.editMode = !yValueParam.editMode;
 	}
-	if( GuiValueBox((Rectangle){600,300,50,50}, "Z:", &z_value, -10, 10, z_box_pressed) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){600,300,50,50}, 20, &zValueParam,"Z:",10) )
 	{
-		z_box_pressed = !z_box_pressed;
+		zValueParam.editMode = !zValueParam.editMode;
 	}
 	
 	free_roam_box_stat = GuiCheckBox((Rectangle){ 400, 460, 20, 20 }, "Free Roam:", free_roam_box_stat);
@@ -80,9 +80,9 @@ void CreateSoundProducerDialog::DrawDialog()
 	if(okClicked)
 	{
 		name = std::string(char_name);
-		xPosition = (float)x_value;
-		yPosition = (float)y_value;
-		zPosition = (float)z_value;
+		xPosition = xValueParam.current_value;
+		yPosition = yValueParam.current_value;
+		zPosition = zValueParam.current_value;
 		tempFreeRoamBool = free_roam_box_stat;
 		sound_bank_account_num = account_num;
 	}
@@ -112,9 +112,12 @@ void CreateSoundProducerDialog::resetConfig()
 	yPosition = 0;
 	zPosition = 0;
 	
-	x_value = 0;
-	y_value = 0;
-	z_value = 0;
+	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+	
 	sound_bank_account_num = 0;
 	okClicked = false;
 	cancelClicked = false;

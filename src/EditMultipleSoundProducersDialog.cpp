@@ -3,6 +3,9 @@
 #include "raygui/raygui.h"
 
 #include <cstring>
+#include <string>
+
+#include "raygui/raygui_extras.h"
 
 EditMultipleSoundProducersDialog::EditMultipleSoundProducersDialog(const std::string& title)
 {
@@ -14,26 +17,23 @@ void EditMultipleSoundProducersDialog::Init(std::vector <std::unique_ptr <SoundP
 void EditMultipleSoundProducersDialog::SetPointerToSoundBank(SoundBank* thisSoundBank){m_sound_bank_ptr = thisSoundBank;}
 
 
-int editsp_x_value = 0;
-bool editsp_x_box_pressed = false;
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-int editsp_y_value = 0;
-bool editsp_y_box_pressed = false;
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-int editsp_z_value = 0;
-bool editsp_z_box_pressed = false;
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
-char editsp_char_name[20];
-bool editsp_name_box_pressed = false;
+static char editsp_char_name[20] = "name here";
+static bool editsp_name_box_pressed = false;
 
-bool editsp_free_roam_box_stat = false;
+static bool editsp_free_roam_box_stat = false;
 
-bool editsp_dropDownSoundMode = false;
-int editsp_dropDownSoundActive = 0;
+static bool editsp_dropDownSoundMode = false;
+static int editsp_dropDownSoundActive = 0;
 
-bool editsp_dropDownSoundProducerMode = false;
-int editsp_dropDownSoundProducerActive = 0;
-std::string soundproducer_choices = "";
+static bool editsp_dropDownSoundProducerMode = false;
+static int editsp_dropDownSoundProducerActive = 0;
+static std::string soundproducer_choices = "";
 
 void EditMultipleSoundProducersDialog::DrawDialog()
 {
@@ -65,18 +65,19 @@ void EditMultipleSoundProducersDialog::DrawDialog()
 		editsp_name_box_pressed = !editsp_name_box_pressed;
 	}
 	
-	if( GuiValueBox((Rectangle){400,300,50,50}, "X:", &editsp_x_value, -10, 10, editsp_x_box_pressed) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,300,50,50}, 20, &xValueParam,"X:",10) )
 	{
-		editsp_x_box_pressed = !editsp_x_box_pressed;
+		xValueParam.editMode = !xValueParam.editMode;
 	}
-	if( GuiValueBox((Rectangle){500,300,50,50}, "Y:", &editsp_y_value, -10, 10, editsp_y_box_pressed) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,300,50,50}, 20, &yValueParam,"Y:",10) )
 	{
-		editsp_y_box_pressed = !editsp_y_box_pressed;
+		yValueParam.editMode = !yValueParam.editMode;
 	}
-	if( GuiValueBox((Rectangle){600,300,50,50}, "Z:", &editsp_z_value, -10, 10, editsp_z_box_pressed) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){600,300,50,50}, 20, &zValueParam,"Z:",10) )
 	{
-		editsp_z_box_pressed = !editsp_z_box_pressed;
+		zValueParam.editMode = !zValueParam.editMode;
 	}
+
 	
 	tempFreeRoamBool = GuiCheckBox((Rectangle){ 400, 460, 20, 20 }, "Free Roam:", tempFreeRoamBool);
 	
@@ -113,9 +114,9 @@ void EditMultipleSoundProducersDialog::ChangeSoundProducerAttributes()
 			thisSoundProducer->SetNameString(newname);
 			
 			//change position of selected sound producer based on what is in textfields
-			xPosition = (float)editsp_x_value;
-			yPosition = (float)editsp_y_value;
-			zPosition = (float)editsp_z_value;
+			xPosition = xValueParam.current_value;
+			yPosition = yValueParam.current_value;
+			zPosition = zValueParam.current_value;
 			thisSoundProducer->SetPositionX(xPosition);
 			thisSoundProducer->SetPositionY(yPosition);
 			thisSoundProducer->SetPositionZ(zPosition);
@@ -137,9 +138,10 @@ void EditMultipleSoundProducersDialog::resetConfig()
 	yPosition = 0;
 	zPosition = 0;
 	
-	editsp_x_value = 0;
-	editsp_y_value = 0;
-	editsp_z_value = 0;
+	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+	
 	sound_bank_account_num = 0;
 	okClicked = false;
 	cancelClicked = false;
@@ -168,9 +170,9 @@ void EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(size_t cho
 			yPosition = thisSoundProducer->GetPositionY();
 			zPosition = thisSoundProducer->GetPositionZ();
 			
-			editsp_x_value = int(xPosition);
-			editsp_y_value = int(yPosition);
-			editsp_z_value = int(zPosition);
+			xValueParam = InitValidFloatParamSettings(xPosition, 0.0f, -30.0f, 30.0f, std::to_string(xPosition).c_str());
+			yValueParam = InitValidFloatParamSettings(yPosition, 0.0f, -30.0f, 30.0f, std::to_string(yPosition).c_str());
+			zValueParam = InitValidFloatParamSettings(zPosition, 0.0f, -30.0f, 30.0f, std::to_string(zPosition).c_str());
 			
 			//update sound bank account number
 			sound_bank_account_num = thisSoundProducer->GetAccountNumber();
