@@ -82,7 +82,7 @@ ReverbZone* EffectsManager::GetPointerToEAXReverbZone(size_t& index){return &eax
 
 EchoZone* EffectsManager::GetPointerToEchoZone(size_t& index){return &echo_zones_vector[index];}
 
-void EffectsManager::PerformReverbThreadOperation()
+void EffectsManager::PerformEffectThreadOperation()
 {
 	
 	//if there are effect zones
@@ -106,21 +106,19 @@ void EffectsManager::PerformReverbThreadOperation()
 					{
 						for(size_t i = 0; i < m_sound_producer_reg_ptr->sound_producer_vector_ref->size(); i++)
 						{
-							ALuint* source_ptr = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i)->getSource();
+							SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
 							
 							//if no reverb is applied
-							if(!EffectsManager::DoesSourceHaveEffectApplied(source_ptr))
+							if(!thisSoundProducer->GetEffectAppliedBool())
 							{
-								SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
+								ALuint* source_ptr = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i)->getSource();
 							
 								//if there is a sound producer attached to sound producer track
 								if(thisSoundProducer != nullptr)
 								{
 									//if sound producer is inside the zone
 									if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone))
-									{
-										std::cout << "SoundProducer and listener in the effect zone! Applying effect!\n";
-										
+									{										
 										//apply reverb to source of sound producer track
 										EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
 									}
@@ -149,7 +147,7 @@ void EffectsManager::PerformReverbThreadOperation()
 						{
 							//if sound producer is inside the zone
 							if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone)
-							   || EffectsManager::DoesSourceHaveEffectApplied(source_ptr))
+							   || thisSoundProducer->GetEffectAppliedBool())
 							{
 								//remove reverb effect from sound producer track
 								EffectsManager::RemoveEffectFromThisSource(source_ptr);
@@ -191,9 +189,11 @@ bool EffectsManager::IsListenerInThisEffectZone(EffectZone* thisZone)
                                      thisZone->GetPositionZ() + zone_width/2 }}  )
         )
 	{
+		//std::cout << "Listener inside effect zone!\n";
 		return true;
 	}
 	
+	//std::cout << "Listener not inside effect zone!\n";
 	return false;
 	
 }
@@ -231,8 +231,19 @@ void EffectsManager::ApplyThisEffectZoneEffectToThisSource(ALuint* source, Effec
 	// Connect the source to the effect slot. This tells the source to use the
 	// effect slot 'slot', on send #0 with the AL_FILTER_NULL filter object.
 	
+	ALenum err;
+	
+	err = alGetError();
+	
+	if(err != AL_NO_ERROR) std::cout << "AL Error found before effect check on source:" <<  alGetString(err) << std::endl;
+	
 	alSource3i(*source, AL_AUXILIARY_SEND_FILTER, (ALint)(*thisZone->GetEffectsSlotPointer()), 0, AL_FILTER_NULL);
-	assert(alGetError()== AL_NO_ERROR && "Failed to setup effect for sound source send 0.");
+	
+	err = alGetError();
+	
+	if(err != AL_NO_ERROR) std::cout << "AL Error found after effect check on source:" <<  alGetString(err) << std::endl;
+	
+	assert(err == AL_NO_ERROR && "Failed to setup effect for sound source send 0.");
 }
 
 void EffectsManager::RemoveEffectFromThisSource(ALuint* source)
@@ -292,18 +303,3 @@ void EffectsManager::FreeEffects()
 	}
 }
 
-bool EffectsManager::DoesSourceHaveEffectApplied(ALuint* source)
-{
-	//alGetSource3i(ALuint source, ALenum param, ALint *v1, ALint *v2, ALint *v3);
-	ALint v1,v2,v3;
-	alGetSource3i(*source, AL_AUXILIARY_SEND_FILTER, &v1, &v2, &v3);
-	
-	if(v1 == AL_EFFECTSLOT_NULL)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	} 
-}

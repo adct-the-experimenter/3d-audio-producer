@@ -107,7 +107,7 @@ void DetermineEffect()
 {
     if(local_effect_manager_ptr)
     {
-		local_effect_manager_ptr->PerformReverbThreadOperation();
+		local_effect_manager_ptr->PerformEffectThreadOperation();
 	}
 }
 
@@ -118,6 +118,10 @@ void ImmediateModeSoundPlayer::PlayAll()
 	//launch worker thread to apply certain effect if listener is in a certain effect zone
     //std::thread effect_worker_thread(DetermineEffect);
   
+	if(m_effects_manager_ptr)
+	{
+		m_effects_manager_ptr->PerformEffectThreadOperation();
+	}
     
 	if(m_state == IMSoundPlayerState::NONE)
 	{

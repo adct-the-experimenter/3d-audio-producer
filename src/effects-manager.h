@@ -45,7 +45,7 @@ public:
 	void FreeEffects();
 	
 	//function to perform the entire reverb thread operation of checking and setting reverb
-	void PerformReverbThreadOperation();
+	void PerformEffectThreadOperation();
 	
 	friend class CreateEAXReverbZoneDialog;
 	friend class CreateStandardReverbZoneDialog;
@@ -92,8 +92,6 @@ private:
 	
 	//std::vector <SoundProducerTrack*> *GetReferenceToSoundProducerTracksVector();
 	SoundProducerRegistry* m_sound_producer_reg_ptr;
-	
-	bool DoesSourceHaveEffectApplied(ALuint* source);
 };
 
 

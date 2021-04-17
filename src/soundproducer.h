@@ -72,6 +72,9 @@ public:
 	
 	void SetPickedBool(bool state);
 	
+	void SetEffectAppliedBool(bool state);
+	bool GetEffectAppliedBool();
+	
 private:
 	//Name of Sound Producer
 	std::string name;
@@ -101,7 +104,9 @@ private:
 	//bool to indicate if sound producer has been clicked on for selection
 	//used to draw cube a different color if picked.
 	bool picked_for_selection;
-
+	
+	//bool to indicate if effect has been applied to its source
+	bool effect_applied;
 };
 
 #endif

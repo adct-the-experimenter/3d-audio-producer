@@ -17,6 +17,8 @@ SoundProducer::SoundProducer()
 	picked_for_selection = false;
 	
 	account_number = 0;
+	
+	effect_applied = false;
 }
 
 SoundProducer::~SoundProducer()
@@ -157,3 +159,6 @@ void SoundProducer::SetAccountNumber(std::uint8_t num){account_number = num;}
 std::uint8_t SoundProducer::GetAccountNumber(){return account_number;}
 
 void SoundProducer::SetPickedBool(bool state){picked_for_selection = state;}
+
+void SoundProducer::SetEffectAppliedBool(bool state){effect_applied = state;}
+bool SoundProducer::GetEffectAppliedBool(){return effect_applied;}

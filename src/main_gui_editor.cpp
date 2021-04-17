@@ -118,13 +118,15 @@ bool MainGuiEditor::OnInit()
 		
 		//initialize effects manager
 		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager() );
-		create_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 		effects_manager_ptr->SetPointerToListener(listener.get());
+		effects_manager_ptr->SetPointerToSoundProducerRegistry(&frame->soundproducer_registry);
+		
+		create_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 		
 		//connect mainframe to effects manager
 		frame->SetEffectsManagerReference(effects_manager_ptr.get());
 		im_sound_player.SetPointerToSoundBank(&m_sound_bank);
-	
+		im_sound_player.SetPointerToEffectsManager(effects_manager_ptr.get());
 	}
 
 
