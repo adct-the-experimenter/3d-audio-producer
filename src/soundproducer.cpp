@@ -32,7 +32,7 @@ SoundProducer::~SoundProducer()
 }
 
 void SoundProducer::InitSoundProducer(std::string& thisName,
-									double& x, double& y, double& z)
+									float& x, float& y, float& z)
 {
 	//intialize source
 	SoundProducer::CreateSource();
@@ -83,7 +83,7 @@ void SoundProducer::moveSource()
 	}
 }
 
-void SoundProducer::SetPositionX(double& x)
+void SoundProducer::SetPositionX(float& x)
 {
 	producer_position.x = x;
 
@@ -92,9 +92,9 @@ void SoundProducer::SetPositionX(double& x)
 	m_saveData.x = x;
 }
 
-double SoundProducer::GetPositionX(){return producer_position.x;}
+float SoundProducer::GetPositionX(){return producer_position.x;}
 
-void SoundProducer::SetPositionY(double& y)
+void SoundProducer::SetPositionY(float& y)
 {
 	producer_position.y = y;
 
@@ -103,9 +103,9 @@ void SoundProducer::SetPositionY(double& y)
 	m_saveData.y = y;
 }
 
-double SoundProducer::GetPositionY(){return producer_position.y;}
+float SoundProducer::GetPositionY(){return producer_position.y;}
 
-void SoundProducer::SetPositionZ(double& z)
+void SoundProducer::SetPositionZ(float& z)
 {
 	producer_position.z = z;
 
@@ -114,7 +114,7 @@ void SoundProducer::SetPositionZ(double& z)
 	m_saveData.z = z;
 }
 
-double SoundProducer::GetPositionZ(){return producer_position.z;}
+float SoundProducer::GetPositionZ(){return producer_position.z;}
 
 
 void SoundProducer::CreateSource()

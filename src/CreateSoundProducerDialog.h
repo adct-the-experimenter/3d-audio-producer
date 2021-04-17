@@ -14,7 +14,7 @@ public:
 	void DrawDialog();
 
 	//function to return position of new sound producer object
-	void getNewPosition(double& x, double& y, double& z);
+	void getNewPosition(float& x, float& y, float& z);
 
 	std::string getNewName();
 
@@ -36,9 +36,9 @@ private:
 
 	//sound producer attributes
 	std::string name;
-	double xPosition;
-	double yPosition;
-	double zPosition;
+	float xPosition;
+	float yPosition;
+	float zPosition;
 	bool tempFreeRoamBool;
 	std::uint8_t sound_bank_account_num;
 	

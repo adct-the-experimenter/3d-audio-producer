@@ -113,9 +113,9 @@ void EditMultipleSoundProducersDialog::ChangeSoundProducerAttributes()
 			thisSoundProducer->SetNameString(newname);
 			
 			//change position of selected sound producer based on what is in textfields
-			xPosition = (double)editsp_x_value;
-			yPosition = (double)editsp_y_value;
-			zPosition = (double)editsp_z_value;
+			xPosition = (float)editsp_x_value;
+			yPosition = (float)editsp_y_value;
+			zPosition = (float)editsp_z_value;
 			thisSoundProducer->SetPositionX(xPosition);
 			thisSoundProducer->SetPositionY(yPosition);
 			thisSoundProducer->SetPositionZ(zPosition);

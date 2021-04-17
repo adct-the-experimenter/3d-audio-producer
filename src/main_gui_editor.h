@@ -104,7 +104,7 @@ private:
 	
 	//void OnCreateSoundProducer(wxCommandEvent& event); //function for menu to create and place sound producer
 	
-	void CreateSoundProducer(std::string& name, double& x, double& y, double& z, bool freeRoam, std::uint8_t account_num);
+	void CreateSoundProducer(std::string& name, float& x, float& y, float& z, bool freeRoam, std::uint8_t account_num);
 	
 	/*
 	void OnEditMultipleSoundProducers(wxCommandEvent& event); //function for menu to edit current available sound producers

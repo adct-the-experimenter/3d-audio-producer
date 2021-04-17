@@ -77,9 +77,9 @@ void CreateSoundProducerDialog::DrawDialog()
 	if(okClicked)
 	{
 		name = std::string(char_name);
-		xPosition = (double)x_value;
-		yPosition = (double)y_value;
-		zPosition = (double)z_value;
+		xPosition = (float)x_value;
+		yPosition = (float)y_value;
+		zPosition = (float)z_value;
 		tempFreeRoamBool = free_roam_box_stat;
 		sound_bank_account_num = account_num;
 	}
@@ -87,7 +87,7 @@ void CreateSoundProducerDialog::DrawDialog()
 
 std::string CreateSoundProducerDialog::getNewName(){return name;}
 
-void CreateSoundProducerDialog::getNewPosition(double& x, double& y, double& z)
+void CreateSoundProducerDialog::getNewPosition(float& x, float& y, float& z)
 {
 	x = xPosition;
 	y = yPosition;

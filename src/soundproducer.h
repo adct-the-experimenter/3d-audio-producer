@@ -23,9 +23,9 @@ struct SoundProducerSaveData
 	std::string name;
 	
 	//position
-	double x;
-	double y;
-	double z;
+	float x;
+	float y;
+	float z;
 	
 	//account number from sound bank
 	std::uint8_t account_number;
@@ -41,15 +41,15 @@ public:
 	void SetNameString(std::string& thisName);
 	std::string GetNameString();
 
-	void SetPositionX(double& x); //set x position of sound producer
-	double GetPositionX(); //get x position of sound producer
-	void SetPositionY(double& y); //set y position of sound producer
-	double GetPositionY(); //get y position of sound producer
-	void SetPositionZ(double& z); //set z position of sound producer
-	double GetPositionZ(); //get z position of sound producer
+	void SetPositionX(float& x); //set x position of sound producer
+	float GetPositionX(); //get x position of sound producer
+	void SetPositionY(float& y); //set y position of sound producer
+	float GetPositionY(); //get y position of sound producer
+	void SetPositionZ(float& z); //set z position of sound producer
+	float GetPositionZ(); //get z position of sound producer
 
 	void InitSoundProducer(std::string& thisName,
-							double& x, double& y, double& z);
+							float& x, float& y, float& z);
 
 	//function to use openal soft audio engine to create source from buffer
 	void CreateSource();

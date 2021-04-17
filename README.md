@@ -51,11 +51,11 @@ Z to zoom to (0, 0, 0)
 
 ### Control Listener
   
-  Use W,A,S,D,Q,E keys to move the listener in 3d space.
+  Use W,A,S,D,Q,E keys to move the listener(blue cube) in 3d space.
   
 ### Control SoundProducers
   
-  TODO
+  Select the sound producer(red cube) and then move the sound producer with W,A,S,D,Q,E keys.
 
 ### Coordinate System of 3D Audio Producer and OpenAL Soft
   Like OpenAL, the application uses a right handed coordinate system to move listener and sound producers, where in a frontal default view X (thumb) points right,  Y points up (index finger), and Z points towards the viewer/camera (middle finger). 

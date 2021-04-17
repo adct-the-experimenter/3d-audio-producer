@@ -190,6 +190,10 @@ bool dialogInUse = false;
 Ray picker_ray = { 0 };
 bool picker_ray_launched = false;
 
+//represents the index of sound producer chosen
+//signed integer used so that -1 can be used.
+std::int32_t soundproducer_picked = -1;
+
 bool editKeyPressed = false;
 
 void MainGuiEditor::HandleEvents()
@@ -256,97 +260,69 @@ void MainGuiEditor::HandleEvents()
 			}
 			break;
 		}
+	*/	
+	//if i key pressed
+	if( IsKeyDown(KEY_I) )
+	{
+		if(soundproducer_picked != -1)
+		{	
+			float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() - distanceToMove; 
+			sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+		}
+	}
+	//j key pressed
+	if( IsKeyDown(KEY_J) )
+	{
+		if(soundproducer_picked != -1)
+		{	
+			float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() - distanceToMove; 
+			sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+		}
+	}
+	//k key pressed
+	if( IsKeyDown(KEY_K) )
+	{
+		if(soundproducer_picked != -1)
+		{	
+			float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() + distanceToMove; 
+			sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+		}
+	
+	}
+	//L key pressed
+	if( IsKeyDown(KEY_L) )
+	{
+		if(soundproducer_picked != -1)
+		{	
+			float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() + distanceToMove; 
+			sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+		}
 		
-		//if i key pressed
-		case 73:
-		{
-			if(sound_producer_vector.size() > 0)
-			{	
-				if(frame->m_sp_toolbar_combobox->GetSelection() >= 0)
-				{
-					int selection = frame->m_sp_toolbar_combobox->GetSelection();
-					double newZ = sound_producer_vector.at(selection)->GetPositionZ() - 1.0; 
-					sound_producer_vector.at(selection)->SetPositionZ(newZ);
-				}
-			}
-			break;
+	}
+	//u key pressed
+	if( IsKeyDown(KEY_U) )
+	{
+		if(soundproducer_picked != -1)
+		{	
+			float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() - distanceToMove; 
+			sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
 		}
-		//j key pressed
-		case 74:
-		{
-			if(sound_producer_vector.size() > 0)
-			{
-				if(frame->m_sp_toolbar_combobox->GetSelection() >= 0)
-				{
-					int selection = frame->m_sp_toolbar_combobox->GetSelection();
-					double newX = sound_producer_vector.at(selection)->GetPositionX() - 1.0; 
-					sound_producer_vector.at(selection)->SetPositionX(newX);
-				}
-			}
-			break;
+		
+	}
+	//o key pressed
+	if( IsKeyDown(KEY_O) )
+	{
+		if(soundproducer_picked != -1)
+		{	
+			float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() + distanceToMove; 
+			sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
 		}
-		//k key pressed
-		case 75:
-		{
-			if(sound_producer_vector.size() > 0)
-			{
-				if(frame->m_sp_toolbar_combobox->GetSelection() >= 0)
-				{
-					int selection = frame->m_sp_toolbar_combobox->GetSelection();
-					double newZ = sound_producer_vector.at(selection)->GetPositionZ() + 1.0; 
-					sound_producer_vector.at(selection)->SetPositionZ(newZ);
-				}
-			}
-			break;
-		}
-		//L key pressed
-		case 76:
-		{
-			if(sound_producer_vector.size() > 0)
-			{
-				if(frame->m_sp_toolbar_combobox->GetSelection() >= 0)
-				{
-					int selection = frame->m_sp_toolbar_combobox->GetSelection();
-					double newX = sound_producer_vector.at(selection)->GetPositionX() + 1.0; 
-					sound_producer_vector.at(selection)->SetPositionX(newX);
-				}
-			}
-			break;
-		}
-		//u key pressed
-		case 85:
-		{
-			if(sound_producer_vector.size() > 0)
-			{
-				if(frame->m_sp_toolbar_combobox->GetSelection() >= 0)
-				{
-					int selection = frame->m_sp_toolbar_combobox->GetSelection();
-					double newY = sound_producer_vector.at(selection)->GetPositionY() - 1.0; 
-					sound_producer_vector.at(selection)->SetPositionY(newY);
-				}
-			}
-			break;
-		}
-		//o key pressed
-		case 79:
-		{
-			if(sound_producer_vector.size() > 0)
-			{
-				if(frame->m_sp_toolbar_combobox->GetSelection() >= 0)
-				{
-					int selection = frame->m_sp_toolbar_combobox->GetSelection();
-					double newY = sound_producer_vector.at(selection)->GetPositionY() + 1.0; 
-					sound_producer_vector.at(selection)->SetPositionY(newY);
-				}
-			}
-			break;
-		}
-		*/
+		
+	}
+
 }
 
-//represents the index of sound producer chosen
-//signed integer used so that -1 can be used.
-std::int32_t soundproducer_picked = -1;
+
 
 void MainGuiEditor::logic()
 {
@@ -533,7 +509,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			{
 				//create sound producer
 				std::string name = create_sp_dialog.getNewName();
-				double x,y,z;
+				float x,y,z;
 				create_sp_dialog.getNewPosition(x,y,z);
 				bool freeRoam = create_sp_dialog.getFreeRoamBool();
 				std::uint8_t account_num =  create_sp_dialog.getAccountNumber();
@@ -1063,7 +1039,7 @@ void MainFrame::OnCreateSoundProducer(wxCommandEvent& event)
 }
 */
 
-void MainFrame::CreateSoundProducer(std::string& name,double& x, double& y, double& z, 
+void MainFrame::CreateSoundProducer(std::string& name,float& x, float& y, float& z, 
 									bool freeRoam, std::uint8_t account_num)
 {
 	sound_producer_vector_ref->push_back( std::unique_ptr <SoundProducer>(new SoundProducer()) );
