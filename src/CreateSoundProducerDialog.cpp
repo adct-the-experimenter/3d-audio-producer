@@ -3,6 +3,7 @@
 
 #include "raygui/raygui.h"
 
+#include <cstring>
 
 CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 {
@@ -116,6 +117,10 @@ void CreateSoundProducerDialog::resetConfig()
 	okClicked = false;
 	cancelClicked = false;
 	tempFreeRoamBool = false;
+	
+	memset(char_name, 0, sizeof(char_name));
+	strncpy(char_name, "name here", 20);
+	char_name[19] = '\0';
 }
 
 void CreateSoundProducerDialog::InitSoundBankChoices()

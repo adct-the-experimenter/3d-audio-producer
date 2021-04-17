@@ -31,10 +31,7 @@ EchoZoneProperties& CreateEchoZoneDialog::getNewProperties(){return properties;}
 static bool ez_name_box_pressed = false;
 static char ez_char_name[20] = "name here";
 
-static float editez_x_value = 0;
-static bool editez_x_box_pressed = false;
-static char ez_textBufferX[9] = "0";
-static bool ez_xValueChanged = false;
+ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
 
 static float editez_y_value = 0;
 static bool editez_y_box_pressed = false;
@@ -89,12 +86,14 @@ void CreateEchoZoneDialog::DrawDialog()
 		ez_name_box_pressed = !ez_name_box_pressed;
 	}
     
-    if( GuiTextBox_ValidValueFloat((Rectangle){350,200,50,50}, 20, editez_x_box_pressed, 
-									&editez_x_value, 0.0f, -10.0f, 10.0f,
-									 ez_textBufferX,&ez_xValueChanged,"X:",10) )
+    //if( GuiTextBox_ValidValueFloat((Rectangle){350,200,50,50}, 20, editez_x_box_pressed, 
+	//								&editez_x_value, 0.0f, -10.0f, 10.0f,
+	//								 ez_textBufferX,&ez_xValueChanged,"X:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,200,50,50}, 20, &xValueParam, "X:", 10) )				
 	{
-		editez_x_box_pressed = !editez_x_box_pressed;
+		xValueParam.editMode = !xValueParam.editMode;
 	}
+	
 	if( GuiTextBox_ValidValueFloat((Rectangle){450,200,50,50}, 20, editez_y_box_pressed, 
 									&editez_y_value, 0.0f, -10.0f, 10.0f,
 									 ez_textBufferY,&ez_yValueChanged,"Y:",10) )
@@ -158,7 +157,7 @@ void CreateEchoZoneDialog::DrawDialog()
 	if(okClicked)
 	{
 		name = std::string(ez_char_name);
-		xPosition = editez_x_value;
+		xPosition = xValueParam.current_value;
 		yPosition = editez_y_value;
 		zPosition = editez_z_value;
 		width = editez_width_value;
@@ -285,4 +284,10 @@ void CreateEchoZoneDialog::resetConfig()
 {
 	okClicked = false;
 	cancelClicked = false;
+	
+	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	
+	memset(ez_char_name, 0, sizeof(ez_char_name));
+	strncpy(ez_char_name, "name here", 20);
+	ez_char_name[19] = '\0';
 }
