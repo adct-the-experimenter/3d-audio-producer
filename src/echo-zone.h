@@ -87,6 +87,7 @@ private:
 	Color echoZoneColor;
 	
 	EchoZoneSaveData m_saveData;
+	
 };
 
 #endif

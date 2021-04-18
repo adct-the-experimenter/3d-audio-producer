@@ -1,95 +1,149 @@
 #include "EditMultipleEchoZonesDialog.h"
 
-EditMultipleEchoZonesDialog::EditMultipleEchoZonesDialog(const wxString& title,EffectsManager* effects_manager)
-       : wxDialog(NULL, -1, title, wxDefaultPosition, wxSize(500, 250), wxRESIZE_BORDER)
-{
-	
-	EditMultipleEchoZonesDialog::initPrivateVariables();
-	
-	effects_manager_ptr = effects_manager;
+#include "raygui/raygui_extras.h"
 
-	wxFloatingPointValidator <double> validatorFloat(3,nullptr,wxNUM_VAL_ZERO_AS_BLANK);
-    validatorFloat.SetRange(-100.00,100.00);     // set allowable range
+#include <string>
+
+EditMultipleEchoZonesDialog::EditMultipleEchoZonesDialog()
+{
+	okClicked = false;
+	cancelClicked = false;
+	
+	m_selection_index = 0;
+	spt_selection_index = 0;
+}
+
+void EditMultipleEchoZonesDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
+
+bool EditMultipleEchoZonesDialog::OkClickedOn(){return okClicked;}
+
+bool EditMultipleEchoZonesDialog::CancelClickedOn(){return cancelClicked;}
+
+static std::string echo_zone_choices = "";
+static bool editez_dropDownEditMode = false;
+static int editez_dropDownEchoZoneActive = 0;
+
+static bool ez_name_box_pressed = false;
+static char ez_char_name[20] = "name here";
+
+//InitValidFloatParamSettings(current,default,min,max,initialText)
+
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
+
+static ValidFloatParamSettings delayValueParam = InitValidFloatParamSettings(0.1f, 0.1f, 0.0f, 0.207f, "0.1");
+
+static ValidFloatParamSettings lrDelayValueParam = InitValidFloatParamSettings(0.1f, 0.0f, 0.0f, 0.404f, "0.1");
+
+static ValidFloatParamSettings dampingValueParam = InitValidFloatParamSettings(0.5f, 0.5f, 0.0f, 0.99f, "0.1");
+
+static ValidFloatParamSettings feedbackValueParam = InitValidFloatParamSettings(0.5f, 0.5f, 0.0f, 1.0f, "0.5");
+
+static ValidFloatParamSettings spreadValueParam = InitValidFloatParamSettings(-1.0f, -1.0f, -1.0f, 1.0f, "-1.0");
+
+void EditMultipleEchoZonesDialog::InitGUI()
+{
+	if(m_effects_manager_ptr)
+	{
+		//clear previous sound choices
+		echo_zone_choices.clear();
+				
+		for(size_t i = 0; i < m_effects_manager_ptr->echo_zones_vector.size(); i++ )
+		{
+			echo_zone_choices += m_effects_manager_ptr->echo_zones_vector[i].GetNameString() + ";";
+		}
+		
+		//initialize values in GUI text boxes based on first choice
+		//EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
+		EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(m_selection_index);
+		
+	}
+}
+
+void EditMultipleEchoZonesDialog::DrawDialog()
+{
+	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Edit Echo Zone");
+	
+	if(exit){cancelClicked = true;}
+	
+		
+	
+	
+	//initialize text fields
+	
+	if( GuiTextBox((Rectangle){350,180,100,50}, ez_char_name, 20, ez_name_box_pressed) )
+	{
+		ez_name_box_pressed = !ez_name_box_pressed;
+	}
     
     
-	textFieldX = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 60), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldY = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 80), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldZ = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,250,50,50}, 20, &xValueParam, "X:", 10) )				
+	{
+		xValueParam.editMode = !xValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(2.0,30.00);     // set allowable range
-	textFieldWidth = new wxTextCtrl(this,-1, "2.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
-	
-	
-	validatorFloat.SetRange(0.0,0.207);     // set allowable range
-	textField_flDelay = new wxTextCtrl(this,-1, "0.1", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(0.0,0.404);     // set allowable range
-	textField_flLRDelay = new wxTextCtrl(this,-1, "0.1", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	validatorFloat.SetRange(0.0,0.99);     // set allowable range
-	textField_flDamping = new wxTextCtrl(this,-1, "0.5", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	validatorFloat.SetRange(0.0,1.0);     // set allowable range
-	textField_flFeedback = new wxTextCtrl(this,-1, "0.5", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(-1.0,1.0);     // set allowable range
-	textField_flSpread = new wxTextCtrl(this,-1, "-1.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	
-	
-	
-	
-	//initialize text to the left of fields
-	wxStaticText* positionText = new wxStaticText(this, -1, wxT("Position :"), wxPoint(20, 40));
-	wxStaticText* xPositionText = new wxStaticText(this, -1, wxT("X :"), wxPoint(40, 60));
-	wxStaticText* yPositionText = new wxStaticText(this, -1, wxT("Y :"), wxPoint(40, 80));
-	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100));
-	wxStaticText* widthText = new wxStaticText(this, -1, wxT("Width :"), wxPoint(40, 120));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){450,250,50,50}, 20, &yValueParam,"Y:",10) )
+	{
+		yValueParam.editMode = !yValueParam.editMode;
+	}
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){550,250,50,50}, 20, &zValueParam,"Z:",10) )
+	{
+		zValueParam.editMode = !zValueParam.editMode;
+	}
     
-    wxStaticText* echoText = new wxStaticText(this, -1, wxT("Echo Properties"), wxPoint(40, 120));
-    wxStaticText* flDelayText = new wxStaticText(this, -1, wxT("delay:"), wxPoint(40, 120));
-	wxStaticText* flLRDelayText = new wxStaticText(this, -1, wxT("LR delay:"), wxPoint(40, 120));
-	wxStaticText* flDampingText = new wxStaticText(this, -1, wxT("Damping:"), wxPoint(40, 120));
-	wxStaticText* flFeedbackText = new wxStaticText(this, -1, wxT("feedback:"), wxPoint(40, 120));
-	wxStaticText* flSpreadText = new wxStaticText(this, -1, wxT("spread:"), wxPoint(40, 120));
+    if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,320,50,50}, 20, &widthValueParam,"Width:",40) )
+	{
+		widthValueParam.editMode = !widthValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,390,50,50}, 20, &delayValueParam,"Delay:",40) )
+	{
+		delayValueParam.editMode = !delayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){455,390,50,50}, 20, &lrDelayValueParam,"LRDelay:",45) )
+	{
+		lrDelayValueParam.editMode = !lrDelayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,460,50,50}, 20, &dampingValueParam,"Damping:",45) )
+	{
+		dampingValueParam.editMode = !dampingValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){455,460,50,50}, 20, &feedbackValueParam,"Feedback",50) )
+	{
+		feedbackValueParam.editMode = !feedbackValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){550,460,50,50}, 20, &spreadValueParam,"Spread",40) )
+	{
+		spreadValueParam.editMode = !spreadValueParam.editMode;
+	}
+	
+	if( GuiDropdownBox((Rectangle){ 350,130,140,30 }, echo_zone_choices.c_str(), &editez_dropDownEchoZoneActive, editez_dropDownEditMode) )
+	{
+		editez_dropDownEditMode = !editez_dropDownEditMode;
+		m_selection_index = editez_dropDownEchoZoneActive;
+		EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(m_selection_index);
+	}
+	
+	okClicked = GuiButton( (Rectangle){ 400, 550, 70, 30 }, GuiIconText(0, "OK") );
+	
+	cancelClicked = GuiButton( (Rectangle){ 500, 550, 70, 30 }, GuiIconText(0, "Cancel") );
+	if(exit){cancelClicked = true;}
+	
+	if(okClicked)
+	{
+		EditMultipleEchoZonesDialog::ChangeEchoZoneAttributes();
+	}
+	
+	/*
 	
     wxStaticText* spPreviewText = new wxStaticText(this, -1, wxT("Echo Zone, Sound Track to Preview:"), wxPoint(40, 20));
     
@@ -130,161 +184,59 @@ EditMultipleEchoZonesDialog::EditMultipleEchoZonesDialog(const wxString& title,E
 	}
 	
 	
-	//add listbox to name box
-	hboxEchoZones->Add(listboxEchoZones, 1, wxEXPAND | wxALL, 20);
-	hboxEchoZones->Add(listboxSoundProducers, 1, wxEXPAND | wxALL, 20);
     
-    //initialize Ok and Cancel buttons 
-	okButton = new wxButton(this, wxID_ANY, wxT("Ok"), 
-							wxDefaultPosition, wxSize(70, 30));
-	
-	okButton->Bind(wxEVT_BUTTON,&EditMultipleEchoZonesDialog::OnOk,this);
 	
 	applyButton = new wxButton(this, wxID_ANY, wxT("Apply"), 
 							wxDefaultPosition, wxSize(70, 30));
-	
-	applyButton->Bind(wxEVT_BUTTON,&EditMultipleEchoZonesDialog::OnApply,this);
-	
-	cancelButton = new wxButton(this, wxID_ANY, wxT("Cancel"), 
-								wxDefaultPosition, wxSize(70, 30));
-	
-	cancelButton->Bind(wxEVT_BUTTON,&EditMultipleEchoZonesDialog::OnCancel,this);
+		
 	
 	previewButton = new wxButton(this, wxID_ANY, wxT("Preview"), 
 								wxDefaultPosition, wxSize(70, 30));
-	
-	previewButton->Bind(wxEVT_BUTTON,&EditMultipleEchoZonesDialog::OnPreview,this);
+	*/
 
-	//Make vertical box to put horizontal boxes in
-	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
 	
-	//make horizontal box to put ok and cancel buttons in
-	wxBoxSizer *hbox5 = new wxBoxSizer(wxHORIZONTAL);
-	
-	hbox5->Add(previewButton,1);
-	hbox5->Add(applyButton,1);
-	hbox5->Add(okButton, 1);
-	hbox5->Add(cancelButton, 1, wxLEFT, 5);
-	
-	//add panel of text fields in vertical box
-	
-	vbox->Add(positionText);
-	
-	wxBoxSizer *hboxPosition = new wxBoxSizer(wxHORIZONTAL);
-	hboxPosition->Add(xPositionText); hboxPosition->Add(textFieldX);
-	hboxPosition->Add(yPositionText); hboxPosition->Add(textFieldY);
-	hboxPosition->Add(zPositionText); hboxPosition->Add(textFieldZ);
-	
-	int pixelSpaceSeparator = 2;
-	
-	vbox->Add(hboxPosition,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxWidth = new wxBoxSizer(wxHORIZONTAL);
-	hboxWidth->Add(widthText); hboxWidth->Add(textFieldWidth);
-	
-	vbox->Add(hboxWidth,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(echoText);
-	
-	wxBoxSizer *hboxEchoRow1 = new wxBoxSizer(wxHORIZONTAL);
-	hboxEchoRow1->Add(flDelayText); hboxEchoRow1->Add(textField_flDelay); 
-	hboxEchoRow1->Add(flLRDelayText); hboxEchoRow1->Add(textField_flLRDelay);
-	
-	vbox->Add(hboxEchoRow1,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxEchoRow2 = new wxBoxSizer(wxHORIZONTAL);
-	hboxEchoRow2->Add(flDampingText); hboxEchoRow2->Add(textField_flDamping);
-	
-	vbox->Add(hboxEchoRow2,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxEchoRow3 = new wxBoxSizer(wxHORIZONTAL);
-	hboxEchoRow3->Add(flFeedbackText); hboxEchoRow3->Add(textField_flFeedback);
-	hboxEchoRow3->Add(flSpreadText); hboxEchoRow3->Add(textField_flSpread);
-	
-	vbox->Add(hboxEchoRow3,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(spPreviewText);
-	vbox->Add(hboxEchoZones,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	vbox->Add(hbox5, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, pixelSpaceSeparator);
-
-	SetSizerAndFit(vbox);
-	
-	//center and show elements in dialog
-	Centre();
-	ShowModal();
-
-	//destroy when done showing
-	Destroy(); 
-}
-
-void EditMultipleEchoZonesDialog::initPrivateVariables()
-{
-	m_selection_index = -1;
-	spt_selection_index = -1;
-	textFieldX = nullptr; textFieldY = nullptr; textFieldZ = nullptr;
-	textFieldWidth = nullptr;
-	listboxEchoZones = nullptr;
-	
-	applyButton = nullptr; okButton = nullptr; cancelButton = nullptr;
 }
 
 
 void EditMultipleEchoZonesDialog::ChangeEchoZoneAttributes()
 {
+	
 	if(m_selection_index != -1)
 	{
-		if(effects_manager_ptr->echo_zones_vector.size() > 0)
+		if(m_effects_manager_ptr->echo_zones_vector.size() > 0)
 		{
 			
-			EchoZone* thisEchoZone = &effects_manager_ptr->echo_zones_vector.at(m_selection_index);
-				
-			//change position of selected reverb zone based on what is in textfields
-			double xPosition, yPosition, zPosition;
+			EchoZone* thisEchoZone = &m_effects_manager_ptr->echo_zones_vector.at(m_selection_index);
 			
-			( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-			( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-			( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
+			std::string name = std::string(ez_char_name);
+			thisEchoZone->SetNameString(name);	
 			
-			( textFieldWidth->GetLineText(0) ).ToDouble(&width);
+			thisEchoZone->SetPositionX(xValueParam.current_value);
+			thisEchoZone->SetPositionY(yValueParam.current_value);
+			thisEchoZone->SetPositionZ(zValueParam.current_value);
 			
-			thisEchoZone->SetPositionX(xPosition);
-			thisEchoZone->SetPositionY(yPosition);
-			thisEchoZone->SetPositionZ(zPosition);
+			thisEchoZone->ChangeWidth(widthValueParam.current_value);
 			
-			if(width != thisEchoZone->GetWidth())
-			{
-				thisEchoZone->ChangeWidth(width);
-			}
-			
-			
-			( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-			( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-			( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
-			( textFieldWidth->GetLineText(0) ).ToDouble(&width);
-
-			( textField_flDelay->GetLineText(0) ).ToDouble(&tempEchoProp.flDelay);
-			( textField_flLRDelay->GetLineText(0) ).ToDouble(&tempEchoProp.flLRDelay);
-			( textField_flDamping->GetLineText(0) ).ToDouble(&tempEchoProp.flDamping);
-			( textField_flFeedback->GetLineText(0) ).ToDouble(&tempEchoProp.flFeedback);
-			( textField_flSpread->GetLineText(0) ).ToDouble(&tempEchoProp.flSpread);
-
+			tempEchoProp.flDelay = delayValueParam.current_value;
+			tempEchoProp.flDamping = dampingValueParam.current_value;
+			tempEchoProp.flFeedback = feedbackValueParam.current_value;
+			tempEchoProp.flLRDelay = lrDelayValueParam.current_value;
+			tempEchoProp.flSpread = spreadValueParam.current_value;
 			
 			thisEchoZone->ChangeEchoZoneProperties(tempEchoProp);
 			
-			
 		}
 			
-			
-			
 	}
+	
+	
 }
 	
 
 
-void EditMultipleEchoZonesDialog::OnPreview(wxCommandEvent& event)
+void EditMultipleEchoZonesDialog::Preview()
 {
-	
+	/*
 	if(effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)
 	{
 		
@@ -361,91 +313,51 @@ void EditMultipleEchoZonesDialog::OnPreview(wxCommandEvent& event)
 			wxMessageBox( wxT("Select a soundproducer!") );
 		}
 	}
+	*/
 }
 
-void EditMultipleEchoZonesDialog::OnApply(wxCommandEvent& event)
-{
-	EditMultipleEchoZonesDialog::ChangeEchoZoneAttributes();	
-}
 
-void EditMultipleEchoZonesDialog::OnOk(wxCommandEvent& event )
+void EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(size_t choice)
 {
-	EditMultipleEchoZonesDialog::ChangeEchoZoneAttributes();
 	
-	EditMultipleEchoZonesDialog::Exit();
-}
-
-void EditMultipleEchoZonesDialog::OnCancel(wxCommandEvent& event)
-{
-	EditMultipleEchoZonesDialog::Exit();
-}
-
-void EditMultipleEchoZonesDialog::Exit()
-{
-	if(okButton != nullptr){ delete okButton;}
-	if(applyButton != nullptr){ delete applyButton;}
-	if(cancelButton != nullptr){delete cancelButton;}
-
-	if(textFieldX != nullptr){ delete textFieldX;}
-	if(textFieldY != nullptr){ delete textFieldY;}
-	if(textFieldZ != nullptr){ delete textFieldZ;}
-
-    if(listboxEchoZones != nullptr){delete listboxEchoZones;}
-    Close( true ); //close window
-}
-
-void EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(wxCommandEvent& event )
-{
-	//std::cout << "\nSelected sound producer! " <<  listboxEchoZones->GetSelection() << " item on the list.\n";
-	m_selection_index = listboxEchoZones->GetSelection();
-	
-	
-	if(effects_manager_ptr->echo_zones_vector.size() > 0)
+	if(m_effects_manager_ptr->echo_zones_vector.size() > 0)
 	{
-		EchoZone* thisEchoZone = &effects_manager_ptr->echo_zones_vector.at(m_selection_index);
-			//wxString mystring( thisSoundProducer->GetNameString() );
-			//std::cout << "Sound Producer Name: " << thisSoundProducer->GetNameString() << std::endl;
-			
-			//reset text fields
-			textFieldX->Clear();
-			textFieldY->Clear();
-			textFieldZ->Clear();
-			textFieldWidth->Clear();
-			
-			//update position text fields to have current position of sound producer selected
-			(*textFieldX) << thisEchoZone->GetPositionX();
-			(*textFieldY) << thisEchoZone->GetPositionY();
-			(*textFieldZ) << thisEchoZone->GetPositionZ();
-			(*textFieldWidth) << thisEchoZone->GetWidth();
-			
-			
-			
-			
-				tempEchoProp = thisEchoZone->GetEchoZoneProperties();
-			
-				textField_flDelay->Clear();
-				(*textField_flDelay) << tempEchoProp.flDelay;
-				
-				textField_flLRDelay->Clear();
-				(*textField_flLRDelay) << tempEchoProp.flLRDelay;
-				
-				textField_flDamping->Clear();
-				(*textField_flDamping) << tempEchoProp.flDamping;
-				
-				textField_flFeedback->Clear();
-				(*textField_flFeedback) << tempEchoProp.flFeedback;
-				
-				textField_flSpread->Clear();
-				(*textField_flSpread) << tempEchoProp.flSpread;
-			
+		EchoZone* thisEchoZone = &m_effects_manager_ptr->echo_zones_vector.at(choice);
 		
+		strncpy(ez_char_name, thisEchoZone->GetNameString().c_str(), 20);
+		ez_char_name[19] = '\0';
+		
+		xValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionX(), 0.0f, -30.0f, 30.0f, std::to_string(thisEchoZone->GetPositionX()).c_str() );
+
+		yValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionY(), 0.0f, -30.0f, 30.0f, std::to_string(thisEchoZone->GetPositionY()).c_str() );
+
+		zValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionZ(), 0.0f, -30.0f, 30.0f, std::to_string(thisEchoZone->GetPositionZ()).c_str() );
+
+		widthValueParam = InitValidFloatParamSettings(thisEchoZone->GetWidth(), 10.0f, 1.0f, 40.0f, std::to_string(thisEchoZone->GetWidth()).c_str() );
+
+		tempEchoProp = thisEchoZone->GetEchoZoneProperties();
+		
+		delayValueParam = InitValidFloatParamSettings(tempEchoProp.flDelay, 0.1f, 0.0f, 0.207f, std::to_string(tempEchoProp.flDelay).c_str() );
+
+		lrDelayValueParam = InitValidFloatParamSettings(tempEchoProp.flLRDelay, 0.0f, 0.0f, 0.404f, std::to_string(tempEchoProp.flLRDelay).c_str() );
+
+		dampingValueParam = InitValidFloatParamSettings(tempEchoProp.flDamping, 0.5f, 0.0f, 0.99f, std::to_string(tempEchoProp.flDamping).c_str() );
+
+		feedbackValueParam = InitValidFloatParamSettings(tempEchoProp.flFeedback, 0.5f, 0.0f, 1.0f, std::to_string(tempEchoProp.flFeedback).c_str() );
+
+		spreadValueParam = InitValidFloatParamSettings(tempEchoProp.flSpread, -1.0f, -1.0f, 1.0f, std::to_string(tempEchoProp.flSpread).c_str() );
 		
 	}
+	
 }
 
-void EditMultipleEchoZonesDialog::SoundProducerTrackSelectedInListBox(wxCommandEvent& event )
+void EditMultipleEchoZonesDialog::SoundProducerTrackSelectedInListBox()
 {
-	spt_selection_index = listboxSoundProducers->GetSelection();
+	//spt_selection_index = listboxSoundProducers->GetSelection();
 }
 
-
+void EditMultipleEchoZonesDialog::resetConfig()
+{
+	okClicked = false;
+	cancelClicked = false;
+}

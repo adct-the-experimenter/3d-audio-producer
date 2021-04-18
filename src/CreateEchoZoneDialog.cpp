@@ -144,17 +144,6 @@ void CreateEchoZoneDialog::DrawDialog()
 		}
 	}
 	
-    
-    //initialize Ok and Cancel buttons 
-	okButton = new wxButton(this, wxID_ANY, wxT("Ok"), 
-							wxDefaultPosition, wxSize(70, 30));
-	
-	okButton->Bind(wxEVT_BUTTON,&CreateEchoZoneDialog::OnOk,this);
-	
-	cancelButton = new wxButton(this, wxID_ANY, wxT("Cancel"), 
-								wxDefaultPosition, wxSize(70, 30));
-	
-	cancelButton->Bind(wxEVT_BUTTON,&CreateEchoZoneDialog::OnCancel,this);
 	
 	previewButton = new wxButton(this, wxID_ANY, wxT("Preview"), 
 								wxDefaultPosition, wxSize(70, 30));
