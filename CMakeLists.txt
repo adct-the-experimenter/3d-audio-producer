@@ -44,7 +44,7 @@ include_directories(/usr/include /usr/local/include ./include ./src/timeline-tra
 set(SOURCES src/main.cpp
 			src/main_gui_editor.cpp
 			#src/SaveSystem.cpp src/LoadSystem.cpp src/XMLCreator.cpp src/XMLReader.cpp
-			#src/CreateStandardReverbZoneDialog.cpp src/EditMultipleStandardReverbZonesDialog.cpp 
+			src/CreateStandardReverbZoneDialog.cpp #src/EditMultipleStandardReverbZonesDialog.cpp 
 			#src/CreateEAXReverbZoneDialog.cpp src/EditMultipleEAXReverbZonesDialog.cpp 
 			src/CreateEchoZoneDialog.cpp src/EditMultipleEchoZonesDialog.cpp
 			src/echo-zone.cpp

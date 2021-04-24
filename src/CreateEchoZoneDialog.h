@@ -16,8 +16,6 @@ public:
 	
 	void Preview();
 
-	void Exit();
-
 
 	//function to return position of new sound producer object
 	void getNewPosition(float& x, float& y, float& z);
@@ -49,9 +47,7 @@ private:
 	float width;
 	
 	EchoZoneProperties properties;
-	
-	void initPrivateVariables();
-	
+		
 	bool okClicked;
 	bool cancelClicked;
 

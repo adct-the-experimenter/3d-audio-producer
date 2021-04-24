@@ -15,6 +15,7 @@
 #include "Change-HRTF-Dialog.h"
 #include "CreateEchoZoneDialog.h"
 #include "EditMultipleEchoZonesDialog.h"
+#include "CreateStandardReverbZoneDialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -49,6 +50,7 @@ HRTFTestDialog hrtf_test_dialog;
 ChangeHRTFDialog change_hrtf_dialog;
 CreateEchoZoneDialog create_echo_zone_dialog;
 EditMultipleEchoZonesDialog edit_echo_zone_dialog;
+CreateStandardReverbZoneDialog create_sr_zone_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -398,7 +400,8 @@ enum class GuiState : std::uint8_t { NONE=0,
 									CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, 
 									EDIT_LISTENER, 
 									TEST_HRTF, CHANGE_HRTF, 
-									CREATE_ECHO_ZONE, EDIT_ECHO_ZONE };
+									CREATE_ECHO_ZONE, EDIT_ECHO_ZONE,
+									CREATE_SR_ZONE };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -439,7 +442,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//sound producer
 				case 2:{ g_state = GuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
 				//standard reverb zone
-				case 3:{break;}
+				case 3:{ g_state = GuiState::CREATE_SR_ZONE; dialogInUse = true; break;}
 				//eax reverb zone
 				case 4:{break;}
 				//echo zone
@@ -593,6 +596,36 @@ void MainGuiEditor::draw_object_creation_menu()
 			{						
 				g_state = GuiState::NONE;
 				edit_echo_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			
+			break;
+		}
+		case GuiState::CREATE_SR_ZONE:
+		{
+			create_sr_zone_dialog.DrawDialog();
+			
+			if(create_sr_zone_dialog.OkClickedOn() )
+			{
+				//create echo zone
+				float x,y,z,width;
+				ReverbStandardProperties properties;
+				
+				create_sr_zone_dialog.getNewPosition(x,y,z);
+				std::string name = create_sr_zone_dialog.getNewName();
+				width = create_sr_zone_dialog.getNewWidth();
+				properties = create_sr_zone_dialog.getNewProperties();
+				
+				//effects_manager_ptr->CreateEchoZone(name,x,y,z,width,properties);
+				
+				g_state = GuiState::NONE;
+				create_sr_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			if(create_sr_zone_dialog.CancelClickedOn())
+			{
+				g_state = GuiState::NONE;
+				create_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
