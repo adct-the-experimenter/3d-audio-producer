@@ -67,46 +67,100 @@ static ValidFloatParamSettings roomRolloffValueParam = InitValidFloatParamSettin
 
 void CreateStandardReverbZoneDialog::DrawDialog()
 {
-	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Create Echo Zone");
+	bool exit = GuiWindowBox((Rectangle){180,80,620,520},"Create Standard Reverb Zone");
 	
 	if(exit){cancelClicked = true;}
 	
 	//initialize text fields
 	
-	if( GuiTextBox((Rectangle){350,130,100,50}, sr_char_name, 20, sr_name_box_pressed) )
+	if( GuiTextBox((Rectangle){300,130,100,50}, sr_char_name, 20, sr_name_box_pressed) )
 	{
 		sr_name_box_pressed = !sr_name_box_pressed;
 	}
     
     
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,200,50,50}, 20, &xValueParam, "X:", 10) )				
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,200,50,50}, 20, &xValueParam, "X:", 10) )				
 	{
 		xValueParam.editMode = !xValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){450,200,50,50}, 20, &yValueParam,"Y:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,200,50,50}, 20, &yValueParam,"Y:",10) )
 	{
 		yValueParam.editMode = !yValueParam.editMode;
 	}
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){550,200,50,50}, 20, &zValueParam,"Z:",10) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,200,50,50}, 20, &zValueParam,"Z:",10) )
 	{
 		zValueParam.editMode = !zValueParam.editMode;
 	}
     
-    if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,270,50,50}, 20, &widthValueParam,"Width:",40) )
+    if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,270,50,50}, 20, &widthValueParam,"Width:",40) )
 	{
 		widthValueParam.editMode = !widthValueParam.editMode;
 	}
 	
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,340,50,50}, 20, &densityValueParam,"Density:",40) )
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,340,50,50}, 20, &densityValueParam,"Density:",40) )
 	{
 		densityValueParam.editMode = !densityValueParam.editMode;
 	}
 	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,340,50,50}, 20, &diffusionValueParam,"Diffusion:",45) )
+	{
+		diffusionValueParam.editMode = !diffusionValueParam.editMode;
+	}
 	
-	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){480,340,50,50}, 20, &gainValueParam,"Gain:",25) )
+	{
+		gainValueParam.editMode = !gainValueParam.editMode;
+	}
 	
-	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){575,340,50,50}, 20, &gainValueHFParam,"Gain HF:",40) )
+	{
+		gainValueHFParam.editMode = !gainValueHFParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,420,50,50}, 20, &decayValueParam,"Decay(s):",45) )
+	{
+		decayValueParam.editMode = !decayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,420,50,50}, 20, &decayHFValueParam,"Decay HF:",50) )
+	{
+		decayHFValueParam.editMode = !decayHFValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){520,420,50,50}, 20, &reflectionsGainValueParam,"Reflect_Gain:",65) )
+	{
+		reflectionsGainValueParam.editMode = !reflectionsGainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){650,420,50,50}, 20, &reflectionsDelayValueParam,"Reflect_Delay:",75) )
+	{
+		reflectionsDelayValueParam.editMode = !reflectionsDelayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,500,50,50}, 20, &lateReverbGainValueParam,"Late Gain:",45) )
+	{
+		lateReverbGainValueParam.editMode = !lateReverbGainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,500,50,50}, 20, &lateReverbDelayValueParam,"Late Delay:",50) )
+	{
+		lateReverbDelayValueParam.editMode = !lateReverbDelayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){510,500,50,50}, 20, &airAbsorptionGainValueParam,"Air Absorb:",55) )
+	{
+		airAbsorptionGainValueParam.editMode = !airAbsorptionGainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){625,500,50,50}, 20, &roomRolloffValueParam,"Room Rolloff:",60) )
+	{
+		roomRolloffValueParam.editMode = !roomRolloffValueParam.editMode;
+	}
+	
+	okClicked = GuiButton( (Rectangle){ 400,560, 70, 30 }, GuiIconText(0, "OK") );
+	
+	cancelClicked = GuiButton( (Rectangle){ 500, 560, 70, 30 }, GuiIconText(0, "Cancel") );
 	if(exit){cancelClicked = true;}
 	
 	if(okClicked)

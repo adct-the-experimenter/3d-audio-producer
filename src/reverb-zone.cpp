@@ -59,15 +59,15 @@ ReverbZone::ReverbZone() : EffectZone()
 	
 	m_type = ReverbZone::Type::NONE;
 	
-	standardColor.r = 0.9f;
-	standardColor.g = 0.8f;
-	standardColor.b = 0.0f;
-	standardColor.a = 0.3f;
+	standardColor.r = 51;
+	standardColor.g = 0;
+	standardColor.b = 102;
+	standardColor.a = 100;
 	
-	eaxColor.r = 0.6f;
-	eaxColor.g = 0.0f;
-	eaxColor.b = 0.1f;
-	eaxColor.a = 0.3f;
+	eaxColor.r = 255;
+	eaxColor.g = 0;
+	eaxColor.b = 0;
+	eaxColor.a = 100;
 	
 }
 

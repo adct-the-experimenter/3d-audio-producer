@@ -616,12 +616,13 @@ void MainGuiEditor::draw_object_creation_menu()
 				width = create_sr_zone_dialog.getNewWidth();
 				properties = create_sr_zone_dialog.getNewProperties();
 				
-				//effects_manager_ptr->CreateEchoZone(name,x,y,z,width,properties);
+				effects_manager_ptr->CreateStandardReverbZone(name,x,y,z,width,properties);
 				
 				g_state = GuiState::NONE;
 				create_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
+
 			if(create_sr_zone_dialog.CancelClickedOn())
 			{
 				g_state = GuiState::NONE;
