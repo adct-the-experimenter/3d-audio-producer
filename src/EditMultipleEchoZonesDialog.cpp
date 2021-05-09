@@ -71,8 +71,6 @@ void EditMultipleEchoZonesDialog::DrawDialog()
 	
 	if(exit){cancelClicked = true;}
 	
-		
-	
 	
 	//initialize text fields
 	

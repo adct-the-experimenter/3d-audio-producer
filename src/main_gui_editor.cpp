@@ -16,6 +16,7 @@
 #include "CreateEchoZoneDialog.h"
 #include "EditMultipleEchoZonesDialog.h"
 #include "CreateStandardReverbZoneDialog.h"
+#include "EditMultipleStandardReverbZonesDialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -51,6 +52,7 @@ ChangeHRTFDialog change_hrtf_dialog;
 CreateEchoZoneDialog create_echo_zone_dialog;
 EditMultipleEchoZonesDialog edit_echo_zone_dialog;
 CreateStandardReverbZoneDialog create_sr_zone_dialog;
+EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -373,14 +375,14 @@ void MainGuiEditor::logic()
 void MainGuiEditor::DrawGUI_Items()
 {
 	
+	//draw immediate mode sound player
+	im_sound_player.DrawGui_Item();
+	
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
 	
 	//draw object creation/edit menu
 	MainGuiEditor::draw_object_creation_menu();
-	
-	//draw immediate mode sound player
-	im_sound_player.DrawGui_Item();
 	
 	//active sound producer dropdown box
 	
@@ -401,7 +403,7 @@ enum class GuiState : std::uint8_t { NONE=0,
 									EDIT_LISTENER, 
 									TEST_HRTF, CHANGE_HRTF, 
 									CREATE_ECHO_ZONE, EDIT_ECHO_ZONE,
-									CREATE_SR_ZONE };
+									CREATE_SR_ZONE, EDIT_SR_ZONE };
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -475,7 +477,14 @@ void MainGuiEditor::draw_object_creation_menu()
 					break;
 				}
 				//standard reverb zone
-				case 3:{break;}
+				case 3:
+				{ 
+					g_state = GuiState::EDIT_SR_ZONE;
+					dialogInUse = true;
+					edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+					edit_sr_zone_dialog.InitGUI();
+					break;
+				}
 				//eax reverb zone
 				case 4:{break;}
 				//echo zone
@@ -632,6 +641,18 @@ void MainGuiEditor::draw_object_creation_menu()
 			
 			break;
 		}
+		case GuiState::EDIT_SR_ZONE:
+		{
+			edit_sr_zone_dialog.DrawDialog();
+			
+			if(edit_sr_zone_dialog.OkClickedOn() || edit_sr_zone_dialog.CancelClickedOn())
+			{						
+				g_state = GuiState::NONE;
+				edit_sr_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			break;
+		}
 		default:{ break;}
 	}
 }
@@ -640,10 +661,12 @@ void MainGuiEditor::draw_object_creation_menu()
 void MainGuiEditor::draw_sound_bank()
 {
 	
-	GuiDrawRectangle((Rectangle){625,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
-	GuiDrawText("Sound Bank", (Rectangle){625,50,125,20}, 1, BLACK);
-	GuiDrawText("Sound Name", (Rectangle){625,70,125,20}, 1, BLACK);
-	GuiDrawText("File", (Rectangle){700,70,125,20}, 1, BLACK);
+	float leftX = GetScreenWidth() - 200;
+	
+	GuiDrawRectangle((Rectangle){leftX,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawText("Sound Bank", (Rectangle){leftX,50,125,20}, 1, BLACK);
+	GuiDrawText("Sound Name", (Rectangle){leftX,70,125,20}, 1, BLACK);
+	GuiDrawText("File", (Rectangle){leftX + 75,70,125,20}, 1, BLACK);
 	
 	m_sound_bank.DrawGui_Item();
 	

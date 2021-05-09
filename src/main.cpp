@@ -77,13 +77,12 @@ void ApplicationLoop()
 void InitRaylibSystem()
 {
 	
-	SetConfigFlags(FLAG_MSAA_4X_HINT);  // Set MSAA 4X hint before windows creation
+	SetConfigFlags(FLAG_MSAA_4X_HINT || FLAG_VSYNC_HINT);  // Set MSAA 4X hint before windows creation
 	
     InitWindow(screenWidth, screenHeight, "3d Audio Producer");
 	
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     
-    SetConfigFlags(FLAG_VSYNC_HINT);
 
 }
 

@@ -1,167 +1,214 @@
 #include "EditMultipleStandardReverbZonesDialog.h"
 
-EditMultipleStandardReverbZonesDialog::EditMultipleStandardReverbZonesDialog(const wxString& title,EffectsManager* effects_manager)
-       : wxDialog(NULL, -1, title, wxDefaultPosition, wxSize(500, 250), wxRESIZE_BORDER)
+#include "raygui/raygui_extras.h"
+
+#include <string>
+
+EditMultipleStandardReverbZonesDialog::EditMultipleStandardReverbZonesDialog()
 {
+	okClicked = false;
+	cancelClicked = false;
 	
-	EditMultipleStandardReverbZonesDialog::initPrivateVariables();
-	
-	effects_manager_ptr = effects_manager;
+	m_selection_index = 0;
+	spt_selection_index = 0;
+}
 
-	wxFloatingPointValidator <double> validatorFloat(3,nullptr,wxNUM_VAL_ZERO_AS_BLANK);
-    validatorFloat.SetRange(-100.00,100.00);     // set allowable range
-    
-    
-	textFieldX = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 60), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldY = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 80), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldZ = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
-	
-	validatorFloat.SetRange(2.0,30.00);     // set allowable range
-	textFieldWidth = new wxTextCtrl(this,-1, "2.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
-	
-	
-	validatorFloat.SetRange(0.0,1.0);     // set allowable range
-	textField_flDensity = new wxTextCtrl(this,-1, "1.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	textField_flDiffusion = new wxTextCtrl(this,-1, "1.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	textField_flGain = new wxTextCtrl(this,-1, "0.32", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	textField_flGainHF = new wxTextCtrl(this,-1, "0.89", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(0.1,20.00);     // set allowable range
-	textField_flDecayTime = new wxTextCtrl(this,-1, "1.49", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(0.0,2.00);     // set allowable range
-	textField_flDecayHFRatio = new wxTextCtrl(this,-1, "0.83", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(0.0,0.3);     // set allowable range
-	textField_flReflectionsDelay = new wxTextCtrl(this,-1, "0.007", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-	
-	validatorFloat.SetRange(0.0,3.16);     // set allowable range
-	textField_flReflectionsGain = new wxTextCtrl(this,-1, "0.05", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-								
-	validatorFloat.SetRange(0.0,10.00);     // set allowable range
-	textField_flLateReverbGain = new wxTextCtrl(this,-1, "1.26", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-	
-	validatorFloat.SetRange(0.0,0.1);     // set allowable range
-	textField_flLateReverbDelay = new wxTextCtrl(this,-1, "0.011", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-								
-	
-	validatorFloat.SetRange(0.892,1.00);     // set allowable range
-	textField_flAirAbsorptionGainHF = new wxTextCtrl(this,-1, "0.994", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	validatorFloat.SetRange(0.0,10.00);     // set allowable range
-	textField_flRoomRolloffFactor = new wxTextCtrl(this,-1, "0.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	
-	
-	//initialize text to the left of fields
-	wxStaticText* positionText = new wxStaticText(this, -1, wxT("Position :"), wxPoint(20, 40));
-	wxStaticText* xPositionText = new wxStaticText(this, -1, wxT("X :"), wxPoint(40, 60));
-	wxStaticText* yPositionText = new wxStaticText(this, -1, wxT("Y :"), wxPoint(40, 80));
-	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100));
-	wxStaticText* widthText = new wxStaticText(this, -1, wxT("Width :"), wxPoint(40, 120));
-    
-    wxStaticText* reverbText = new wxStaticText(this, -1, wxT("Reverb Properties"), wxPoint(40, 120));
-    wxStaticText* flDensityText = new wxStaticText(this, -1, wxT("density:"), wxPoint(40, 120));
-	wxStaticText* flDiffusionText = new wxStaticText(this, -1, wxT("diffusion:"), wxPoint(40, 120));
-	wxStaticText* flGainText = new wxStaticText(this, -1, wxT("gain:"), wxPoint(40, 120));
-	wxStaticText* flGainHFText = new wxStaticText(this, -1, wxT("gain HF:"), wxPoint(40, 120));
-	wxStaticText* flDecayTimeText = new wxStaticText(this, -1, wxT("decay time:"), wxPoint(40, 120));
-	wxStaticText* flDecayHFRatioText = new wxStaticText(this, -1, wxT("decay HF ratio:"), wxPoint(40, 120));
-	wxStaticText* flLateReverbGainText = new wxStaticText(this, -1, wxT("late reverb gain:"), wxPoint(40, 120));
-	wxStaticText* flLateReverbDelayText = new wxStaticText(this, -1, wxT("late reverb delay:"), wxPoint(40, 120));						
-	wxStaticText* flReflectionsGainText = new wxStaticText(this, -1, wxT("reflections gain:"), wxPoint(40, 120));
-	wxStaticText* flReflectionsDelayText = new wxStaticText(this, -1, wxT("reflections delay:"), wxPoint(40, 120));
-	wxStaticText* flAirAbsorptionGainHFText = new wxStaticText(this, -1, wxT("air absorption:"), wxPoint(40, 120));
-	wxStaticText* flRoomRolloffFactorText = new wxStaticText(this, -1, wxT("room rolloff factor:"), wxPoint(40, 120));  
+void EditMultipleStandardReverbZonesDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
 
-	wxStaticText* spPreviewText = new wxStaticText(this, -1, wxT("Reverb Zone, Preview SoundProducerTrack :"), wxPoint(40, 20));
+bool EditMultipleStandardReverbZonesDialog::OkClickedOn(){return okClicked;}
+
+bool EditMultipleStandardReverbZonesDialog::CancelClickedOn(){return cancelClicked;}
+
+static std::string standard_reverb_zone_choices = "";
+static bool editsr_dropDownEditMode = false;
+static int editsr_dropDownZoneActive = 0;
+
+static bool sr_name_box_pressed = false;
+static char sr_char_name[20] = "name here";
+
+//InitValidFloatParamSettings(current,default,min,max,initialText)
+
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
+
+static ValidFloatParamSettings densityValueParam = InitValidFloatParamSettings(1.0f, 1.0f, 0.0f, 1.0f, "1.0");
+
+static ValidFloatParamSettings diffusionValueParam = InitValidFloatParamSettings(1.0f, 1.0f, 0.0f, 1.0f, "1.0");
+
+static ValidFloatParamSettings gainValueParam = InitValidFloatParamSettings(0.32f, 0.32f, 0.0f, 1.0f, "0.32");
+
+static ValidFloatParamSettings gainValueHFParam = InitValidFloatParamSettings(0.5f, 0.89f, 0.0f, 0.99f, "0.89");
+
+static ValidFloatParamSettings decayValueParam = InitValidFloatParamSettings(1.49f, 1.49f, 0.1f, 20.0f, "1.49");
+
+static ValidFloatParamSettings decayHFValueParam = InitValidFloatParamSettings(0.83f, 0.83f, 0.1f, 2.0f, "0.83");
+
+static ValidFloatParamSettings reflectionsGainValueParam = InitValidFloatParamSettings(0.05f, 0.05f, 0.0f, 3.16f, "0.05");
+
+static ValidFloatParamSettings reflectionsDelayValueParam = InitValidFloatParamSettings(0.007f, 0.007f, 0.0f, 0.3f, "0.007");
+
+static ValidFloatParamSettings lateReverbGainValueParam = InitValidFloatParamSettings(1.26f, 1.26f, 0.0f, 10.0f, "1.26");
+
+static ValidFloatParamSettings lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "-0.011");
+
+static ValidFloatParamSettings airAbsorptionGainValueParam = InitValidFloatParamSettings(0.994f, 0.994f, 0.892f, 1.0f, "0.994");
+
+static ValidFloatParamSettings roomRolloffValueParam = InitValidFloatParamSettings(0.0f, 0.0f, 0.0f, 10.0f, "0.0");
+
+void EditMultipleStandardReverbZonesDialog::InitGUI()
+{
+	if(m_effects_manager_ptr)
+	{
+		//clear previous sound choices
+		standard_reverb_zone_choices.clear();
+				
+		for(size_t i = 0; i < m_effects_manager_ptr->standard_reverb_zones_vector.size(); i++ )
+		{
+			standard_reverb_zone_choices += m_effects_manager_ptr->standard_reverb_zones_vector[i].GetNameString() + ";";
+		}
+		
+		//initialize values in GUI text boxes based on first choice
+		//EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
+		EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+		
+	}
+}
+
+void EditMultipleStandardReverbZonesDialog::DrawDialog()
+{
+	bool exit = GuiWindowBox((Rectangle){180,60,620,540},"Edit Standard Reverb Zone");
+	
+	if(exit){cancelClicked = true;}
+	
+	//initialize text fields
+	
+	if( GuiTextBox((Rectangle){300,130,100,50}, sr_char_name, 20, sr_name_box_pressed) )
+	{
+		sr_name_box_pressed = !sr_name_box_pressed;
+	}
+    
+    
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,200,50,50}, 20, &xValueParam, "X:", 10) )				
+	{
+		xValueParam.editMode = !xValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,200,50,50}, 20, &yValueParam,"Y:",10) )
+	{
+		yValueParam.editMode = !yValueParam.editMode;
+	}
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,200,50,50}, 20, &zValueParam,"Z:",10) )
+	{
+		zValueParam.editMode = !zValueParam.editMode;
+	}
+    
+    if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,270,50,50}, 20, &widthValueParam,"Width:",40) )
+	{
+		widthValueParam.editMode = !widthValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,340,50,50}, 20, &densityValueParam,"Density:",40) )
+	{
+		densityValueParam.editMode = !densityValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,340,50,50}, 20, &diffusionValueParam,"Diffusion:",45) )
+	{
+		diffusionValueParam.editMode = !diffusionValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){480,340,50,50}, 20, &gainValueParam,"Gain:",25) )
+	{
+		gainValueParam.editMode = !gainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){575,340,50,50}, 20, &gainValueHFParam,"Gain HF:",40) )
+	{
+		gainValueHFParam.editMode = !gainValueHFParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,420,50,50}, 20, &decayValueParam,"Decay(s):",45) )
+	{
+		decayValueParam.editMode = !decayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,420,50,50}, 20, &decayHFValueParam,"Decay HF:",50) )
+	{
+		decayHFValueParam.editMode = !decayHFValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){520,420,50,50}, 20, &reflectionsGainValueParam,"Reflect_Gain:",65) )
+	{
+		reflectionsGainValueParam.editMode = !reflectionsGainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){650,420,50,50}, 20, &reflectionsDelayValueParam,"Reflect_Delay:",75) )
+	{
+		reflectionsDelayValueParam.editMode = !reflectionsDelayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,500,50,50}, 20, &lateReverbGainValueParam,"Late Gain:",45) )
+	{
+		lateReverbGainValueParam.editMode = !lateReverbGainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,500,50,50}, 20, &lateReverbDelayValueParam,"Late Delay:",50) )
+	{
+		lateReverbDelayValueParam.editMode = !lateReverbDelayValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){510,500,50,50}, 20, &airAbsorptionGainValueParam,"Air Absorb:",55) )
+	{
+		airAbsorptionGainValueParam.editMode = !airAbsorptionGainValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){625,500,50,50}, 20, &roomRolloffValueParam,"Room Rolloff:",60) )
+	{
+		roomRolloffValueParam.editMode = !roomRolloffValueParam.editMode;
+	}
+	
+	if( GuiDropdownBox((Rectangle){ 300,100,140,30 }, standard_reverb_zone_choices.c_str(), &editsr_dropDownZoneActive, editsr_dropDownEditMode) )
+	{
+		editsr_dropDownEditMode = !editsr_dropDownEditMode;
+		m_selection_index = editsr_dropDownZoneActive;
+		EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+	}
+	
+	okClicked = GuiButton( (Rectangle){ 400,560, 70, 30 }, GuiIconText(0, "OK") );
+	
+	cancelClicked = GuiButton( (Rectangle){ 500, 560, 70, 30 }, GuiIconText(0, "Cancel") );
+	if(exit){cancelClicked = true;}
+	
+	if(okClicked)
+	{
+		EditMultipleStandardReverbZonesDialog::ChangeStandardReverbZoneAttributes();
+		
+	}
+	
+	/*
+	
+    wxStaticText* spPreviewText = new wxStaticText(this, -1, wxT("Echo Zone, Sound Track to Preview:"), wxPoint(40, 20));
     
     //make horizontal box to put names in
-	wxBoxSizer* hboxReverbZones = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* hboxEchoZones = new wxBoxSizer(wxHORIZONTAL);
 	
 	//list box to contain names of Sound Producers to edit, single selection by default 
-	listboxReverbZones = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(100, 20)); 
+	listboxEchoZones = new wxListBox(this, wxID_ANY, wxPoint(0, 0), wxSize(100, 20)); 
 	
-	listboxReverbZones->Bind(wxEVT_LISTBOX,&EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox,this);
+	listboxEchoZones->Bind(wxEVT_LISTBOX,&EditMultipleStandardReverbZonesDialog::EchoZoneSelectedInListBox,this);
 	
 	//add contents of reverb zones to listbox
-	for(size_t i = 0; i < effects_manager_ptr->standard_reverb_zones_vector.size(); i++)
+	for(size_t i = 0; i < effects_manager_ptr->echo_zones_vector.size(); i++)
 	{
-		ReverbZone* thisReverbZone = effects_manager_ptr->GetPointerToStandardReverbZone(i);
-			
-		
-			wxString mystring( thisReverbZone->GetNameString() );
-			listboxReverbZones->Append(mystring);
-				
+		EchoZone* thisEchoZone = effects_manager_ptr->GetPointerToEchoZone(i);
+					
+		wxString mystring( thisEchoZone->GetNameString() );
+		listboxEchoZones->Append(mystring);
 	}
 	
 	//list box to contain names of Sound Producers to edit, single selection by default 
@@ -184,198 +231,67 @@ EditMultipleStandardReverbZonesDialog::EditMultipleStandardReverbZonesDialog(con
 	}
 	
 	
-	//add listbox to name box
-	hboxReverbZones->Add(listboxReverbZones, 1, wxEXPAND | wxALL, 20);
-	hboxReverbZones->Add(listboxSoundProducers, 1, wxEXPAND | wxALL, 20);
     
-    //initialize Ok and Cancel buttons 
-	okButton = new wxButton(this, wxID_ANY, wxT("Ok"), 
-							wxDefaultPosition, wxSize(70, 30));
-	
-	okButton->Bind(wxEVT_BUTTON,&EditMultipleStandardReverbZonesDialog::OnOk,this);
 	
 	applyButton = new wxButton(this, wxID_ANY, wxT("Apply"), 
 							wxDefaultPosition, wxSize(70, 30));
-	
-	applyButton->Bind(wxEVT_BUTTON,&EditMultipleStandardReverbZonesDialog::OnApply,this);
-	
-	cancelButton = new wxButton(this, wxID_ANY, wxT("Cancel"), 
-								wxDefaultPosition, wxSize(70, 30));
-	
-	cancelButton->Bind(wxEVT_BUTTON,&EditMultipleStandardReverbZonesDialog::OnCancel,this);
+		
 	
 	previewButton = new wxButton(this, wxID_ANY, wxT("Preview"), 
 								wxDefaultPosition, wxSize(70, 30));
-	
-	previewButton->Bind(wxEVT_BUTTON,&EditMultipleStandardReverbZonesDialog::OnPreview,this);
+	*/
 
-	//Make vertical box to put horizontal boxes in
-	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
 	
-	//make horizontal box to put ok and cancel buttons in
-	wxBoxSizer *hbox5 = new wxBoxSizer(wxHORIZONTAL);
-	
-	hbox5->Add(previewButton,1);
-	hbox5->Add(applyButton,1);
-	hbox5->Add(okButton, 1);
-	hbox5->Add(cancelButton, 1, wxLEFT, 5);
-	
-	//add panel of text fields in vertical box
-	
-	vbox->Add(positionText);
-	
-	wxBoxSizer *hboxPosition = new wxBoxSizer(wxHORIZONTAL);
-	hboxPosition->Add(xPositionText); hboxPosition->Add(textFieldX);
-	hboxPosition->Add(yPositionText); hboxPosition->Add(textFieldY);
-	hboxPosition->Add(zPositionText); hboxPosition->Add(textFieldZ);
-	
-	int pixelSpaceSeparator = 2;
-	
-	vbox->Add(hboxPosition,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxWidth = new wxBoxSizer(wxHORIZONTAL);
-	hboxWidth->Add(widthText); hboxWidth->Add(textFieldWidth);
-	
-	vbox->Add(hboxWidth,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	vbox->Add(reverbText);
-	
-	wxBoxSizer *hboxReverbRow1 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow1->Add(flDensityText); hboxReverbRow1->Add(textField_flDensity); 
-	hboxReverbRow1->Add(flDiffusionText); hboxReverbRow1->Add(textField_flDiffusion);
-	
-	vbox->Add(hboxReverbRow1,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxReverbRow2 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow2->Add(flGainText); hboxReverbRow2->Add(textField_flGain);
-	hboxReverbRow2->Add(flGainHFText); hboxReverbRow2->Add(textField_flGainHF);
-	
-	vbox->Add(hboxReverbRow2,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxReverbRow3 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow3->Add(flDecayTimeText); hboxReverbRow3->Add(textField_flDecayTime);
-	hboxReverbRow3->Add(flDecayHFRatioText); hboxReverbRow3->Add(textField_flDecayHFRatio);
-	
-	vbox->Add(hboxReverbRow3,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxReverbRow4 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow4->Add(flLateReverbGainText); hboxReverbRow4->Add(textField_flLateReverbGain);
-	hboxReverbRow4->Add(flLateReverbDelayText); hboxReverbRow4->Add(textField_flLateReverbDelay);
-	
-	vbox->Add(hboxReverbRow4,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxReverbRow5 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow5->Add(flReflectionsGainText); hboxReverbRow5->Add(textField_flReflectionsGain);
-	hboxReverbRow5->Add(flReflectionsDelayText); hboxReverbRow5->Add(textField_flReflectionsDelay);
-	
-	vbox->Add(hboxReverbRow5,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	wxBoxSizer *hboxReverbRow6 = new wxBoxSizer(wxHORIZONTAL);
-	
-	hboxReverbRow6->Add(flAirAbsorptionGainHFText); hboxReverbRow6->Add(textField_flAirAbsorptionGainHF);
-	hboxReverbRow6->Add(flRoomRolloffFactorText); hboxReverbRow6->Add(textField_flRoomRolloffFactor);
-	
-	vbox->Add(hboxReverbRow6,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	vbox->Add(spPreviewText);
-	vbox->Add(hboxReverbZones,1, wxEXPAND | wxALL, pixelSpaceSeparator);
-	
-	vbox->Add(hbox5, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, pixelSpaceSeparator);
-
-	SetSizerAndFit(vbox);
-	
-	//center and show elements in dialog
-	Centre();
-	ShowModal();
-
-	//destroy when done showing
-	Destroy(); 
-}
-
-void EditMultipleStandardReverbZonesDialog::initPrivateVariables()
-{
-	m_selection_index = -1;
-	spt_selection_index = -1;
-	textFieldX = nullptr; textFieldY = nullptr; textFieldZ = nullptr;
-	textFieldWidth = nullptr;
-	listboxReverbZones = nullptr;
-	
-	applyButton = nullptr; okButton = nullptr; cancelButton = nullptr;
 }
 
 
-void EditMultipleStandardReverbZonesDialog::ChangeReverbZoneAttributes()
+void EditMultipleStandardReverbZonesDialog::ChangeStandardReverbZoneAttributes()
 {
+	
 	if(m_selection_index != -1)
 	{
-		if(effects_manager_ptr->standard_reverb_zones_vector.size() > 0)
+		if(m_effects_manager_ptr->standard_reverb_zones_vector.size() > 0)
 		{
 			
-			ReverbZone* thisReverbZone = &effects_manager_ptr->standard_reverb_zones_vector.at(m_selection_index);
-				
-			//change position of selected reverb zone based on what is in textfields
-			double xPosition, yPosition, zPosition;
+			ReverbZone* thisReverbZone = &m_effects_manager_ptr->standard_reverb_zones_vector.at(m_selection_index);
 			
-			( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-			( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-			( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
+			std::string name = std::string(sr_char_name);
+			thisReverbZone->SetNameString(name);	
 			
-			( textFieldWidth->GetLineText(0) ).ToDouble(&width);
+			thisReverbZone->SetPositionX(xValueParam.current_value);
+			thisReverbZone->SetPositionY(yValueParam.current_value);
+			thisReverbZone->SetPositionZ(zValueParam.current_value);
 			
-			thisReverbZone->SetPositionX(xPosition);
-			thisReverbZone->SetPositionY(yPosition);
-			thisReverbZone->SetPositionZ(zPosition);
+			thisReverbZone->ChangeWidth(widthValueParam.current_value);
 			
-			if(width != thisReverbZone->GetWidth())
-			{
-				thisReverbZone->ChangeWidth(width);
-			}
 			
-			if(thisReverbZone->GetType() == ReverbZone::Type::STANDARD)
-			{
-				(textField_flDensity->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDensity);
-				
-				(textField_flDiffusion->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDiffusion);
-				
-				(textField_flGain->GetLineText(0) ).ToDouble(&tempStandardRevProp.flGain);
-				
-				(textField_flGainHF->GetLineText(0) ).ToDouble(&tempStandardRevProp.flGainHF);
-				
-				(textField_flDecayTime->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDecayTime);
-				
-				(textField_flDecayHFRatio->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDecayHFRatio);
-				
-				(textField_flReflectionsDelay->GetLineText(0) ).ToDouble(&tempStandardRevProp.flReflectionsDelay);
-				
-				(textField_flLateReverbGain->GetLineText(0) ).ToDouble(&tempStandardRevProp.flLateReverbGain);
-				
-				(textField_flLateReverbDelay->GetLineText(0) ).ToDouble(&tempStandardRevProp.flLateReverbDelay);
-				 
-				(textField_flReflectionsGain->GetLineText(0) ).ToDouble(&tempStandardRevProp.flReflectionsGain);
-				
-				(textField_flAirAbsorptionGainHF->GetLineText(0) ).ToDouble(&tempStandardRevProp.flAirAbsorptionGainHF); 
-				
-				(textField_flRoomRolloffFactor->GetLineText(0) ).ToDouble(&tempStandardRevProp.flRoomRolloffFactor);
+			tempStandardReverbProp.flDensity = densityValueParam.current_value;
+			tempStandardReverbProp.flDiffusion = diffusionValueParam.current_value;
+			tempStandardReverbProp.flGain = gainValueParam.current_value;
+			tempStandardReverbProp.flGainHF = gainValueHFParam.current_value;
+			tempStandardReverbProp.flDecayTime = decayValueParam.current_value;
+			tempStandardReverbProp.flDecayHFRatio = decayHFValueParam.current_value;
+			tempStandardReverbProp.flReflectionsDelay = reflectionsDelayValueParam.current_value;
+			tempStandardReverbProp.flReflectionsGain = reflectionsGainValueParam.current_value;
+			tempStandardReverbProp.flLateReverbDelay = lateReverbDelayValueParam.current_value;
+			tempStandardReverbProp.flLateReverbGain = lateReverbGainValueParam.current_value;
+			tempStandardReverbProp.flAirAbsorptionGainHF = airAbsorptionGainValueParam.current_value;
+			tempStandardReverbProp.flRoomRolloffFactor = roomRolloffValueParam.current_value;
 			
-				thisReverbZone->ChangeStandardReverbZoneProperties(tempStandardRevProp);
-			}
-			else
-			{
-				//do nothing
-			}
+			thisReverbZone->ChangeStandardReverbZoneProperties(tempStandardReverbProp);
 			
 		}
 			
-			
-			
 	}
+	
+	
 }
 	
 
 
-void EditMultipleStandardReverbZonesDialog::OnPreview(wxCommandEvent& event)
+void EditMultipleStandardReverbZonesDialog::Preview()
 {
-	
+	/*
 	if(effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)
 	{
 		
@@ -390,33 +306,29 @@ void EditMultipleStandardReverbZonesDialog::OnPreview(wxCommandEvent& event)
 			if(thisTrack->GetReferenceToSoundProducerManipulated() != nullptr)
 			{
 				//Create temporary reverb zone
-				ReverbZone tempZone;
+				EchoZone tempZone;
 				
 				( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
 				( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
 				( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
 				( textFieldWidth->GetLineText(0) ).ToDouble(&width);
 				
-				ReverbZone* thisReverbZone = &effects_manager_ptr->standard_reverb_zones_vector.at(m_selection_index);
+				EchoZone* thisEchoZone = &effects_manager_ptr->echo_zones_vector.at(m_selection_index);
 					
 				
+					( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
+					( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
+					( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
+					( textFieldWidth->GetLineText(0) ).ToDouble(&width);
+
+					( textField_flDelay->GetLineText(0) ).ToDouble(&tempEchoProp.flDelay);
+					( textField_flLRDelay->GetLineText(0) ).ToDouble(&tempEchoProp.flLRDelay);
+					( textField_flDamping->GetLineText(0) ).ToDouble(&tempEchoProp.flDamping);
+					( textField_flFeedback->GetLineText(0) ).ToDouble(&tempEchoProp.flFeedback);
+					( textField_flSpread->GetLineText(0) ).ToDouble(&tempEchoProp.flSpread);
+
+					tempZone.InitEchoZone(name,xPosition,yPosition,zPosition,width,tempEchoProp);
 					
-					( textField_flDensity->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDensity);
-					( textField_flDiffusion->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDiffusion);
-					( textField_flGain->GetLineText(0) ).ToDouble(&tempStandardRevProp.flGain);
-					( textField_flGainHF->GetLineText(0) ).ToDouble(&tempStandardRevProp.flGainHF);
-					( textField_flDecayTime->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDecayTime);
-					( textField_flDecayHFRatio->GetLineText(0) ).ToDouble(&tempStandardRevProp.flDecayHFRatio);
-					( textField_flReflectionsGain->GetLineText(0) ).ToDouble(&tempStandardRevProp.flReflectionsGain);
-					( textField_flReflectionsDelay->GetLineText(0) ).ToDouble(&tempStandardRevProp.flReflectionsDelay);
-					( textField_flLateReverbGain->GetLineText(0) ).ToDouble(&tempStandardRevProp.flLateReverbGain);
-					( textField_flLateReverbDelay->GetLineText(0) ).ToDouble(&tempStandardRevProp.flLateReverbDelay);
-					( textField_flAirAbsorptionGainHF->GetLineText(0) ).ToDouble(&tempStandardRevProp.flAirAbsorptionGainHF);
-					( textField_flRoomRolloffFactor->GetLineText(0) ).ToDouble(&tempStandardRevProp.flRoomRolloffFactor);
-					
-					tempZone.InitStandardReverbZone(name,xPosition,yPosition,zPosition,width,tempStandardRevProp);
-				
-				
 				
 				//apply effect to sound producer track
 				effects_manager_ptr->ApplyThisEffectZoneEffectToThisTrack(thisTrack, &tempZone);
@@ -456,116 +368,65 @@ void EditMultipleStandardReverbZonesDialog::OnPreview(wxCommandEvent& event)
 			wxMessageBox( wxT("Select a soundproducer!") );
 		}
 	}
+	*/
 }
 
-void EditMultipleStandardReverbZonesDialog::OnApply(wxCommandEvent& event)
-{
-	EditMultipleStandardReverbZonesDialog::ChangeReverbZoneAttributes();	
-}
 
-void EditMultipleStandardReverbZonesDialog::OnOk(wxCommandEvent& event )
+void EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(size_t choice)
 {
-	EditMultipleStandardReverbZonesDialog::ChangeReverbZoneAttributes();
 	
-	EditMultipleStandardReverbZonesDialog::Exit();
-}
-
-void EditMultipleStandardReverbZonesDialog::OnCancel(wxCommandEvent& event)
-{
-	EditMultipleStandardReverbZonesDialog::Exit();
-}
-
-void EditMultipleStandardReverbZonesDialog::Exit()
-{
-	if(okButton != nullptr){ delete okButton;}
-	if(applyButton != nullptr){ delete applyButton;}
-	if(cancelButton != nullptr){delete cancelButton;}
-
-	if(textFieldX != nullptr){ delete textFieldX;}
-	if(textFieldY != nullptr){ delete textFieldY;}
-	if(textFieldZ != nullptr){ delete textFieldZ;}
-
-    if(listboxReverbZones != nullptr){delete listboxReverbZones;}
-    Close( true ); //close window
-}
-
-void EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(wxCommandEvent& event )
-{
-	//std::cout << "\nSelected sound producer! " <<  listboxReverbZones->GetSelection() << " item on the list.\n";
-	m_selection_index = listboxReverbZones->GetSelection();
-	
-	
-	if(effects_manager_ptr->standard_reverb_zones_vector.size() > 0)
+	if(m_effects_manager_ptr->standard_reverb_zones_vector.size() > 0)
 	{
-		ReverbZone* thisReverbZone = &effects_manager_ptr->standard_reverb_zones_vector.at(m_selection_index);
-			//wxString mystring( thisSoundProducer->GetNameString() );
-			//std::cout << "Sound Producer Name: " << thisSoundProducer->GetNameString() << std::endl;
-			
-			//reset text fields
-			textFieldX->Clear();
-			textFieldY->Clear();
-			textFieldZ->Clear();
-			textFieldWidth->Clear();
-			
-			//update position text fields to have current position of sound producer selected
-			(*textFieldX) << thisReverbZone->GetPositionX();
-			(*textFieldY) << thisReverbZone->GetPositionY();
-			(*textFieldZ) << thisReverbZone->GetPositionZ();
-			(*textFieldWidth) << thisReverbZone->GetWidth();
-			
-			
-			
-			if(thisReverbZone->GetType() == ReverbZone::Type::STANDARD)
-			{
-				tempStandardRevProp = thisReverbZone->GetStandardReverbZoneProperties();
-			
-				textField_flDensity->Clear();
-				(*textField_flDensity) << tempStandardRevProp.flDensity;
-				
-				textField_flDiffusion->Clear();
-				(*textField_flDiffusion) << tempStandardRevProp.flDiffusion;
-				
-				textField_flGain->Clear();
-				(*textField_flGain) << tempStandardRevProp.flGain;
-				
-				textField_flGainHF->Clear();
-				(*textField_flGainHF) << tempStandardRevProp.flGainHF;
-				
-				textField_flDecayTime->Clear();
-				(*textField_flDecayTime) << tempStandardRevProp.flDecayTime;
-				
-				textField_flDecayHFRatio->Clear();
-				(*textField_flDecayHFRatio) << tempStandardRevProp.flDecayHFRatio;
-				
-				textField_flReflectionsDelay->Clear(); 
-				(*textField_flReflectionsDelay) << tempStandardRevProp.flReflectionsDelay;
-				
-				textField_flLateReverbGain->Clear(); 
-				(*textField_flLateReverbGain) << tempStandardRevProp.flLateReverbGain;
-				
-				textField_flLateReverbDelay->Clear();
-				(*textField_flLateReverbDelay) << tempStandardRevProp.flLateReverbDelay;
-				 
-				textField_flReflectionsGain->Clear();
-				(*textField_flReflectionsGain) << tempStandardRevProp.flReflectionsGain;
-				
-				textField_flAirAbsorptionGainHF->Clear(); 
-				(*textField_flAirAbsorptionGainHF) << tempStandardRevProp.flAirAbsorptionGainHF; 
-				
-				textField_flRoomRolloffFactor->Clear();
-				(*textField_flRoomRolloffFactor) << tempStandardRevProp.flRoomRolloffFactor;
-			}
-			else
-			{
-				//do nothing
-			}
+		ReverbZone* thisReverbZone = &m_effects_manager_ptr->standard_reverb_zones_vector.at(choice);
 		
+		tempStandardReverbProp = thisReverbZone->GetStandardReverbZoneProperties();
+		
+		strncpy(sr_char_name, thisReverbZone->GetNameString().c_str(), 20);
+		sr_char_name[19] = '\0';
+		
+		xValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionX(), 0.0f, -30.0f, 30.0f, std::to_string(thisReverbZone->GetPositionX()).c_str() );
+
+		yValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionY(), 0.0f, -30.0f, 30.0f, std::to_string(thisReverbZone->GetPositionY()).c_str());
+
+		zValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionZ(), 0.0f, -30.0f, 30.0f, std::to_string(thisReverbZone->GetPositionZ()).c_str());
+
+		widthValueParam = InitValidFloatParamSettings(thisReverbZone->GetWidth(), 10.0f, 1.0f, 40.0f, std::to_string(thisReverbZone->GetWidth()).c_str());
+
+		densityValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flDensity, 1.0f, 0.0f, 1.0f, std::to_string(tempStandardReverbProp.flDensity).c_str() );
+
+		diffusionValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flDiffusion, 1.0f, 0.0f, 1.0f, std::to_string(tempStandardReverbProp.flDiffusion).c_str() );
+
+		gainValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flGain, 0.32f, 0.0f, 1.0f, std::to_string(tempStandardReverbProp.flGain).c_str());
+
+		gainValueHFParam = InitValidFloatParamSettings(tempStandardReverbProp.flGainHF, 0.89f, 0.0f, 0.99f, std::to_string(tempStandardReverbProp.flGainHF).c_str());
+
+		decayValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flDecayTime, 1.49f, 0.1f, 20.0f, std::to_string(tempStandardReverbProp.flDecayTime).c_str());
+
+		decayHFValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flDecayHFRatio, 0.83f, 0.1f, 2.0f, std::to_string(tempStandardReverbProp.flDecayHFRatio).c_str());
+
+		reflectionsGainValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flReflectionsGain, 0.05f, 0.0f, 3.16f, std::to_string(tempStandardReverbProp.flReflectionsGain).c_str());
+
+		reflectionsDelayValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flReflectionsDelay, 0.007f, 0.0f, 0.3f, std::to_string(tempStandardReverbProp.flReflectionsDelay).c_str());
+
+		lateReverbGainValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flLateReverbGain, 1.26f, 0.0f, 10.0f, std::to_string(tempStandardReverbProp.flLateReverbGain).c_str());
+
+		lateReverbDelayValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flLateReverbDelay, 0.011f, 0.0f, 0.1f, std::to_string(tempStandardReverbProp.flLateReverbDelay).c_str());
+
+		airAbsorptionGainValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flAirAbsorptionGainHF, 0.994f, 0.892f, 1.0f, std::to_string(tempStandardReverbProp.flAirAbsorptionGainHF).c_str());
+
+		roomRolloffValueParam = InitValidFloatParamSettings(tempStandardReverbProp.flRoomRolloffFactor, 0.0f, 0.0f, 10.0f, std::to_string(tempStandardReverbProp.flRoomRolloffFactor).c_str());
 		
 	}
+	
 }
 
-void EditMultipleStandardReverbZonesDialog::SoundProducerTrackSelectedInListBox(wxCommandEvent& event )
+void EditMultipleStandardReverbZonesDialog::SoundProducerTrackSelectedInListBox()
 {
-	spt_selection_index = listboxSoundProducers->GetSelection();
+	//spt_selection_index = listboxSoundProducers->GetSelection();
 }
 
+void EditMultipleStandardReverbZonesDialog::resetConfig()
+{
+	okClicked = false;
+	cancelClicked = false;
+}

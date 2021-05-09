@@ -69,14 +69,16 @@ void SoundBank::DrawGui_Item()
 {
 	//draw rectangle
 	
+	float leftX = GetScreenWidth() - 200;
+	
 	//for each account from start to last account number
 	for(std::uint8_t i = 0; i < m_sound_accounts.size(); i++)
 	{
 		//draw account number
 		char num = *(std::to_string(i).c_str());
-		GuiTextBox((Rectangle){625,100 + i*30,20,25}, &num, 20, false);
+		GuiTextBox((Rectangle){leftX,100 + i*30,20,25}, &num, 20, false);
 		//draw textbox with name of sound and account number
-		if( GuiTextBox((Rectangle){650,100 + i*30,100,25}, 
+		if( GuiTextBox((Rectangle){leftX + 25,100 + i*30,100,25}, 
 						name_textboxes[i].char_name, 20, name_textboxes[i].name_box_pressed
 					) )
 		{
@@ -110,7 +112,7 @@ void SoundBank::DrawGui_Item()
 	for(std::uint8_t i = 0; i < 10; i++)
 	{
 		//draw open file button
-		if( GuiButton( (Rectangle){ 750,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
+		if( GuiButton( (Rectangle){ leftX + 125,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
 		{
 			current_file_button_edit = i;
 			fileDialogState.fileDialogActive = true; //activate file dialog
