@@ -52,8 +52,6 @@ private:
 	bool okClicked;
 	bool cancelClicked;
 	
-	
-
 };
 
 

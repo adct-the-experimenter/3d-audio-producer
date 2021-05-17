@@ -17,6 +17,7 @@
 #include "EditMultipleEchoZonesDialog.h"
 #include "CreateStandardReverbZoneDialog.h"
 #include "EditMultipleStandardReverbZonesDialog.h"
+#include "CreateEAXReverbZoneDialog.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -47,12 +48,17 @@ CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
 EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
 EditListenerDialog edit_lt_dialog("Edit Listener");
 ImmediateModeSoundPlayer im_sound_player;
+
 HRTFTestDialog hrtf_test_dialog;
 ChangeHRTFDialog change_hrtf_dialog;
+
 CreateEchoZoneDialog create_echo_zone_dialog;
 EditMultipleEchoZonesDialog edit_echo_zone_dialog;
+
 CreateStandardReverbZoneDialog create_sr_zone_dialog;
 EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
+
+CreateEAXReverbZoneDialog create_er_zone_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -403,7 +409,9 @@ enum class GuiState : std::uint8_t { NONE=0,
 									EDIT_LISTENER, 
 									TEST_HRTF, CHANGE_HRTF, 
 									CREATE_ECHO_ZONE, EDIT_ECHO_ZONE,
-									CREATE_SR_ZONE, EDIT_SR_ZONE };
+									CREATE_SR_ZONE, EDIT_SR_ZONE,
+									CREATE_ER_ZONE };
+									
 GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
@@ -446,7 +454,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//standard reverb zone
 				case 3:{ g_state = GuiState::CREATE_SR_ZONE; dialogInUse = true; break;}
 				//eax reverb zone
-				case 4:{break;}
+				case 4:{ g_state = GuiState::CREATE_ER_ZONE; dialogInUse = true; break;}
 				//echo zone
 				case 5:{ g_state = GuiState::CREATE_ECHO_ZONE; dialogInUse = true; break;}
 				default:{break;}
@@ -616,7 +624,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			
 			if(create_sr_zone_dialog.OkClickedOn() )
 			{
-				//create echo zone
+				//create standard reverb zone
 				float x,y,z,width;
 				ReverbStandardProperties properties;
 				
@@ -651,6 +659,37 @@ void MainGuiEditor::draw_object_creation_menu()
 				edit_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
+			break;
+		}
+		case GuiState::CREATE_ER_ZONE:
+		{
+			create_er_zone_dialog.DrawDialog();
+			
+			if(create_er_zone_dialog.OkClickedOn()  )
+			{
+				//create eax reverb zone
+				float x,y,z,width;
+				ReverbEAXProperties properties;
+				
+				create_er_zone_dialog.getNewPosition(x,y,z);
+				std::string name = create_er_zone_dialog.getNewName();
+				width = create_er_zone_dialog.getNewWidth();
+				properties = create_er_zone_dialog.getNewProperties();
+				
+				effects_manager_ptr->CreateEAXReverbZone(name,x,y,z,width,properties);
+				
+				g_state = GuiState::NONE;
+				create_sr_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			
+			if(create_er_zone_dialog.CancelClickedOn())
+			{
+				g_state = GuiState::NONE;
+				create_er_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			
 			break;
 		}
 		default:{ break;}

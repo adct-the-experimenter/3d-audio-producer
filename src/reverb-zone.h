@@ -25,12 +25,10 @@ struct ReverbEAXProperties
 	float flReflectionsGain;
 	//AL_EAXREVERB_REFLECTIONS_DELAY, 
 	float flReflectionsDelay;
-	//alEffectfv(effect, AL_EAXREVERB_REFLECTIONS_PAN, float flReflectionsPan;
 	//AL_EAXREVERB_LATE_REVERB_GAIN, 
 	float flLateReverbGain;
 	//AL_EAXREVERB_LATE_REVERB_DELAY, 
 	float flLateReverbDelay;
-	//alEffectfv(effect, AL_EAXREVERB_LATE_REVERB_PAN, float flLateReverbPan;
 	//AL_EAXREVERB_ECHO_TIME, 
 	float flEchoTime;
 	//AL_EAXREVERB_ECHO_DEPTH, 

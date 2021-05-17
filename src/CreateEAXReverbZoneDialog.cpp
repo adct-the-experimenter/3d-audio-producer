@@ -1,230 +1,235 @@
 #include "CreateEAXReverbZoneDialog.h"
 
-CreateEAXReverbZoneDialog::CreateEAXReverbZoneDialog(const wxString& title,EffectsManager* effects_manager) : wxDialog(NULL, -1, title, wxDefaultPosition, wxSize(250, 230))
+#include "raygui/raygui.h"
+
+#include "raygui/raygui_extras.h"
+
+CreateEAXReverbZoneDialog::CreateEAXReverbZoneDialog() 
 {
 	okClicked = false;
-	
-	m_effects_manager_ptr = effects_manager;
+	cancelClicked = false;
+		
 	spt_selection_index = -1;
+	
+}
+
+void CreateEAXReverbZoneDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
+
+std::string& CreateEAXReverbZoneDialog::getNewName(){return name;}
+
+void CreateEAXReverbZoneDialog::getNewPosition(float& x, float& y, float& z)
+{
+	x = xPosition;
+	y = yPosition;
+	z = zPosition;
+}
+
+float& CreateEAXReverbZoneDialog::getNewWidth(){return width;}
+	
+ReverbEAXProperties& CreateEAXReverbZoneDialog::getNewProperties(){return properties;}
+
+static bool er_name_box_pressed = false;
+static char er_char_name[20] = "name here";
+
+//InitValidFloatParamSettings(current,default,min,max,initialText)
+
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+
+static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
+
+static ValidFloatParamSettings densityValueParam = InitValidFloatParamSettings(1.0f, 1.0f, 0.0f, 1.0f, "1.0");
+
+static ValidFloatParamSettings diffusionValueParam = InitValidFloatParamSettings(1.0f, 1.0f, 0.0f, 1.0f, "1.0");
+
+static ValidFloatParamSettings gainValueParam = InitValidFloatParamSettings(0.32f, 0.32f, 0.0f, 1.0f, "0.32");
+
+static ValidFloatParamSettings gainValueHFParam = InitValidFloatParamSettings(0.5f, 0.89f, 0.0f, 0.99f, "0.89");
+
+static ValidFloatParamSettings decayValueParam = InitValidFloatParamSettings(1.49f, 1.49f, 0.1f, 20.0f, "1.49");
+
+static ValidFloatParamSettings decayHFValueParam = InitValidFloatParamSettings(0.83f, 0.83f, 0.1f, 2.0f, "0.83");
+
+static ValidFloatParamSettings reflectionsGainValueParam = InitValidFloatParamSettings(0.05f, 0.05f, 0.0f, 3.16f, "0.05");
+
+static ValidFloatParamSettings reflectionsDelayValueParam = InitValidFloatParamSettings(0.007f, 0.007f, 0.0f, 0.3f, "0.007");
+
+static ValidFloatParamSettings lateReverbGainValueParam = InitValidFloatParamSettings(1.26f, 1.26f, 0.0f, 10.0f, "1.26");
+
+static ValidFloatParamSettings lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "-0.011");
+
+static ValidFloatParamSettings airAbsorptionGainValueParam = InitValidFloatParamSettings(0.994f, 0.994f, 0.892f, 1.0f, "0.994");
+
+static ValidFloatParamSettings roomRolloffValueParam = InitValidFloatParamSettings(0.0f, 0.0f, 0.0f, 10.0f, "0.0");
+
+
+static ValidFloatParamSettings echoTimeValueParam = InitValidFloatParamSettings(0.25f, 0.25f, 0.075f, 0.25f, "0.25");
+
+static ValidFloatParamSettings echoDepthValueParam = InitValidFloatParamSettings(0.0f, 0.0f, 0.0f, 1.0f, "0.0");
+
+static ValidFloatParamSettings modulationTimeValueParam = InitValidFloatParamSettings(0.25f, 0.25f, 0.004f, 4.0f, "0.25");
+
+static ValidFloatParamSettings modulationDepthValueParam = InitValidFloatParamSettings(0.0f, 0.0f, 0.0f, 1.0f, "0.0");
+
+static ValidFloatParamSettings hfReferenceValueParam = InitValidFloatParamSettings(5000.0f,5000.0f,1000.0f,20000.0f,"5000");
+
+static ValidFloatParamSettings lfReferenceValueParam = InitValidFloatParamSettings(250.0f,250.0f,20.0f,1000.0f,"250");
+
+void CreateEAXReverbZoneDialog::DrawDialog()
+{
+	bool exit = GuiWindowBox((Rectangle){180,20,620,580},"Create EAX Reverb Zone");
+	
+	if(exit){cancelClicked = true;}
 	
 	//initialize text fields
 	
-	wxFloatingPointValidator <double> validatorFloat(3,nullptr,wxNUM_VAL_ZERO_AS_BLANK);
-    validatorFloat.SetRange(0.00,10.00);     // set allowable range
+	if( GuiTextBox((Rectangle){300,70,100,50}, er_char_name, 20, er_name_box_pressed) )
+	{
+		er_name_box_pressed = !er_name_box_pressed;
+	}
     
     
-    textFieldName = new wxTextCtrl(this,-1, "Name", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER);
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,140,50,50}, 20, &xValueParam, "X:", 10) )				
+	{
+		xValueParam.editMode = !xValueParam.editMode;
+	}
+	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,140,50,50}, 20, &yValueParam,"Y:",10) )
+	{
+		yValueParam.editMode = !yValueParam.editMode;
+	}
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,140,50,50}, 20, &zValueParam,"Z:",10) )
+	{
+		zValueParam.editMode = !zValueParam.editMode;
+	}
     
-    validatorFloat.SetRange(-100.00,100.00);     // set allowable range
-	textFieldX = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 60), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+    if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,210,50,50}, 20, &widthValueParam,"Width:",40) )
+	{
+		widthValueParam.editMode = !widthValueParam.editMode;
+	}
 	
-	textFieldY = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 80), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-								
-	textFieldZ = new wxTextCtrl(this,-1, "0.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){250,280,50,50}, 20, &densityValueParam,"Density:",40) )
+	{
+		densityValueParam.editMode = !densityValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(2.00,30.00);     // set allowable range
-	textFieldWidth = new wxTextCtrl(this,-1, "2.00", 
-								wxPoint(95, 100), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT("")); 
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){350,280,50,50}, 20, &diffusionValueParam,"Diffusion:",45) )
+	{
+		diffusionValueParam.editMode = !diffusionValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.0,1.0);     // set allowable range
-	textField_flDensity = new wxTextCtrl(this,-1, "1.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){430,280,50,50}, 20, &gainValueParam,"Gain:",25) )
+	{
+		gainValueParam.editMode = !gainValueParam.editMode;
+	}
 	
-	textField_flDiffusion = new wxTextCtrl(this,-1, "1.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){525,280,50,50}, 20, &gainValueHFParam,"Gain HF:",40) )
+	{
+		gainValueHFParam.editMode = !gainValueHFParam.editMode;
+	}
 	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,360,50,50}, 20, &decayValueParam,"Decay(s):",45) )
+	{
+		decayValueParam.editMode = !decayValueParam.editMode;
+	}
 	
-	textField_flGain = new wxTextCtrl(this,-1, "0.32", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,360,50,50}, 20, &decayHFValueParam,"Decay HF:",50) )
+	{
+		decayHFValueParam.editMode = !decayHFValueParam.editMode;
+	}
 	
-	textField_flGainHF = new wxTextCtrl(this,-1, "0.89", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){520,360,50,50}, 20, &reflectionsGainValueParam,"Reflect_Gain:",65) )
+	{
+		reflectionsGainValueParam.editMode = !reflectionsGainValueParam.editMode;
+	}
 	
-	textField_flGainLF = new wxTextCtrl(this,-1, "0.89", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){650,360,50,50}, 20, &reflectionsDelayValueParam,"Reflect_Delay:",75) )
+	{
+		reflectionsDelayValueParam.editMode = !reflectionsDelayValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.00,20.00);     // set allowable range
-	textField_flDecayTime = new wxTextCtrl(this,-1, "1.49", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){300,440,50,50}, 20, &lateReverbGainValueParam,"Late Gain:",45) )
+	{
+		lateReverbGainValueParam.editMode = !lateReverbGainValueParam.editMode;
+	}
 	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,440,50,50}, 20, &lateReverbDelayValueParam,"Late Delay:",50) )
+	{
+		lateReverbDelayValueParam.editMode = !lateReverbDelayValueParam.editMode;
+	}
 	
-	textField_flDecayHFRatio = new wxTextCtrl(this,-1, "0.83", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){510,440,50,50}, 20, &airAbsorptionGainValueParam,"Air Absorb:",55) )
+	{
+		airAbsorptionGainValueParam.editMode = !airAbsorptionGainValueParam.editMode;
+	}
 	
-	textField_flDecayLFRatio = new wxTextCtrl(this,-1, "0.83", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){625,440,50,50}, 20, &roomRolloffValueParam,"Room Rolloff:",60) )
+	{
+		roomRolloffValueParam.editMode = !roomRolloffValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.00,3.16);     // set allowable range
-	textField_flReflectionsDelay = new wxTextCtrl(this,-1, "0.007", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){260,510,50,50}, 20, &echoTimeValueParam,"Echo Time:",60) )
+	{
+		echoTimeValueParam.editMode = !echoTimeValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.00,0.3);     // set allowable range
-	textField_flReflectionsGain = new wxTextCtrl(this,-1, "0.05", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){375,510,50,50}, 20, &echoDepthValueParam,"Echo Depth:",60) )
+	{
+		echoDepthValueParam.editMode = !echoDepthValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.00,10.0);     // set allowable range
-	textField_flLateReverbGain = new wxTextCtrl(this,-1, "1.26", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){480,510,50,50}, 20, &modulationTimeValueParam,"Mod Time:",50) )
+	{
+		modulationTimeValueParam.editMode = !modulationTimeValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.00,0.1);     // set allowable range
-	textField_flLateReverbDelay = new wxTextCtrl(this,-1, "0.011", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-
-	validatorFloat.SetRange(0.075,0.25);     // set allowable range
-	textField_flEchoTime = new wxTextCtrl(this,-1, "0.2", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-
-	validatorFloat.SetRange(0.00,1.0);     // set allowable range							
-	textField_flEchoDepth = new wxTextCtrl(this,-1, "0.05", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-    
-    validatorFloat.SetRange(0.004,4.0);     // set allowable range									
-	textField_flModulationTime = new wxTextCtrl(this,-1, "0.05", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){595,510,50,50}, 20, &modulationDepthValueParam,"Mod Depth:",55) )
+	{
+		modulationDepthValueParam.editMode = !modulationDepthValueParam.editMode;
+	}
 	
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){600,280,50,50}, 20, &hfReferenceValueParam,"HF:",15) )
+	{
+		hfReferenceValueParam.editMode = !hfReferenceValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(0.00,1.0);     // set allowable range
-	textField_flModulationDepth = new wxTextCtrl(this,-1, "0.05", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
+	if( GuiTextBox_ValidValueFloatSimple((Rectangle){670,280,50,50}, 20, &lfReferenceValueParam,"LF:",15) )
+	{
+		lfReferenceValueParam.editMode = !lfReferenceValueParam.editMode;
+	}
 	
-	validatorFloat.SetRange(1000.00,20000.0);     // set allowable range
-	textField_flHFReference = new wxTextCtrl(this,-1, "1000", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
-								
-    validatorFloat.SetRange(20.0,1000.0);     // set allowable range								
-	textField_flLFReference = new wxTextCtrl(this,-1, "250.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,
-								wxT(""));
+	okClicked = GuiButton( (Rectangle){ 400,570, 70, 30 }, GuiIconText(0, "OK") );
 	
-	validatorFloat.SetRange(0.892,1.0);     // set allowable range
-	textField_flAirAbsorptionGainHF = new wxTextCtrl(this,-1, "0.994", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
+	cancelClicked = GuiButton( (Rectangle){ 500, 570, 70, 30 }, GuiIconText(0, "Cancel") );
+	if(exit){cancelClicked = true;}
 	
-	validatorFloat.SetRange(0.00,10.0);     // set allowable range
-	textField_flRoomRolloffFactor = new wxTextCtrl(this,-1, "0.0", 
-								wxPoint(95, 20), wxSize(80,20),
-								wxTE_PROCESS_ENTER,
-								validatorFloat,          // associate the text box with the desired validator
-								wxT(""));
-	
-	
-	
-	//initialize text to the left of fields
-	wxStaticText* NameText = new wxStaticText(this, -1, wxT("Name :"), wxPoint(40, 20));
-	wxStaticText* positionText = new wxStaticText(this, -1, wxT("Position :"), wxPoint(20, 40));
-	wxStaticText* xPositionText = new wxStaticText(this, -1, wxT("X :"), wxPoint(40, 60));
-	wxStaticText* yPositionText = new wxStaticText(this, -1, wxT("Y :"), wxPoint(40, 80));
-	wxStaticText* zPositionText = new wxStaticText(this, -1, wxT("Z :"), wxPoint(40, 100));
-	wxStaticText* widthText = new wxStaticText(this, -1, wxT("Width :"), wxPoint(40, 120));
-    
-    wxStaticText* reverbText = new wxStaticText(this, -1, wxT("Reverb Properties"), wxPoint(40, 120));
-    wxStaticText* flDensityText = new wxStaticText(this, -1, wxT("density:"), wxPoint(40, 120));
-	wxStaticText* flDiffusionText = new wxStaticText(this, -1, wxT("diffusion:"), wxPoint(40, 120));
-	wxStaticText* flGainText = new wxStaticText(this, -1, wxT("gain:"), wxPoint(40, 120));
-	wxStaticText* flGainHFText = new wxStaticText(this, -1, wxT("gain HF:"), wxPoint(40, 120));
-	wxStaticText* flGainLFText = new wxStaticText(this, -1, wxT("gain LF:"), wxPoint(40, 120));
-	wxStaticText* flDecayTimeText = new wxStaticText(this, -1, wxT("decay time:"), wxPoint(40, 120));
-	wxStaticText* flDecayHFRatioText = new wxStaticText(this, -1, wxT("decay HF ratio:"), wxPoint(40, 120));
-	wxStaticText* flDecayLFRatioText = new wxStaticText(this, -1, wxT("decay LF ratio:"), wxPoint(40, 120));
-	wxStaticText* flLateReverbGainText = new wxStaticText(this, -1, wxT("late reverb gain:"), wxPoint(40, 120));
-	wxStaticText* flLateReverbDelayText = new wxStaticText(this, -1, wxT("late reverb delay:"), wxPoint(40, 120));						
-	
-	wxStaticText* flEchoTimeText = new wxStaticText(this, -1, wxT("echo time:"), wxPoint(40, 120));						
-	wxStaticText* flEchoDepthText = new wxStaticText(this, -1, wxT("echo depth:"), wxPoint(40, 120));						
-	wxStaticText* flModulationTimeText = new wxStaticText(this, -1, wxT("modulation time:"), wxPoint(40, 120));						
-	wxStaticText* flModulationDepthText = new wxStaticText(this, -1, wxT("modulation depth:"), wxPoint(40, 120));						
-	wxStaticText* flHFReferenceText = new wxStaticText(this, -1, wxT("HF Reference:"), wxPoint(40, 120));						
-	wxStaticText* flLFReferenceText = new wxStaticText(this, -1, wxT("LF Reference:"), wxPoint(40, 120));						
-	
-	wxStaticText* flReflectionsGainText = new wxStaticText(this, -1, wxT("reflections gain:"), wxPoint(40, 120));
-	wxStaticText* flReflectionsDelayText = new wxStaticText(this, -1, wxT("reflections delay:"), wxPoint(40, 120));
-	wxStaticText* flAirAbsorptionGainHFText = new wxStaticText(this, -1, wxT("air absorption:"), wxPoint(40, 120));
-	wxStaticText* flRoomRolloffFactorText = new wxStaticText(this, -1, wxT("room rolloff factor:"), wxPoint(40, 120)); 
-
-	wxStaticText* spPreviewText = new wxStaticText(this, -1, wxT("Sound Producer on Track To Preview :"), wxPoint(40, 20));
-    
-    //make horizontal box to put names in
-	wxBoxSizer* hboxSoundProducers = new wxBoxSizer(wxHORIZONTAL);
-	
-	//list box to contain names of Sound Producers to edit, single selection by default 
-	listboxSoundProducers = new wxListBox(this, ID_LISTBOX, 
-							wxPoint(0, 0), wxSize(100, 20)); 
-	
-
-	listboxSoundProducers->Bind(wxEVT_LISTBOX,&CreateEAXReverbZoneDialog::SoundProducerTrackSelectedInListBox,this);
+	if(okClicked)
+	{
+		name = std::string(er_char_name);
+		xPosition = xValueParam.current_value;
+		yPosition = yValueParam.current_value;
+		zPosition = zValueParam.current_value;
+		width = widthValueParam.current_value;
+		
+		
+		properties.flDensity = densityValueParam.current_value;
+		properties.flDiffusion = diffusionValueParam.current_value;
+		properties.flGain = gainValueParam.current_value;
+		properties.flGainHF = gainValueHFParam.current_value;
+		properties.flDecayTime = decayValueParam.current_value;
+		properties.flDecayHFRatio = decayHFValueParam.current_value;
+		properties.flReflectionsDelay = reflectionsDelayValueParam.current_value;
+		properties.flReflectionsGain = reflectionsGainValueParam.current_value;
+		properties.flLateReverbDelay = lateReverbDelayValueParam.current_value;
+		properties.flLateReverbGain = lateReverbGainValueParam.current_value;
+		properties.flAirAbsorptionGainHF = airAbsorptionGainValueParam.current_value;
+		properties.flRoomRolloffFactor = roomRolloffValueParam.current_value;
+		
+	}
+    /*
 	
 	//add contents of soundproducers to listbox
 	if(m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)
@@ -241,200 +246,33 @@ CreateEAXReverbZoneDialog::CreateEAXReverbZoneDialog(const wxString& title,Effec
 	}
 	
 	
-	//add listbox to name box
-	hboxSoundProducers->Add(listboxSoundProducers, 1, wxEXPAND | wxALL, 20);
-    
-    //initialize Ok and Cancel buttons 
-	okButton = new wxButton(this, wxID_ANY, wxT("Ok"), 
-							wxDefaultPosition, wxSize(70, 30));
-	
-	okButton->Bind(wxEVT_BUTTON,&CreateEAXReverbZoneDialog::OnOk,this);
-	
-	cancelButton = new wxButton(this, wxID_ANY, wxT("Cancel"), 
-								wxDefaultPosition, wxSize(70, 30));
-	
-	cancelButton->Bind(wxEVT_BUTTON,&CreateEAXReverbZoneDialog::OnCancel,this);
-	
 	previewButton = new wxButton(this, wxID_ANY, wxT("Preview"), 
 								wxDefaultPosition, wxSize(70, 30));
 	
 	previewButton->Bind(wxEVT_BUTTON,&CreateEAXReverbZoneDialog::OnPreview,this);
-
-	//Make vertical box to put horizontal boxes in
-	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-	
-	//make horizontal box to put ok and cancel buttons in
-	wxBoxSizer *hbox5 = new wxBoxSizer(wxHORIZONTAL);
-	
-	hbox5->Add(previewButton,1);
-	hbox5->Add(okButton, 1);
-	hbox5->Add(cancelButton, 1, wxLEFT, 5);
-	
-	//add panel of text fields in vertical box
-	
-	wxBoxSizer *hboxName = new wxBoxSizer(wxHORIZONTAL);
-	hboxName->Add(NameText); hboxName->Add(textFieldName);
-	
-	vbox->Add(hboxName, 1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(positionText);
-	
-	wxBoxSizer *hboxX = new wxBoxSizer(wxHORIZONTAL);
-	hboxX->Add(xPositionText); hboxX->Add(textFieldX);
-	
-	vbox->Add(hboxX,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxY = new wxBoxSizer(wxHORIZONTAL);
-	hboxY->Add(yPositionText); hboxY->Add(textFieldY);
-	
-	vbox->Add(hboxY,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxZ = new wxBoxSizer(wxHORIZONTAL);
-	hboxZ->Add(zPositionText); hboxZ->Add(textFieldZ);
-	
-	vbox->Add(hboxZ,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxWidth = new wxBoxSizer(wxHORIZONTAL);
-	hboxWidth->Add(widthText); hboxWidth->Add(textFieldWidth);
-	
-	vbox->Add(hboxWidth,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(reverbText);
-	
-	wxBoxSizer *hboxReverbRow1 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow1->Add(flDensityText); hboxReverbRow1->Add(textField_flDensity); 
-	hboxReverbRow1->Add(flDiffusionText); hboxReverbRow1->Add(textField_flDiffusion);
-	
-	vbox->Add(hboxReverbRow1,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxReverbRow2 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow2->Add(flGainText); hboxReverbRow2->Add(textField_flGain);
-	hboxReverbRow2->Add(flGainHFText); hboxReverbRow2->Add(textField_flGainHF);
-	hboxReverbRow2->Add(flGainLFText); hboxReverbRow2->Add(textField_flGainLF);
-	
-	vbox->Add(hboxReverbRow2,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxReverbRow3 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow3->Add(flDecayTimeText); hboxReverbRow3->Add(textField_flDecayTime);
-	hboxReverbRow3->Add(flDecayHFRatioText); hboxReverbRow3->Add(textField_flDecayHFRatio);
-	hboxReverbRow3->Add(flDecayLFRatioText); hboxReverbRow3->Add(textField_flDecayLFRatio);
-	
-	vbox->Add(hboxReverbRow3,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxReverbRow4 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow4->Add(flLateReverbGainText); hboxReverbRow4->Add(textField_flLateReverbGain);
-	hboxReverbRow4->Add(flLateReverbDelayText); hboxReverbRow4->Add(textField_flLateReverbDelay);
-	
-	vbox->Add(hboxReverbRow4,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hBoxEAXRow1 = new wxBoxSizer(wxHORIZONTAL);
-	hBoxEAXRow1->Add(flEchoDepthText); hBoxEAXRow1->Add(textField_flEchoDepth);
-	hBoxEAXRow1->Add(flEchoTimeText); hBoxEAXRow1->Add(textField_flEchoTime);
-	
-	vbox->Add(hBoxEAXRow1,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hBoxEAXRow2 = new wxBoxSizer(wxHORIZONTAL);
-	hBoxEAXRow2->Add(flModulationDepthText); hBoxEAXRow2->Add(textField_flModulationDepth);
-	hBoxEAXRow2->Add(flModulationTimeText); hBoxEAXRow2->Add(textField_flModulationTime);
-	
-	vbox->Add(hBoxEAXRow2,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hBoxEAXRow3 = new wxBoxSizer(wxHORIZONTAL);
-	hBoxEAXRow3->Add(flLFReferenceText); hBoxEAXRow3->Add(textField_flLFReference);
-	hBoxEAXRow3->Add(flHFReferenceText); hBoxEAXRow3->Add(textField_flHFReference);
-	
-	vbox->Add(hBoxEAXRow3,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxReverbRow5 = new wxBoxSizer(wxHORIZONTAL);
-	hboxReverbRow5->Add(flReflectionsGainText); hboxReverbRow5->Add(textField_flReflectionsGain);
-	hboxReverbRow5->Add(flReflectionsDelayText); hboxReverbRow5->Add(textField_flReflectionsDelay);
-	
-	vbox->Add(hboxReverbRow5,1, wxEXPAND | wxALL, 10);
-	
-	wxBoxSizer *hboxReverbRow6 = new wxBoxSizer(wxHORIZONTAL);
-	
-	hboxReverbRow6->Add(flAirAbsorptionGainHFText); hboxReverbRow6->Add(textField_flAirAbsorptionGainHF);
-	hboxReverbRow6->Add(flRoomRolloffFactorText); hboxReverbRow6->Add(textField_flRoomRolloffFactor);
-	
-	vbox->Add(hboxReverbRow6,1, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(spPreviewText);
-	vbox->Add(hboxSoundProducers,0, wxEXPAND | wxALL, 10);
-	
-	vbox->Add(hbox5, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
-
-	SetSizerAndFit(vbox);
-	
-	//center and show elements in dialog
-	Centre();
-	ShowModal();
-
-	//destroy when done showing
-	Destroy(); 
+	*/
 }
 
-std::string CreateEAXReverbZoneDialog::getNewName(){return name;}
 
-void CreateEAXReverbZoneDialog::getNewPosition(double& x, double& y, double& z)
+
+void CreateEAXReverbZoneDialog::Preview()
 {
-	x = xPosition;
-	y = yPosition;
-	z = zPosition;
-}
-
-double& CreateEAXReverbZoneDialog::getNewWidth(){return width;}
-	
-ReverbEAXProperties& CreateEAXReverbZoneDialog::getNewProperties(){return properties;}
-
-void CreateEAXReverbZoneDialog::OnOk(wxCommandEvent& event )
-{
-	okClicked = true;
-	
-	name = textFieldName->GetLineText(0).ToStdString();
-	( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
-	( textFieldY->GetLineText(0) ).ToDouble(&yPosition);
-	( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
-	( textFieldWidth->GetLineText(0) ).ToDouble(&width);
-	
-	( textField_flDensity->GetLineText(0) ).ToDouble(&properties.flDensity);
-	( textField_flDiffusion->GetLineText(0) ).ToDouble(&properties.flDiffusion);
-	( textField_flGain->GetLineText(0) ).ToDouble(&properties.flGain);
-	( textField_flGainHF->GetLineText(0) ).ToDouble(&properties.flGainHF);
-	( textField_flGainLF->GetLineText(0) ).ToDouble(&properties.flGainLF);
-	( textField_flDecayTime->GetLineText(0) ).ToDouble(&properties.flDecayTime);
-	( textField_flDecayHFRatio->GetLineText(0) ).ToDouble(&properties.flDecayHFRatio);
-	( textField_flDecayLFRatio->GetLineText(0) ).ToDouble(&properties.flDecayLFRatio);
-	( textField_flReflectionsGain->GetLineText(0) ).ToDouble(&properties.flReflectionsGain);
-	( textField_flReflectionsDelay->GetLineText(0) ).ToDouble(&properties.flReflectionsDelay);
-	( textField_flLateReverbGain->GetLineText(0) ).ToDouble(&properties.flLateReverbGain);
-	( textField_flLateReverbDelay->GetLineText(0) ).ToDouble(&properties.flLateReverbDelay);
-	( textField_flEchoDepth->GetLineText(0) ).ToDouble(&properties.flEchoDepth);
-	( textField_flEchoTime->GetLineText(0) ).ToDouble(&properties.flEchoTime);
-	( textField_flModulationDepth->GetLineText(0) ).ToDouble(&properties.flModulationDepth);
-	( textField_flModulationTime->GetLineText(0) ).ToDouble(&properties.flModulationTime);
-	( textField_flHFReference->GetLineText(0) ).ToDouble(&properties.flHFReference);
-	( textField_flLFReference->GetLineText(0) ).ToDouble(&properties.flLFReference);
-	( textField_flAirAbsorptionGainHF->GetLineText(0) ).ToDouble(&properties.flAirAbsorptionGainHF);
-	( textField_flRoomRolloffFactor->GetLineText(0) ).ToDouble(&properties.flRoomRolloffFactor);
-	
-	CreateEAXReverbZoneDialog::Exit();
-}
-
-void CreateEAXReverbZoneDialog::OnPreview(wxCommandEvent& event)
-{
+	/*
 	if(m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector()->size() > 0)
 	{
+		
+		//get sound producer track of first sound producer track
+		std::vector <SoundProducerTrack*> *ref_track_vec = m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector();
+		
 		if(spt_selection_index != -1)
 		{
-			//get sound producer track of first sound producer track
-			std::vector <SoundProducerTrack*> *ref_track_vec = m_effects_manager_ptr->GetReferenceToSoundProducerTracksVector();
 			SoundProducerTrack* thisTrack = ref_track_vec->at(spt_selection_index);
-			
+		
 			//if track has a sound producer
 			if(thisTrack->GetReferenceToSoundProducerManipulated() != nullptr)
 			{
 				//Create temporary reverb zone
-				ReverbZone tempZone;
+				EchoZone tempZone;
 				
 				name = textFieldName->GetLineText(0).ToStdString();
 				( textFieldX->GetLineText(0) ).ToDouble(&xPosition);
@@ -442,28 +280,13 @@ void CreateEAXReverbZoneDialog::OnPreview(wxCommandEvent& event)
 				( textFieldZ->GetLineText(0) ).ToDouble(&zPosition);
 				( textFieldWidth->GetLineText(0) ).ToDouble(&width);
 				
-				( textField_flDensity->GetLineText(0) ).ToDouble(&properties.flDensity);
-				( textField_flDiffusion->GetLineText(0) ).ToDouble(&properties.flDiffusion);
-				( textField_flGain->GetLineText(0) ).ToDouble(&properties.flGain);
-				( textField_flGainHF->GetLineText(0) ).ToDouble(&properties.flGainHF);
-				( textField_flGainLF->GetLineText(0) ).ToDouble(&properties.flGainLF);
-				( textField_flDecayTime->GetLineText(0) ).ToDouble(&properties.flDecayTime);
-				( textField_flDecayHFRatio->GetLineText(0) ).ToDouble(&properties.flDecayHFRatio);
-				( textField_flDecayLFRatio->GetLineText(0) ).ToDouble(&properties.flDecayLFRatio);
-				( textField_flReflectionsGain->GetLineText(0) ).ToDouble(&properties.flReflectionsGain);
-				( textField_flReflectionsDelay->GetLineText(0) ).ToDouble(&properties.flReflectionsDelay);
-				( textField_flLateReverbGain->GetLineText(0) ).ToDouble(&properties.flLateReverbGain);
-				( textField_flLateReverbDelay->GetLineText(0) ).ToDouble(&properties.flLateReverbDelay);
-				( textField_flEchoDepth->GetLineText(0) ).ToDouble(&properties.flEchoDepth);
-				( textField_flEchoTime->GetLineText(0) ).ToDouble(&properties.flEchoTime);
-				( textField_flModulationDepth->GetLineText(0) ).ToDouble(&properties.flModulationDepth);
-				( textField_flModulationTime->GetLineText(0) ).ToDouble(&properties.flModulationTime);
-				( textField_flHFReference->GetLineText(0) ).ToDouble(&properties.flHFReference);
-				( textField_flLFReference->GetLineText(0) ).ToDouble(&properties.flLFReference);
-				( textField_flAirAbsorptionGainHF->GetLineText(0) ).ToDouble(&properties.flAirAbsorptionGainHF);
-				( textField_flRoomRolloffFactor->GetLineText(0) ).ToDouble(&properties.flRoomRolloffFactor);
+				( textField_flDelay->GetLineText(0) ).ToDouble(&properties.flDelay);
+				( textField_flLRDelay->GetLineText(0) ).ToDouble(&properties.flLRDelay);
+				( textField_flDamping->GetLineText(0) ).ToDouble(&properties.flDamping);
+				( textField_flFeedback->GetLineText(0) ).ToDouble(&properties.flFeedback);
+				( textField_flSpread->GetLineText(0) ).ToDouble(&properties.flSpread);
 				
-				tempZone.InitEAXReverbZone(name,xPosition,yPosition,zPosition,width,properties);
+				tempZone.InitEchoZone(name,xPosition,yPosition,zPosition,width,properties);
 				
 				//apply effect to sound producer track
 				m_effects_manager_ptr->ApplyThisEffectZoneEffectToThisTrack(thisTrack, &tempZone);
@@ -489,45 +312,60 @@ void CreateEAXReverbZoneDialog::OnPreview(wxCommandEvent& event)
 				//free effect
 				tempZone.FreeEffects();
 			}
-			
+			else
+			{
+				wxMessageBox( wxT("Create a soundproducer. Set it to a track. Load audio to it with browse button!") );	
+			}
 		}
 		else
 		{
-			wxMessageBox( wxT("Select a sound producer!") );	
+			wxMessageBox( wxT("Select a soundproducer!") );
 		}
 	}
-	else
-	{
-		wxMessageBox( wxT("Create a soundproducer. Set it to a track. Load audio to it with browse button!") );
-	}
+	*/
 	
 }
 
-void CreateEAXReverbZoneDialog::SoundProducerTrackSelectedInListBox(wxCommandEvent& event )
+bool CreateEAXReverbZoneDialog::CancelClickedOn(){return cancelClicked;}
+
+bool CreateEAXReverbZoneDialog::OkClickedOn(){return okClicked;}
+
+void CreateEAXReverbZoneDialog::resetConfig()
 {
-	spt_selection_index = listboxSoundProducers->GetSelection();
-}
-
-
-void CreateEAXReverbZoneDialog::OnCancel(wxCommandEvent& event)
-{
+	okClicked = false;
+	cancelClicked = false;
 	
-	CreateEAXReverbZoneDialog::Exit();
-}
-
-void CreateEAXReverbZoneDialog::Exit()
-{
-	if(okButton != nullptr){ delete okButton;}
-	if(cancelButton != nullptr){delete cancelButton;}
-	if(previewButton != nullptr){delete previewButton;}
+	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
 	
-	if(textFieldX != nullptr){ delete textFieldX;}
-	if(textFieldY != nullptr){ delete textFieldY;}
-	if(textFieldZ != nullptr){ delete textFieldZ;}
-	if(textFieldWidth != nullptr){ delete textFieldWidth;}
+	widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 	
- 
-    Close( true ); //close window
-}
+	densityValueParam = InitValidFloatParamSettings(1.0f, 1.0f, 0.0f, 1.0f, "1.0");
 
-bool CreateEAXReverbZoneDialog::OkClicked(){return okClicked;}
+	diffusionValueParam = InitValidFloatParamSettings(1.0f, 1.0f, 0.0f, 1.0f, "1.0");
+
+	gainValueParam = InitValidFloatParamSettings(0.32f, 0.32f, 0.0f, 1.0f, "0.32");
+
+	gainValueHFParam = InitValidFloatParamSettings(0.5f, 0.89f, 0.0f, 0.99f, "0.89");
+
+	decayValueParam = InitValidFloatParamSettings(1.49f, 1.49f, 0.1f, 20.0f, "1.49");
+
+	decayHFValueParam = InitValidFloatParamSettings(0.83f, 0.83f, 0.1f, 2.0f, "0.83");
+
+	reflectionsGainValueParam = InitValidFloatParamSettings(0.05f, 0.05f, 0.0f, 3.16f, "0.05");
+
+	reflectionsDelayValueParam = InitValidFloatParamSettings(0.007f, 0.007f, 0.0f, 0.3f, "0.007");
+
+	lateReverbGainValueParam = InitValidFloatParamSettings(1.26f, 1.26f, 0.0f, 10.0f, "1.26");
+
+	lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "-0.011");
+
+	airAbsorptionGainValueParam = InitValidFloatParamSettings(0.994f, 0.994f, 0.892f, 1.0f, "0.994");
+
+	roomRolloffValueParam = InitValidFloatParamSettings(0.0f, 0.0f, 0.0f, 10.0f, "0.0");
+	
+	memset(er_char_name, 0, sizeof(er_char_name));
+	strncpy(er_char_name, "name here", 20);
+	er_char_name[19] = '\0';
+}
