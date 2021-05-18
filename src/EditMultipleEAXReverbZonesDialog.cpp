@@ -19,9 +19,9 @@ bool EditMultipleEAXReverbZonesDialog::OkClickedOn(){return okClicked;}
 
 bool EditMultipleEAXReverbZonesDialog::CancelClickedOn(){return cancelClicked;}
 
-static std::string standard_reverb_zone_choices = "";
-static bool editsr_dropDownEditMode = false;
-static int editsr_dropDownZoneActive = 0;
+static std::string eax_reverb_zone_choices = "";
+static bool editer_dropDownEditMode = false;
+static int editer_dropDownZoneActive = 0;
 
 static bool er_name_box_pressed = false;
 static char er_char_name[20] = "name here";
@@ -78,11 +78,11 @@ void EditMultipleEAXReverbZonesDialog::InitGUI()
 	if(m_effects_manager_ptr)
 	{
 		//clear previous sound choices
-		standard_reverb_zone_choices.clear();
+		eax_reverb_zone_choices.clear();
 				
 		for(size_t i = 0; i < m_effects_manager_ptr->standard_reverb_zones_vector.size(); i++ )
 		{
-			standard_reverb_zone_choices += m_effects_manager_ptr->standard_reverb_zones_vector[i].GetNameString() + ";";
+			eax_reverb_zone_choices += m_effects_manager_ptr->eax_reverb_zones_vector[i].GetNameString() + ";";
 		}
 		
 		//initialize values in GUI text boxes based on first choice
@@ -94,7 +94,7 @@ void EditMultipleEAXReverbZonesDialog::InitGUI()
 
 void EditMultipleEAXReverbZonesDialog::DrawDialog()
 {
-	bool exit = GuiWindowBox((Rectangle){180,20,620,580},"Create EAX Reverb Zone");
+	bool exit = GuiWindowBox((Rectangle){180,20,620,580},"Edit EAX Reverb Zone");
 	
 	if(exit){cancelClicked = true;}
 	
@@ -215,10 +215,19 @@ void EditMultipleEAXReverbZonesDialog::DrawDialog()
 		lfReferenceValueParam.editMode = !lfReferenceValueParam.editMode;
 	}
 	
+	
+	
 	okClicked = GuiButton( (Rectangle){ 400,570, 70, 30 }, GuiIconText(0, "OK") );
 	
 	cancelClicked = GuiButton( (Rectangle){ 500, 570, 70, 30 }, GuiIconText(0, "Cancel") );
 	if(exit){cancelClicked = true;}
+	
+	if( GuiDropdownBox((Rectangle){ 300,50,140,30 }, eax_reverb_zone_choices.c_str(), &editer_dropDownZoneActive, editer_dropDownEditMode) )
+	{
+		editer_dropDownEditMode = !editer_dropDownEditMode;
+		m_selection_index = editer_dropDownZoneActive;
+		EditMultipleEAXReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+	}
 	
 	if(okClicked)
 	{
@@ -411,7 +420,7 @@ void EditMultipleEAXReverbZonesDialog::Preview()
 void EditMultipleEAXReverbZonesDialog::ReverbZoneSelectedInListBox(size_t choice)
 {
 	
-	if(m_effects_manager_ptr->standard_reverb_zones_vector.size() > 0)
+	if(m_effects_manager_ptr->eax_reverb_zones_vector.size() > 0)
 	{
 		ReverbZone* thisReverbZone = &m_effects_manager_ptr->standard_reverb_zones_vector.at(choice);
 		
