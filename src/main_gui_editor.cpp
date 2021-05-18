@@ -18,6 +18,8 @@
 #include "CreateStandardReverbZoneDialog.h"
 #include "EditMultipleStandardReverbZonesDialog.h"
 #include "CreateEAXReverbZoneDialog.h"
+#include "EditMultipleEAXReverbZonesDialog.h"
+
 
 #include "immediate_mode_sound_player.h"
 
@@ -59,6 +61,7 @@ CreateStandardReverbZoneDialog create_sr_zone_dialog;
 EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
 CreateEAXReverbZoneDialog create_er_zone_dialog;
+EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -410,7 +413,7 @@ enum class GuiState : std::uint8_t { NONE=0,
 									TEST_HRTF, CHANGE_HRTF, 
 									CREATE_ECHO_ZONE, EDIT_ECHO_ZONE,
 									CREATE_SR_ZONE, EDIT_SR_ZONE,
-									CREATE_ER_ZONE };
+									CREATE_ER_ZONE, EDIT_ER_ZONE };
 									
 GuiState g_state = GuiState::NONE;
 
@@ -494,7 +497,14 @@ void MainGuiEditor::draw_object_creation_menu()
 					break;
 				}
 				//eax reverb zone
-				case 4:{break;}
+				case 4:
+				{
+					g_state = GuiState::EDIT_ER_ZONE;
+					dialogInUse = true;
+					edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+					edit_er_zone_dialog.InitGUI();
+					break;
+				}
 				//echo zone
 				case 5:
 				{ 
@@ -687,6 +697,19 @@ void MainGuiEditor::draw_object_creation_menu()
 			{
 				g_state = GuiState::NONE;
 				create_er_zone_dialog.resetConfig();
+				dialogInUse = false;
+			}
+			
+			break;
+		}
+		case GuiState::EDIT_ER_ZONE:
+		{
+			edit_er_zone_dialog.DrawDialog();
+			
+			if(edit_er_zone_dialog.OkClickedOn() || edit_er_zone_dialog.CancelClickedOn())
+			{						
+				g_state = GuiState::NONE;
+				edit_er_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
