@@ -59,7 +59,7 @@ static ValidFloatParamSettings reflectionsDelayValueParam = InitValidFloatParamS
 
 static ValidFloatParamSettings lateReverbGainValueParam = InitValidFloatParamSettings(1.26f, 1.26f, 0.0f, 10.0f, "1.26");
 
-static ValidFloatParamSettings lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "-0.011");
+static ValidFloatParamSettings lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "0.011");
 
 static ValidFloatParamSettings airAbsorptionGainValueParam = InitValidFloatParamSettings(0.994f, 0.994f, 0.892f, 1.0f, "0.994");
 
@@ -227,6 +227,13 @@ void CreateEAXReverbZoneDialog::DrawDialog()
 		properties.flLateReverbGain = lateReverbGainValueParam.current_value;
 		properties.flAirAbsorptionGainHF = airAbsorptionGainValueParam.current_value;
 		properties.flRoomRolloffFactor = roomRolloffValueParam.current_value;
+		
+		properties.flEchoTime = echoTimeValueParam.current_value;
+		properties.flEchoDepth = echoDepthValueParam.current_value;
+		properties.flModulationTime = modulationTimeValueParam.current_value;
+		properties.flModulationDepth = modulationDepthValueParam.current_value;
+		properties.flHFReference = hfReferenceValueParam.current_value;
+		properties.flLFReference = lfReferenceValueParam.current_value;
 		
 	}
     /*

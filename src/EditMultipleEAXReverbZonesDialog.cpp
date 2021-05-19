@@ -54,7 +54,7 @@ static ValidFloatParamSettings reflectionsDelayValueParam = InitValidFloatParamS
 
 static ValidFloatParamSettings lateReverbGainValueParam = InitValidFloatParamSettings(1.26f, 1.26f, 0.0f, 10.0f, "1.26");
 
-static ValidFloatParamSettings lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "-0.011");
+static ValidFloatParamSettings lateReverbDelayValueParam = InitValidFloatParamSettings(0.011f, 0.011f, 0.0f, 0.1f, "0.011");
 
 static ValidFloatParamSettings airAbsorptionGainValueParam = InitValidFloatParamSettings(0.994f, 0.994f, 0.892f, 1.0f, "0.994");
 
@@ -80,7 +80,7 @@ void EditMultipleEAXReverbZonesDialog::InitGUI()
 		//clear previous sound choices
 		eax_reverb_zone_choices.clear();
 				
-		for(size_t i = 0; i < m_effects_manager_ptr->standard_reverb_zones_vector.size(); i++ )
+		for(size_t i = 0; i < m_effects_manager_ptr->eax_reverb_zones_vector.size(); i++ )
 		{
 			eax_reverb_zone_choices += m_effects_manager_ptr->eax_reverb_zones_vector[i].GetNameString() + ";";
 		}
@@ -295,10 +295,10 @@ void EditMultipleEAXReverbZonesDialog::ChangeEAXReverbZoneAttributes()
 	
 	if(m_selection_index != -1)
 	{
-		if(m_effects_manager_ptr->standard_reverb_zones_vector.size() > 0)
+		if(m_effects_manager_ptr->eax_reverb_zones_vector.size() > 0)
 		{
 			
-			ReverbZone* thisReverbZone = &m_effects_manager_ptr->standard_reverb_zones_vector.at(m_selection_index);
+			ReverbZone* thisReverbZone = &m_effects_manager_ptr->eax_reverb_zones_vector.at(m_selection_index);
 			
 			std::string name = std::string(er_char_name);
 			thisReverbZone->SetNameString(name);	
@@ -322,6 +322,13 @@ void EditMultipleEAXReverbZonesDialog::ChangeEAXReverbZoneAttributes()
 			tempEAXReverbProp.flLateReverbGain = lateReverbGainValueParam.current_value;
 			tempEAXReverbProp.flAirAbsorptionGainHF = airAbsorptionGainValueParam.current_value;
 			tempEAXReverbProp.flRoomRolloffFactor = roomRolloffValueParam.current_value;
+			
+			tempEAXReverbProp.flEchoTime = echoTimeValueParam.current_value;
+			tempEAXReverbProp.flEchoDepth = echoDepthValueParam.current_value;
+			tempEAXReverbProp.flModulationTime = modulationTimeValueParam.current_value;
+			tempEAXReverbProp.flModulationDepth = modulationDepthValueParam.current_value;
+			tempEAXReverbProp.flHFReference = hfReferenceValueParam.current_value;
+			tempEAXReverbProp.flLFReference = lfReferenceValueParam.current_value;
 			
 			thisReverbZone->ChangeEAXReverbZoneProperties(tempEAXReverbProp);
 			
@@ -422,7 +429,7 @@ void EditMultipleEAXReverbZonesDialog::ReverbZoneSelectedInListBox(size_t choice
 	
 	if(m_effects_manager_ptr->eax_reverb_zones_vector.size() > 0)
 	{
-		ReverbZone* thisReverbZone = &m_effects_manager_ptr->standard_reverb_zones_vector.at(choice);
+		ReverbZone* thisReverbZone = &m_effects_manager_ptr->eax_reverb_zones_vector.at(choice);
 		
 		tempEAXReverbProp = thisReverbZone->GetEAXReverbZoneProperties();
 		
@@ -461,6 +468,17 @@ void EditMultipleEAXReverbZonesDialog::ReverbZoneSelectedInListBox(size_t choice
 
 		roomRolloffValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flRoomRolloffFactor, 0.0f, 0.0f, 10.0f, std::to_string(tempEAXReverbProp.flRoomRolloffFactor).c_str());
 		
+		echoTimeValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flEchoTime, 0.25f, 0.075f, 0.25f, std::to_string(tempEAXReverbProp.flEchoTime).c_str() );
+
+		echoDepthValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flEchoDepth, 0.0f, 0.0f, 1.0f, std::to_string(tempEAXReverbProp.flEchoDepth).c_str() );
+
+		modulationTimeValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flModulationTime, 0.25f, 0.004f, 4.0f, std::to_string(tempEAXReverbProp.flModulationTime).c_str() );
+
+		modulationDepthValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flModulationDepth, 0.0f, 0.0f, 1.0f, std::to_string(tempEAXReverbProp.flModulationDepth).c_str() );
+
+		hfReferenceValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flHFReference,5000.0f,1000.0f,20000.0f,std::to_string(tempEAXReverbProp.flHFReference).c_str() );
+
+		lfReferenceValueParam = InitValidFloatParamSettings(tempEAXReverbProp.flLFReference,250.0f,20.0f,1000.0f,std::to_string(tempEAXReverbProp.flLFReference).c_str() );
 	}
 	
 }
