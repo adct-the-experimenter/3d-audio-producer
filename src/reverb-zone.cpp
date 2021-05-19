@@ -184,6 +184,8 @@ ALuint ReverbZone::LoadEAXReverbEffect(const EFXEAXREVERBPROPERTIES *reverb)
 	/* Create the effect object and check if we can do EAX reverb. */
     alGenEffects(1, &effect);
     
+    
+    
 	if(alGetEnumValue("AL_EFFECT_EAXREVERB") != 0)
     {
         printf("Using EAX Reverb\n");
@@ -191,23 +193,44 @@ ALuint ReverbZone::LoadEAXReverbEffect(const EFXEAXREVERBPROPERTIES *reverb)
         /* EAX Reverb is available. Set the EAX effect type then load the
          * reverb properties. */
         alEffecti(effect, AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
+        
 
         alEffectf(effect, AL_EAXREVERB_DENSITY, reverb->flDensity);
         alEffectf(effect, AL_EAXREVERB_DIFFUSION, reverb->flDiffusion);
         alEffectf(effect, AL_EAXREVERB_GAIN, reverb->flGain);
         alEffectf(effect, AL_EAXREVERB_GAINHF, reverb->flGainHF);
         alEffectf(effect, AL_EAXREVERB_GAINLF, reverb->flGainLF);
+        
         alEffectf(effect, AL_EAXREVERB_DECAY_TIME, reverb->flDecayTime);
         alEffectf(effect, AL_EAXREVERB_DECAY_HFRATIO, reverb->flDecayHFRatio);
+        
         alEffectf(effect, AL_EAXREVERB_DECAY_LFRATIO, reverb->flDecayLFRatio);
+        err = alGetError();
+		if(err != AL_NO_ERROR)
+		{
+			fprintf(stderr, "value above code wrong. OpenAL error: %s\n", alGetString(err));
+			//if(alIsEffect(effect))
+			//    alDeleteEffects(1, &effect);
+			//return 0;
+		}
+        
         alEffectf(effect, AL_EAXREVERB_REFLECTIONS_GAIN, reverb->flReflectionsGain);
+        
         alEffectf(effect, AL_EAXREVERB_REFLECTIONS_DELAY, reverb->flReflectionsDelay);
+        
         alEffectfv(effect, AL_EAXREVERB_REFLECTIONS_PAN, reverb->flReflectionsPan);
+        
         alEffectf(effect, AL_EAXREVERB_LATE_REVERB_GAIN, reverb->flLateReverbGain);
+        
         alEffectf(effect, AL_EAXREVERB_LATE_REVERB_DELAY, reverb->flLateReverbDelay);
+        
         alEffectfv(effect, AL_EAXREVERB_LATE_REVERB_PAN, reverb->flLateReverbPan);
+        
+        
         alEffectf(effect, AL_EAXREVERB_ECHO_TIME, reverb->flEchoTime);
+        
         alEffectf(effect, AL_EAXREVERB_ECHO_DEPTH, reverb->flEchoDepth);
+        
         alEffectf(effect, AL_EAXREVERB_MODULATION_TIME, reverb->flModulationTime);
         alEffectf(effect, AL_EAXREVERB_MODULATION_DEPTH, reverb->flModulationDepth);
         alEffectf(effect, AL_EAXREVERB_AIR_ABSORPTION_GAINHF, reverb->flAirAbsorptionGainHF);
@@ -215,6 +238,7 @@ ALuint ReverbZone::LoadEAXReverbEffect(const EFXEAXREVERBPROPERTIES *reverb)
         alEffectf(effect, AL_EAXREVERB_LFREFERENCE, reverb->flLFReference);
         alEffectf(effect, AL_EAXREVERB_ROOM_ROLLOFF_FACTOR, reverb->flRoomRolloffFactor);
         alEffecti(effect, AL_EAXREVERB_DECAY_HFLIMIT, reverb->iDecayHFLimit);
+        
     }
     
      /* Check if an error occured, and clean up if so. */
@@ -381,6 +405,9 @@ void ReverbZone::InitEAXReverbZone(std::string& thisName,
 	reverb.flAirAbsorptionGainHF = properties.flAirAbsorptionGainHF;
 	reverb.flRoomRolloffFactor = properties.flRoomRolloffFactor;
 	
+	//set decay lf ratio to default value manually
+	reverb.flDecayLFRatio = 0.83f;
+	
 	//load effect based on type
 	m_effect = LoadEAXReverbEffect(&reverb);
 	
@@ -397,7 +424,7 @@ void ReverbZone::InitEAXReverbZone(std::string& thisName,
      */
     ALint i_effect = (ALint)(m_effect);
     alAuxiliaryEffectSloti(m_slot, AL_EFFECTSLOT_EFFECT,i_effect );
-    assert(alGetError()==AL_NO_ERROR && "Failed to set effect slot");
+    assert(alGetError()== AL_NO_ERROR && "Failed to set effect slot");
     
 	EffectZone::InitEffectZone(thisName,x,y,z,width);
 	
@@ -518,6 +545,9 @@ void ReverbZone::ChangeEAXReverbZoneProperties(ReverbEAXProperties& properties)
 	reverb.flAirAbsorptionGainHF = properties.flAirAbsorptionGainHF;
 	reverb.flRoomRolloffFactor = properties.flRoomRolloffFactor;
 	
+	//set decay lf ratio to default value manually
+	reverb.flDecayLFRatio = 0.83f;
+	
 	if(alGetEnumValue("AL_EFFECT_EAXREVERB") != 0)
     {
         printf("Using EAX Reverb\n");
@@ -585,7 +615,7 @@ ReverbZone::Type& ReverbZone::GetType(){return m_type;}
 
 
 ALuint* ReverbZone::GetEffectPointer(){ return &m_effect;}
-ALuint* ReverbZone::GetEffectsSlotPointer(){std::cout << "Derived class called! \n"; return &m_slot;}
+ALuint* ReverbZone::GetEffectsSlotPointer(){ return &m_slot;}
 
 ALuint ReverbZone::GetEffect(){return m_effect;}
 ALuint ReverbZone::GetEffectsSlot(){return m_slot;}
