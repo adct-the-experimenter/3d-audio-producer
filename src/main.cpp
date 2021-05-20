@@ -77,7 +77,7 @@ void ApplicationLoop()
 void InitRaylibSystem()
 {
 	
-	SetConfigFlags(FLAG_MSAA_4X_HINT || FLAG_VSYNC_HINT);  // Set MSAA 4X hint before windows creation
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT  );  // Set MSAA 4X hint before windows creation
 	
     InitWindow(screenWidth, screenHeight, "3d Audio Producer");
 	
