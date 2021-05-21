@@ -59,6 +59,8 @@ public:
 	
 	void SetColor(Color color);
 	
+	void SetPickedBool(bool state);
+	
 	//OpenAL Soft effects properties
 	
 	void SetEffectsSlotPointer(ALuint* slot_ptr);
@@ -85,6 +87,8 @@ private:
 	float m_width;
 	
 	Color m_color;
+	
+	bool picked;
 };
 
 #endif

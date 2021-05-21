@@ -22,6 +22,8 @@ public:
 	bool OkClickedOn();
 	bool CancelClickedOn();
 	
+	void SetCurrentZoneIndexForEditing(size_t index);
+	
 private:
 
 	EffectsManager* m_effects_manager_ptr; //pointer to vector of sound producers to edit

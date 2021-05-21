@@ -8,6 +8,8 @@
 
 #include "listener.h"
 
+#include "raylib.h" //for Ray and Bounding Box
+
 //class to manipulate x,y z position of sound producer
 class EffectsManager
 {
@@ -46,6 +48,13 @@ public:
 	
 	//function to perform the entire reverb thread operation of checking and setting reverb
 	void PerformEffectThreadOperation();
+	
+	enum class EffectZoneType : std::uint8_t {NONE=0,STANDARD_REVERB,EAX_REVERB,ECHO};
+	
+	//function to return index and type of effects zone picked by 3d picking
+	void CheckEffectZones3DPicking(Ray& picker_ray, EffectZoneType& type, int& index);
+	
+	void SetEffectZonePicked(bool state,EffectZoneType& type, int& index);
 	
 	friend class CreateEAXReverbZoneDialog;
 	friend class CreateStandardReverbZoneDialog;

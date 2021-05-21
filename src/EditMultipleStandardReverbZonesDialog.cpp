@@ -13,6 +13,8 @@ EditMultipleStandardReverbZonesDialog::EditMultipleStandardReverbZonesDialog()
 	spt_selection_index = 0;
 }
 
+void EditMultipleStandardReverbZonesDialog::SetCurrentZoneIndexForEditing(size_t index){m_selection_index = index;}
+
 void EditMultipleStandardReverbZonesDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
 
 bool EditMultipleStandardReverbZonesDialog::OkClickedOn(){return okClicked;}

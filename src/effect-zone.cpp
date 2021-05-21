@@ -51,6 +51,7 @@ static LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv;
 static LPALGETAUXILIARYEFFECTSLOTF alGetAuxiliaryEffectSlotf;
 static LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv;
 
+static Color picked_color = (Color){255,255,0,150};
 
 EffectZone::EffectZone()
 {	
@@ -61,6 +62,7 @@ EffectZone::EffectZone()
 	m_color = {245, 245, 245, 150};
 	
 	m_slot_ptr = nullptr;
+	picked = false;
 }
 
 EffectZone::~EffectZone()
@@ -70,7 +72,16 @@ EffectZone::~EffectZone()
 
 void EffectZone::DrawModel()
 {
-	DrawCube(zone_position, m_width, m_width, m_width, m_color);
+	if(!picked)
+	{
+		DrawCube(zone_position, m_width, m_width, m_width, m_color);
+	}
+	else
+	{
+		DrawCube(zone_position, m_width, m_width, m_width, picked_color);
+	}
+	
+	
 }
 
 void EffectZone::InitEffectZone(std::string& thisName,
@@ -134,6 +145,8 @@ void EffectZone::SetColor(Color color)
 {
 	m_color = color;
 }
+
+void EffectZone::SetPickedBool(bool state){picked = state;}
 
 void EffectZone::SetEffectsSlotPointer(ALuint* slot_ptr){m_slot_ptr = slot_ptr;}
 

@@ -303,3 +303,113 @@ void EffectsManager::FreeEffects()
 	}
 }
 
+void EffectsManager::CheckEffectZones3DPicking(Ray& picker_ray,EffectZoneType& type, int& index)
+{
+	index = -1;
+	type = EffectZoneType::NONE;
+	
+	if(standard_reverb_zones_vector.size() > 0)
+	{
+		for(size_t i=0; i < standard_reverb_zones_vector.size(); ++i)
+		{
+			float x,y,z,cube_width;
+			
+			x = standard_reverb_zones_vector[i].GetPositionX();
+			y = standard_reverb_zones_vector[i].GetPositionY();
+			z = standard_reverb_zones_vector[i].GetPositionZ();
+			cube_width = standard_reverb_zones_vector[i].GetWidth();
+			
+			bool collision = CheckCollisionRayBox( picker_ray,
+					(BoundingBox){
+						(Vector3){ x - cube_width/2, y - cube_width/2, z - cube_width/2 },
+						(Vector3){ x + cube_width/2, y + cube_width/2, z + cube_width/2 }}
+					);
+			
+			if(collision)
+			{
+				index = i;
+				type = EffectZoneType::STANDARD_REVERB;
+				break;
+				return;
+			}
+		}
+	}
+	
+	if(eax_reverb_zones_vector.size() > 0)
+	{
+		for(size_t i=0; i < eax_reverb_zones_vector.size(); ++i)
+		{
+			float x,y,z,cube_width;
+			
+			x = eax_reverb_zones_vector[i].GetPositionX();
+			y = eax_reverb_zones_vector[i].GetPositionY();
+			z = eax_reverb_zones_vector[i].GetPositionZ();
+			cube_width = eax_reverb_zones_vector[i].GetWidth();
+			
+			bool collision = CheckCollisionRayBox( picker_ray,
+					(BoundingBox){
+						(Vector3){ x - cube_width/2, y - cube_width/2, z - cube_width/2 },
+						(Vector3){ x + cube_width/2, y + cube_width/2, z + cube_width/2 }}
+					);
+			
+			if(collision)
+			{
+				index = i;
+				type = EffectZoneType::EAX_REVERB;
+				break;
+				return;
+			}
+		}
+	}
+	
+	if(echo_zones_vector.size() > 0)
+	{
+		for(size_t i=0; i < echo_zones_vector.size(); ++i)
+		{
+			float x,y,z,cube_width;
+			
+			x = echo_zones_vector[i].GetPositionX();
+			y = echo_zones_vector[i].GetPositionY();
+			z = echo_zones_vector[i].GetPositionZ();
+			cube_width = echo_zones_vector[i].GetWidth();
+			
+			bool collision = CheckCollisionRayBox( picker_ray,
+					(BoundingBox){
+						(Vector3){ x - cube_width/2, y - cube_width/2, z - cube_width/2 },
+						(Vector3){ x + cube_width/2, y + cube_width/2, z + cube_width/2 }}
+					);
+			
+			if(collision)
+			{
+				index = i;
+				type = EffectZoneType::ECHO;
+				break;
+				return;
+			}
+		}
+	}
+		
+}
+
+void EffectsManager::SetEffectZonePicked(bool state,EffectZoneType& type, int& index)
+{
+	switch(type)
+	{
+		case EffectZoneType::STANDARD_REVERB:
+		{
+			standard_reverb_zones_vector[index].SetPickedBool(state);
+			break;
+		}
+		case EffectZoneType::EAX_REVERB:
+		{
+			eax_reverb_zones_vector[index].SetPickedBool(state);
+			break;
+		}
+		case EffectZoneType::ECHO:
+		{
+			echo_zones_vector[index].SetPickedBool(state);
+			break;
+		}
+		default:{break;}
+	}
+}

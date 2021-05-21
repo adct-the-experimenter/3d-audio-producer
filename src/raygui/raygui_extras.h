@@ -192,3 +192,66 @@ bool GuiTextBox_ValidValueFloatSimple(Rectangle rect, int textSize, ValidFloatPa
 }
 
 #endif
+
+
+
+//3d Object Timeline
+
+#ifndef GUI_3D_OBJECT_TIMELINE_H
+#define GUI_3D_OBJECT_TIMELINE_H
+
+
+typedef struct 
+{
+	bool editMode;
+	float current_timeline_position;
+	float max_num_frames;
+	bool valueChanged;
+	bool addPoint;
+	bool showPropertiesBox;
+} TimelineSettings;
+
+#ifdef __cplusplus
+extern "C" {            // Prevents name mangling of functions
+#endif
+
+//Draws timeline 
+//returns if timeline was clicked on
+bool Gui_3dObject_Timeline(TimelineSettings* settings);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#if defined(GUI_3D_OBJECT_TIMELINE)
+
+bool Gui_3dObject_Timeline(TimelineSettings* settings)
+{
+	
+//draw timeline
+
+//if show timeline is true
+
+	//draw box with background color
+	
+	//draw cursor line where mouse pointer is
+	
+	//if add point is true
+		
+		//add point at current cursor line
+		
+	
+	//if mouse click on point in timeline and add point is false
+		//show properties box to true
+		
+//draw properties box
+	
+//if show properties box bool is true
+	
+	//show the contents of the point in timeline such as position and rotation.
+	
+}
+
+#endif

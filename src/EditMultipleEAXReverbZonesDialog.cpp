@@ -13,6 +13,8 @@ EditMultipleEAXReverbZonesDialog::EditMultipleEAXReverbZonesDialog()
 	spt_selection_index = 0;
 }
 
+void EditMultipleEAXReverbZonesDialog::SetCurrentZoneIndexForEditing(size_t index){m_selection_index = index;}
+
 void EditMultipleEAXReverbZonesDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
 
 bool EditMultipleEAXReverbZonesDialog::OkClickedOn(){return okClicked;}

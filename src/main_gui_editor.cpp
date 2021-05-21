@@ -207,7 +207,13 @@ bool picker_ray_launched = false;
 
 //represents the index of sound producer chosen
 //signed integer used so that -1 can be used.
-std::int32_t soundproducer_picked = -1;
+static std::int32_t soundproducer_picked = -1;
+
+//represent index of effect zone picked
+static int effect_zone_picked = -1;
+
+//represent type of effect zone picked
+static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
 
 bool editKeyPressed = false;
 
@@ -221,7 +227,7 @@ void MainGuiEditor::HandleEvents()
 	else{picker_ray_launched = false;}
 	
 	//if in sound bank area
-	if(GetMouseX() > 620){disableHotkeys = true;}
+	if(GetMouseX() > GetScreenWidth() - 200){disableHotkeys = true;}
 	else{disableHotkeys = false;}
 	
 	if(disableHotkeys || dialogInUse){return;}
@@ -259,7 +265,7 @@ void MainGuiEditor::HandleEvents()
 	}
 	
 	//if key 1 is pressed
-	if(IsKeyDown(KEY_ONE))
+	if(IsKeyReleased(KEY_ONE))
 	{
 		editKeyPressed = true;
 	}
@@ -338,20 +344,20 @@ void MainGuiEditor::HandleEvents()
 }
 
 
-
 void MainGuiEditor::logic()
 {
 	//if picker ray launched
 	if(picker_ray_launched)
 	{
 		bool collision = false;
+		
 		//for each soundproducer, check if picker ray hits sound producer
 		if(sound_producer_vector.size() > 0)
 		{
 			for(size_t i = 0; i < sound_producer_vector.size(); i++)
 			{
 				
-				double sp_x,sp_y,sp_z;
+				float sp_x,sp_y,sp_z;
 				sp_x = sound_producer_vector[i]->GetPositionX();
 				sp_y = sound_producer_vector[i]->GetPositionY();
 				sp_z = sound_producer_vector[i]->GetPositionZ();
@@ -373,8 +379,33 @@ void MainGuiEditor::logic()
 				
 		}
 		
-		if(!collision){soundproducer_picked = -1;}
+		if(!collision)
+		{
+			soundproducer_picked = -1;
+			
+			//if sound producer is not picked,
+			//check for collison with effects zone.
+			int index = -1;
+			EffectsManager::EffectZoneType type = EffectsManager::EffectZoneType::NONE;
+			
+			effects_manager_ptr->CheckEffectZones3DPicking(picker_ray, type , index );
+			
+			if(index != -1 && type != EffectsManager::EffectZoneType::NONE)
+			{
+				effect_zone_type_picked = type;
+				effect_zone_picked = index;
+				effects_manager_ptr->SetEffectZonePicked(true,effect_zone_type_picked, effect_zone_picked);
+			}
+			else
+			{
+				effects_manager_ptr->SetEffectZonePicked(false,effect_zone_type_picked, effect_zone_picked);
+				effect_zone_type_picked = type;
+				effect_zone_picked = index;
+			}
+		}
+		
 	}
+	
 	
 	//run state for immediate mode sound player
 	im_sound_player.RunStateForPlayer();
@@ -406,7 +437,7 @@ int dropDownObjectTypeActive = 0;
 bool objectManipulationState = false;
 
 
-//state 
+//gui state 
 enum class GuiState : std::uint8_t { NONE=0, 
 									CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, 
 									EDIT_LISTENER, 
@@ -415,7 +446,7 @@ enum class GuiState : std::uint8_t { NONE=0,
 									CREATE_SR_ZONE, EDIT_SR_ZONE,
 									CREATE_ER_ZONE, EDIT_ER_ZONE };
 									
-GuiState g_state = GuiState::NONE;
+static GuiState g_state = GuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
 {
@@ -527,6 +558,46 @@ void MainGuiEditor::draw_object_creation_menu()
 		edit_sp_dialog.SetCurrentSoundProducerEditedIndex(size_t(soundproducer_picked));
 		edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
 		edit_sp_dialog.InitGUI();
+	}
+	
+	//if effect zone index is not null, effect type not null, and edit key pressed
+	if(effect_zone_picked != -1 && effect_zone_type_picked != EffectsManager::EffectZoneType::NONE
+	   && editKeyPressed)
+	{
+		
+		effects_manager_ptr->SetEffectZonePicked(false,effect_zone_type_picked, effect_zone_picked);
+		
+		switch(effect_zone_type_picked)
+		{
+			case EffectsManager::EffectZoneType::STANDARD_REVERB:
+			{ 
+				g_state = GuiState::EDIT_SR_ZONE;
+				dialogInUse = true;
+				edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+				edit_sr_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
+				edit_sr_zone_dialog.InitGUI(); 
+				break;
+			}
+			case EffectsManager::EffectZoneType::EAX_REVERB:
+			{
+				g_state = GuiState::EDIT_ER_ZONE;
+				dialogInUse = true;
+				edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+				edit_er_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
+				edit_er_zone_dialog.InitGUI();
+				break;
+			}
+			case EffectsManager::EffectZoneType::ECHO:
+			{
+				g_state = GuiState::EDIT_ECHO_ZONE; 
+				dialogInUse = true;
+				edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+				edit_echo_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
+				edit_echo_zone_dialog.InitGUI(); 
+				break;
+			}
+			default:{break;}
+		}
 	}
 	
 	switch(g_state)

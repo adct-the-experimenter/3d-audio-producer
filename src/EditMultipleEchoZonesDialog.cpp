@@ -13,6 +13,8 @@ EditMultipleEchoZonesDialog::EditMultipleEchoZonesDialog()
 	spt_selection_index = 0;
 }
 
+void EditMultipleEchoZonesDialog::SetCurrentZoneIndexForEditing(size_t index){m_selection_index = index;}
+
 void EditMultipleEchoZonesDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
 
 bool EditMultipleEchoZonesDialog::OkClickedOn(){return okClicked;}
