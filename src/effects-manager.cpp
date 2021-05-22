@@ -121,6 +121,7 @@ void EffectsManager::PerformEffectThreadOperation()
 									{										
 										//apply reverb to source of sound producer track
 										EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
+										
 									}
 								}
 							}
@@ -238,12 +239,11 @@ void EffectsManager::ApplyThisEffectZoneEffectToThisSource(ALuint* source, Effec
 	if(err != AL_NO_ERROR) std::cout << "AL Error found before effect check on source:" <<  alGetString(err) << std::endl;
 	
 	alSource3i(*source, AL_AUXILIARY_SEND_FILTER, (ALint)(*thisZone->GetEffectsSlotPointer()), 0, AL_FILTER_NULL);
-	
+
 	err = alGetError();
 	
 	if(err != AL_NO_ERROR) std::cout << "AL Error found after effect check on source:" <<  alGetString(err) << std::endl;
 	
-	assert(err == AL_NO_ERROR && "Failed to setup effect for sound source send 0.");
 }
 
 void EffectsManager::RemoveEffectFromThisSource(ALuint* source)

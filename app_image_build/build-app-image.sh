@@ -26,24 +26,23 @@ else
 	mkdir AppDir
 fi
 
-ICON_FILE="thief-fighters.png" 
+ICON_FILE="3d-audio-producer.png" 
 
 if [ -f ./AppDir/$ICON_FILE ]; then
 	echo "$ICON_FILE already exists in AppDir."
 else
-	cp ../app_image_resources/thief-fighters.png ./AppDir
+	cp ../app_image_resources/$ICON_FILE ./AppDir
 fi
 
-DESKTOP_FILE="thief-fighters.desktop"
+DESKTOP_FILE="3d-audio-producer.desktop"
 
 if [ -f ./AppDir/$DESKTOP_FILE ]; then
 	echo "$DESKTOP_FILE already exists in AppDir."
 else
-	cp ../app_image_resources/thief-fighters.desktop ./AppDir
+	cp ../app_image_resources/$DESKTOP_FILE ./AppDir
 fi
 
-
-cmake ../.. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DDATAPATH=${HOME}/thief-fighters-data && make -j$(nproc) && make install DESTDIR=AppDir
+cmake ../.. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DDATAPATH=${HOME}/3d-audio-producer-data && make -j$(nproc) && make install DESTDIR=AppDir
 
 if [ -f "linuxdeploy-x86_64.AppImage" ]; then
 	echo "linuxdeploy-x86_64.AppImage exists."
@@ -53,15 +52,15 @@ fi
 
 chmod a+x linuxdeploy*.AppImage
 
-./linuxdeploy*.AppImage --appdir AppDir --icon-file ./AppDir/thief-fighters.png --desktop-file ./AppDir/thief-fighters.desktop  --output appimage
+./linuxdeploy*.AppImage --appdir AppDir --icon-file ./AppDir/$ICON_FILE --desktop-file ./AppDir/$DESKTOP_FILE  --output appimage
 
-if [ -d "thief-fighters-$VERSION" ]; then
-	echo "thief fighters release directory container already exists."
+if [ -d "3d-audio-producer-$VERSION" ]; then
+	echo "3d audio producer release directory container already exists."
 else	
-	mkdir thief-fighters-$VERSION
+	mkdir 3d-audio-producer-$VERSION
 fi
 
-cp Thief*.AppImage thief-fighters-$VERSION
-cp -r ../../data ./thief-fighters-$VERSION/thief-fighters-data
-cp ../app_image_resources/INSTALL ./thief-fighters-$VERSION
-tar -czvf thief-fighters-$VERSION.tar.gz ./thief-fighters-$VERSION
+cp 3D*.AppImage 3d-audio-producer-$VERSION
+cp -r ../../data ./3d-audio-producer-$VERSION/3d-audio-producer-data
+cp ../app_image_resources/INSTALL ./3d-audio-producer-$VERSION
+tar -czvf 3d-audio-producer-$VERSION.tar.gz ./3d-audio-producer-$VERSION
