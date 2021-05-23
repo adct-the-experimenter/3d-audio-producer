@@ -193,6 +193,90 @@ bool GuiTextBox_ValidValueFloatSimple(Rectangle rect, int textSize, ValidFloatPa
 
 #endif
 
+//GuiListView with Dropdown box bound change
+
+#ifndef GUI_DROPDOWN_LISTVIEW_H
+#define GUI_DROPDOWN_LISTVIEW_H
+
+#ifdef __cplusplus
+extern "C" {            // Prevents name mangling of functions
+#endif
+
+//function to use guilistview when drop down box is selected.
+int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, const char *text, int *scrollIndex, int active, bool* editMode, bool* valueChanged);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif
+
+#if defined(GUI_DROPDOWN_LISTVIEW)
+
+int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, const char *text, int *scrollIndex, int active, bool* editMode, bool* valueChanged)
+{
+	
+	Rectangle boundsOpen = bounds;
+    boundsOpen.height = (itemsShowCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING));
+		
+	Rectangle& current_bounds = bounds;
+		
+	// Update control
+    //--------------------------------------------------------------------
+    
+	Vector2 mousePoint = GetMousePosition();
+
+	if (*editMode)
+	{
+		// Check if mouse has been pressed or released outside limits
+		if (!CheckCollisionPointRec(mousePoint, boundsOpen))
+		{
+			if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+			{
+				*editMode = false;
+				*scrollIndex = active;
+			} 
+		}
+		
+	}
+	else
+	{
+		//check if mouse clicked on drop down box
+		if (CheckCollisionPointRec(mousePoint, bounds))
+		{
+			if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+			{
+				*editMode = true;
+			}
+		}
+	}
+
+	if (*editMode){current_bounds = boundsOpen;}
+	
+	int itemSelected = -1;
+	
+	
+	itemSelected = GuiListView( current_bounds, text, scrollIndex, active );
+		
+	
+	if(itemSelected != -1 && itemSelected < itemsCount && itemSelected != active)
+	{
+		*valueChanged = true;
+		*editMode = false;
+		*scrollIndex = itemSelected;
+	}
+	else
+	{
+		itemSelected = active;
+		*valueChanged = false;
+	}
+	
+	return itemSelected;
+	
+}
+
+#endif
 
 
 //3d Object Timeline

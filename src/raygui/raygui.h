@@ -2157,9 +2157,10 @@ int GuiListView(Rectangle bounds, const char *text, int *scrollIndex, int active
     const char **items = NULL;
 
     if (text != NULL) items = GuiTextSplit(text, &itemsCount, NULL);
-
+	
     return GuiListViewEx(bounds, items, itemsCount, NULL, scrollIndex, active);
 }
+
 
 // List View control with extended parameters
 int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, int *scrollIndex, int active)

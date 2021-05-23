@@ -1,5 +1,7 @@
 #include "EditMultipleEchoZonesDialog.h"
 
+#define GUI_DROPDOWN_LISTVIEW
+
 #include "raygui/raygui_extras.h"
 
 #include <string>
@@ -23,7 +25,11 @@ bool EditMultipleEchoZonesDialog::CancelClickedOn(){return cancelClicked;}
 
 static std::string echo_zone_choices = "";
 static bool editez_dropDownEditMode = false;
-static int editez_dropDownEchoZoneActive = 0;
+static bool editez_item_selected_changed = false;
+
+static int editez_listview_scrollIndex = 1;
+static int editez_listview_activeIndex = 0;
+static int editez_listview_itemsCount = 0;
 
 static bool ez_name_box_pressed = false;
 static char ez_char_name[20] = "name here";
@@ -59,6 +65,8 @@ void EditMultipleEchoZonesDialog::InitGUI()
 		{
 			echo_zone_choices += m_effects_manager_ptr->echo_zones_vector[i].GetNameString() + ";";
 		}
+		
+		editez_listview_itemsCount = int( m_effects_manager_ptr->echo_zones_vector.size() );
 		
 		//initialize values in GUI text boxes based on first choice
 		//EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
@@ -126,11 +134,16 @@ void EditMultipleEchoZonesDialog::DrawDialog()
 		spreadValueParam.editMode = !spreadValueParam.editMode;
 	}
 	
-	if( GuiDropdownBox((Rectangle){ 350,130,140,30 }, echo_zone_choices.c_str(), &editez_dropDownEchoZoneActive, editez_dropDownEditMode) )
+	
+	editez_listview_activeIndex = Gui_Dropdown_ListView( (Rectangle){ 350,130,140,40 }, 3, editez_listview_itemsCount, echo_zone_choices.c_str(), 
+												&editez_listview_scrollIndex, editez_listview_activeIndex, &editez_dropDownEditMode,&editez_item_selected_changed
+											);
+											
+	if(editez_item_selected_changed )
 	{
-		editez_dropDownEditMode = !editez_dropDownEditMode;
-		m_selection_index = editez_dropDownEchoZoneActive;
+		m_selection_index = editez_listview_activeIndex;
 		EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(m_selection_index);
+		editez_item_selected_changed = false;
 	}
 	
 	okClicked = GuiButton( (Rectangle){ 400, 550, 70, 30 }, GuiIconText(0, "OK") );
