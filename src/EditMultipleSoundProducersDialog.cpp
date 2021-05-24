@@ -1,5 +1,7 @@
 #include "EditMultipleSoundProducersDialog.h"
 
+#include "global_variables.h"
+
 #include "raygui/raygui.h"
 
 #include <cstring>
@@ -23,11 +25,11 @@ static int edit_soundproducer_listview_activeIndex = 0;
 static int edit_soundproducer_listview_itemsCount = 0;
 
 
-static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
 static char editsp_char_name[20] = "name here";
 static bool editsp_name_box_pressed = false;
@@ -144,9 +146,9 @@ void EditMultipleSoundProducersDialog::resetConfig()
 	yPosition = 0;
 	zPosition = 0;
 	
-	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
-	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
-	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
+	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
+	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 	
 	sound_bank_account_num = 0;
 	okClicked = false;
@@ -176,9 +178,9 @@ void EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(size_t cho
 			yPosition = thisSoundProducer->GetPositionY();
 			zPosition = thisSoundProducer->GetPositionZ();
 			
-			xValueParam = InitValidFloatParamSettings(xPosition, 0.0f, -30.0f, 30.0f, std::to_string(xPosition).c_str());
-			yValueParam = InitValidFloatParamSettings(yPosition, 0.0f, -30.0f, 30.0f, std::to_string(yPosition).c_str());
-			zValueParam = InitValidFloatParamSettings(zPosition, 0.0f, -30.0f, 30.0f, std::to_string(zPosition).c_str());
+			xValueParam = InitValidFloatParamSettings(xPosition, 0.0f, min_position_value, max_position_value, std::to_string(xPosition).c_str());
+			yValueParam = InitValidFloatParamSettings(yPosition, 0.0f, min_position_value, max_position_value, std::to_string(yPosition).c_str());
+			zValueParam = InitValidFloatParamSettings(zPosition, 0.0f, min_position_value, max_position_value, std::to_string(zPosition).c_str());
 			
 			//update sound bank account number
 			sound_bank_account_num = thisSoundProducer->GetAccountNumber();

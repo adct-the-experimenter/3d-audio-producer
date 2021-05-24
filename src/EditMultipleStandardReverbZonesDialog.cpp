@@ -1,5 +1,7 @@
 #include "EditMultipleStandardReverbZonesDialog.h"
 
+#include "global_variables.h"
+
 #include "raygui/raygui_extras.h"
 
 #include <string>
@@ -35,11 +37,11 @@ static char sr_char_name[20] = "name here";
 
 //InitValidFloatParamSettings(current,default,min,max,initialText)
 
-static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
 static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 
@@ -407,11 +409,11 @@ void EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(size_t c
 		strncpy(sr_char_name, thisReverbZone->GetNameString().c_str(), 20);
 		sr_char_name[19] = '\0';
 		
-		xValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionX(), 0.0f, -30.0f, 30.0f, std::to_string(thisReverbZone->GetPositionX()).c_str() );
+		xValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionX(), 0.0f, min_position_value, max_position_value, std::to_string(thisReverbZone->GetPositionX()).c_str() );
 
-		yValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionY(), 0.0f, -30.0f, 30.0f, std::to_string(thisReverbZone->GetPositionY()).c_str());
+		yValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionY(), 0.0f, min_position_value, max_position_value, std::to_string(thisReverbZone->GetPositionY()).c_str());
 
-		zValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionZ(), 0.0f, -30.0f, 30.0f, std::to_string(thisReverbZone->GetPositionZ()).c_str());
+		zValueParam = InitValidFloatParamSettings(thisReverbZone->GetPositionZ(), 0.0f, min_position_value, max_position_value, std::to_string(thisReverbZone->GetPositionZ()).c_str());
 
 		widthValueParam = InitValidFloatParamSettings(thisReverbZone->GetWidth(), 10.0f, 1.0f, 40.0f, std::to_string(thisReverbZone->GetWidth()).c_str());
 

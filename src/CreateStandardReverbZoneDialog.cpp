@@ -1,5 +1,7 @@
 #include "CreateStandardReverbZoneDialog.h"
 
+#include "global_variables.h"
+
 #include "raygui/raygui.h"
 
 #include "raygui/raygui_extras.h"
@@ -16,7 +18,6 @@ CreateStandardReverbZoneDialog::CreateStandardReverbZoneDialog()
 void CreateStandardReverbZoneDialog::SetPointerToEffectsManager(EffectsManager* effects_manager){m_effects_manager_ptr = effects_manager;}
 
 std::string& CreateStandardReverbZoneDialog::getNewName(){return name;}
-
 void CreateStandardReverbZoneDialog::getNewPosition(float& x, float& y, float& z)
 {
 	x = xPosition;
@@ -33,11 +34,11 @@ static char sr_char_name[20] = "name here";
 
 //InitValidFloatParamSettings(current,default,min,max,initialText)
 
-static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
 static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 
@@ -292,9 +293,9 @@ void CreateStandardReverbZoneDialog::resetConfig()
 	okClicked = false;
 	cancelClicked = false;
 	
-	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
-	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
-	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -10.0f, 10.0f, "0.0");
+	xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
+	yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
+	zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 	
 	widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 	

@@ -1,5 +1,7 @@
 #include "EditMultipleEchoZonesDialog.h"
 
+#include "global_variables.h"
+
 #define GUI_DROPDOWN_LISTVIEW
 
 #include "raygui/raygui_extras.h"
@@ -36,11 +38,11 @@ static char ez_char_name[20] = "name here";
 
 //InitValidFloatParamSettings(current,default,min,max,initialText)
 
-static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
-static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
+static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
 static ValidFloatParamSettings widthValueParam = InitValidFloatParamSettings(10.0f, 10.0f, 1.0f, 40.0f, "10.0");
 
@@ -340,11 +342,11 @@ void EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(size_t choice)
 		strncpy(ez_char_name, thisEchoZone->GetNameString().c_str(), 20);
 		ez_char_name[19] = '\0';
 		
-		xValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionX(), 0.0f, -30.0f, 30.0f, std::to_string(thisEchoZone->GetPositionX()).c_str() );
+		xValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionX(), 0.0f, min_position_value, max_position_value, std::to_string(thisEchoZone->GetPositionX()).c_str() );
 
-		yValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionY(), 0.0f, -30.0f, 30.0f, std::to_string(thisEchoZone->GetPositionY()).c_str() );
+		yValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionY(), 0.0f, min_position_value, max_position_value, std::to_string(thisEchoZone->GetPositionY()).c_str() );
 
-		zValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionZ(), 0.0f, -30.0f, 30.0f, std::to_string(thisEchoZone->GetPositionZ()).c_str() );
+		zValueParam = InitValidFloatParamSettings(thisEchoZone->GetPositionZ(), 0.0f, min_position_value, max_position_value, std::to_string(thisEchoZone->GetPositionZ()).c_str() );
 
 		widthValueParam = InitValidFloatParamSettings(thisEchoZone->GetWidth(), 10.0f, 1.0f, 40.0f, std::to_string(thisEchoZone->GetWidth()).c_str() );
 
