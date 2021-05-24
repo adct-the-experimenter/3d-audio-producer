@@ -346,8 +346,8 @@ void MainGuiEditor::HandleEvents()
 
 void MainGuiEditor::logic()
 {
-	//if picker ray launched
-	if(picker_ray_launched)
+	//if picker ray launched, and dialog is not in use.
+	if(picker_ray_launched && !dialogInUse)
 	{
 		bool collision = false;
 		

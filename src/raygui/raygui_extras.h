@@ -198,12 +198,25 @@ bool GuiTextBox_ValidValueFloatSimple(Rectangle rect, int textSize, ValidFloatPa
 #ifndef GUI_DROPDOWN_LISTVIEW_H
 #define GUI_DROPDOWN_LISTVIEW_H
 
+typedef struct 
+{
+	int itemsShowCount;
+	bool editMode;
+	bool valueChanged;
+	int scrollIndex;
+} DropDownListViewSettings;
+
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions
 #endif
 
+DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex);
+
 //function to use guilistview when drop down box is selected.
 int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, const char *text, int *scrollIndex, int active, bool* editMode, bool* valueChanged);
+
+//function to use guilistview when drop down box is selected.
+int Gui_Dropdown_ListView_Simple(DropDownListViewSettings* settings,Rectangle bounds, const char *text, int itemsCount, int active);
 
 #ifdef __cplusplus
 }
@@ -213,6 +226,7 @@ int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, 
 #endif
 
 #if defined(GUI_DROPDOWN_LISTVIEW)
+
 
 int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, const char *text, int *scrollIndex, int active, bool* editMode, bool* valueChanged)
 {
@@ -275,6 +289,24 @@ int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, 
 	return itemSelected;
 	
 }
+
+DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
+{
+	DropDownListViewSettings settings = { 0 };
+	
+	settings.itemsShowCount = itemsShowCount;
+	settings.editMode = false;
+	settings.valueChanged = false;
+	settings.scrollIndex = 0;
+	
+	return settings;
+}
+
+int Gui_Dropdown_ListView_Simple(DropDownListViewSettings* settings,Rectangle bounds, const char *text, int itemsCount, int active)
+{
+	return Gui_Dropdown_ListView(bounds, settings->itemsShowCount, itemsCount, text, &settings->scrollIndex, active, &settings->editMode, &settings->valueChanged);
+}
+
 
 #endif
 

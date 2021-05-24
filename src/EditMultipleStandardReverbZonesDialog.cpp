@@ -22,8 +22,13 @@ bool EditMultipleStandardReverbZonesDialog::OkClickedOn(){return okClicked;}
 bool EditMultipleStandardReverbZonesDialog::CancelClickedOn(){return cancelClicked;}
 
 static std::string standard_reverb_zone_choices = "";
-static bool editsr_dropDownEditMode = false;
-static int editsr_dropDownZoneActive = 0;
+
+//DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
+static DropDownListViewSettings dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
+
+static int editsr_listview_activeIndex = 0;
+static int editsr_listview_itemsCount = 0;
+
 
 static bool sr_name_box_pressed = false;
 static char sr_char_name[20] = "name here";
@@ -73,6 +78,8 @@ void EditMultipleStandardReverbZonesDialog::InitGUI()
 		{
 			standard_reverb_zone_choices += m_effects_manager_ptr->standard_reverb_zones_vector[i].GetNameString() + ";";
 		}
+		
+		editsr_listview_itemsCount = int(m_effects_manager_ptr->standard_reverb_zones_vector.size());
 		
 		//initialize values in GUI text boxes based on first choice
 		//EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
@@ -174,11 +181,25 @@ void EditMultipleStandardReverbZonesDialog::DrawDialog()
 		roomRolloffValueParam.editMode = !roomRolloffValueParam.editMode;
 	}
 	
+	/*
 	if( GuiDropdownBox((Rectangle){ 300,100,140,30 }, standard_reverb_zone_choices.c_str(), &editsr_dropDownZoneActive, editsr_dropDownEditMode) )
 	{
 		editsr_dropDownEditMode = !editsr_dropDownEditMode;
 		m_selection_index = editsr_dropDownZoneActive;
 		EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+	}
+	*/
+	
+	editsr_listview_activeIndex = Gui_Dropdown_ListView_Simple(&dropdown_listview_settings, (Rectangle){ 300,100,140,40 }, 
+																standard_reverb_zone_choices.c_str(), editsr_listview_itemsCount,
+																editsr_listview_activeIndex
+															);
+											
+	if(dropdown_listview_settings.valueChanged )
+	{
+		m_selection_index = editsr_listview_activeIndex;
+		EditMultipleStandardReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+		dropdown_listview_settings.valueChanged = false;
 	}
 	
 	okClicked = GuiButton( (Rectangle){ 400,560, 70, 30 }, GuiIconText(0, "OK") );

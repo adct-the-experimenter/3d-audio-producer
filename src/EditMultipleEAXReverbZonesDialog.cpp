@@ -22,8 +22,12 @@ bool EditMultipleEAXReverbZonesDialog::OkClickedOn(){return okClicked;}
 bool EditMultipleEAXReverbZonesDialog::CancelClickedOn(){return cancelClicked;}
 
 static std::string eax_reverb_zone_choices = "";
-static bool editer_dropDownEditMode = false;
-static int editer_dropDownZoneActive = 0;
+
+//DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
+static DropDownListViewSettings dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
+
+static int editer_listview_activeIndex = 0;
+static int editer_listview_itemsCount = 0;
 
 static bool er_name_box_pressed = false;
 static char er_char_name[20] = "name here";
@@ -102,7 +106,7 @@ void EditMultipleEAXReverbZonesDialog::DrawDialog()
 	
 	//initialize text fields
 	
-	if( GuiTextBox((Rectangle){300,70,100,50}, er_char_name, 20, er_name_box_pressed) )
+	if( GuiTextBox((Rectangle){300,80,100,50}, er_char_name, 20, er_name_box_pressed) )
 	{
 		er_name_box_pressed = !er_name_box_pressed;
 	}
@@ -224,11 +228,25 @@ void EditMultipleEAXReverbZonesDialog::DrawDialog()
 	cancelClicked = GuiButton( (Rectangle){ 500, 570, 70, 30 }, GuiIconText(0, "Cancel") );
 	if(exit){cancelClicked = true;}
 	
+	/*
 	if( GuiDropdownBox((Rectangle){ 300,50,140,30 }, eax_reverb_zone_choices.c_str(), &editer_dropDownZoneActive, editer_dropDownEditMode) )
 	{
 		editer_dropDownEditMode = !editer_dropDownEditMode;
 		m_selection_index = editer_dropDownZoneActive;
 		EditMultipleEAXReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+	}
+	*/
+	
+	editer_listview_activeIndex = Gui_Dropdown_ListView_Simple(&dropdown_listview_settings, (Rectangle){ 300,50,140,40 }, 
+																eax_reverb_zone_choices.c_str(), editer_listview_itemsCount,
+																editer_listview_activeIndex
+															);
+											
+	if(dropdown_listview_settings.valueChanged )
+	{
+		m_selection_index = editer_listview_activeIndex;
+		EditMultipleEAXReverbZonesDialog::ReverbZoneSelectedInListBox(m_selection_index);
+		dropdown_listview_settings.valueChanged = false;
 	}
 	
 	if(okClicked)

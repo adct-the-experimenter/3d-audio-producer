@@ -24,10 +24,10 @@ bool EditMultipleEchoZonesDialog::OkClickedOn(){return okClicked;}
 bool EditMultipleEchoZonesDialog::CancelClickedOn(){return cancelClicked;}
 
 static std::string echo_zone_choices = "";
-static bool editez_dropDownEditMode = false;
-static bool editez_item_selected_changed = false;
 
-static int editez_listview_scrollIndex = 1;
+//DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
+static DropDownListViewSettings dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
+
 static int editez_listview_activeIndex = 0;
 static int editez_listview_itemsCount = 0;
 
@@ -134,16 +134,16 @@ void EditMultipleEchoZonesDialog::DrawDialog()
 		spreadValueParam.editMode = !spreadValueParam.editMode;
 	}
 	
-	
-	editez_listview_activeIndex = Gui_Dropdown_ListView( (Rectangle){ 350,130,140,40 }, 3, editez_listview_itemsCount, echo_zone_choices.c_str(), 
-												&editez_listview_scrollIndex, editez_listview_activeIndex, &editez_dropDownEditMode,&editez_item_selected_changed
-											);
+	editez_listview_activeIndex = Gui_Dropdown_ListView_Simple(&dropdown_listview_settings, (Rectangle){ 350,130,140,40 }, 
+																echo_zone_choices.c_str(), editez_listview_itemsCount,
+																editez_listview_activeIndex
+															);
 											
-	if(editez_item_selected_changed )
+	if(dropdown_listview_settings.valueChanged )
 	{
 		m_selection_index = editez_listview_activeIndex;
 		EditMultipleEchoZonesDialog::EchoZoneSelectedInListBox(m_selection_index);
-		editez_item_selected_changed = false;
+		dropdown_listview_settings.valueChanged = false;
 	}
 	
 	okClicked = GuiButton( (Rectangle){ 400, 550, 70, 30 }, GuiIconText(0, "OK") );
