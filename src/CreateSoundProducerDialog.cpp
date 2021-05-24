@@ -41,6 +41,9 @@ void CreateSoundProducerDialog::DrawDialog()
 	
 	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Create Sound Producer");
 	
+	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
+	
+	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
 	if(exit){cancelClicked = true;}
 	
 	
@@ -66,16 +69,14 @@ void CreateSoundProducerDialog::DrawDialog()
 	
 	if(m_sound_bank_ptr)
 	{
-		if( GuiDropdownBox((Rectangle){ 400,400,140,30 }, sound_choices.c_str(), &dropDownSoundActive, dropDownSoundMode) )
+		if( GuiDropdownBox((Rectangle){ 400,380,140,30 }, sound_choices.c_str(), &dropDownSoundActive, dropDownSoundMode) )
 		{
 			dropDownSoundMode = !dropDownSoundMode;
+			account_num = dropDownSoundActive;
 		}
 	}
 	
-	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
 	
-	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
-	if(exit){cancelClicked = true;}
 	
 	if(okClicked)
 	{

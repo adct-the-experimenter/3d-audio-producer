@@ -16,6 +16,12 @@ void EditMultipleSoundProducersDialog::Init(std::vector <std::unique_ptr <SoundP
 
 void EditMultipleSoundProducersDialog::SetPointerToSoundBank(SoundBank* thisSoundBank){m_sound_bank_ptr = thisSoundBank;}
 
+//DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
+static DropDownListViewSettings soundproducer_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
+
+static int edit_soundproducer_listview_activeIndex = 0;
+static int edit_soundproducer_listview_itemsCount = 0;
+
 
 static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, -30.0f, 30.0f, "0.0");
 
@@ -41,24 +47,11 @@ void EditMultipleSoundProducersDialog::DrawDialog()
 	
 	if(exit){cancelClicked = true;}
 	
+	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
 	
-	if(sound_producer_vector_ref)
-	{
-		if(soundproducer_choices == "")
-		{
-			for(size_t i = 0; i < sound_producer_vector_ref->size(); i++)
-			{
-				soundproducer_choices += sound_producer_vector_ref->at(i)->GetNameString() + ";";
-			}
-		}
-		
-		if( GuiDropdownBox((Rectangle){ 400,150,140,30 }, soundproducer_choices.c_str(), &editsp_dropDownSoundProducerActive, editsp_dropDownSoundProducerMode) )
-		{
-			editsp_dropDownSoundProducerMode = !editsp_dropDownSoundProducerMode;
-			current_sound_producer_editing_index = (size_t)editsp_dropDownSoundProducerActive;
-			EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
-		}
-	}
+	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
+	if(exit){cancelClicked = true;}
+	
 	
 	if( GuiTextBox((Rectangle){400,200,100,50}, editsp_char_name, 20, editsp_name_box_pressed) )
 	{
@@ -83,17 +76,30 @@ void EditMultipleSoundProducersDialog::DrawDialog()
 	
 	if(m_sound_bank_ptr)
 	{
-		if( GuiDropdownBox((Rectangle){ 400,400,140,30 }, sound_choices.c_str(), &editsp_dropDownSoundActive, editsp_dropDownSoundMode) )
+		
+		if( GuiDropdownBox((Rectangle){ 400,380,140,30 }, sound_choices.c_str(), &editsp_dropDownSoundActive, editsp_dropDownSoundMode) )
 		{
 			editsp_dropDownSoundMode = !editsp_dropDownSoundMode;
 			sound_bank_account_num = editsp_dropDownSoundActive;
 		}
+		
+		
 	}
 	
-	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
 	
-	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
-	if(exit){cancelClicked = true;}
+	
+	edit_soundproducer_listview_activeIndex = Gui_Dropdown_ListView_Simple(&soundproducer_dropdown_listview_settings, (Rectangle){ 400,150,140,40 }, 
+																soundproducer_choices.c_str(), edit_soundproducer_listview_itemsCount,
+																edit_soundproducer_listview_activeIndex
+															);
+											
+	if(soundproducer_dropdown_listview_settings.valueChanged )
+	{
+		current_sound_producer_editing_index = (size_t)edit_soundproducer_listview_activeIndex;
+		EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
+		soundproducer_dropdown_listview_settings.valueChanged = false;
+	}
+	
 	
 	if(okClicked)
 	{
@@ -201,15 +207,32 @@ void EditMultipleSoundProducersDialog::InitGUI()
 		{
 			sound_choices += std::to_string(i) + " | " + account_look_up[i] + ";";
 		}
+				
 		
-		//initialize values in GUI text boxes based on first choice
-		EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
 		
 	}
+	
+	if(sound_producer_vector_ref)
+	{
+		if(soundproducer_choices == "")
+		{
+			for(size_t i = 0; i < sound_producer_vector_ref->size(); i++)
+			{
+				soundproducer_choices += sound_producer_vector_ref->at(i)->GetNameString() + ";";
+			}
+			
+			edit_soundproducer_listview_itemsCount = (int)sound_producer_vector_ref->size();
+		}
+				
+	}
+	
+	//initialize values in GUI text boxes based on first choice
+	EditMultipleSoundProducersDialog::SoundProducerSelectedInListBox(current_sound_producer_editing_index);
 }
 
 void EditMultipleSoundProducersDialog::SetCurrentSoundProducerEditedIndex(size_t index)
 {
 	current_sound_producer_editing_index = index;
 	editsp_dropDownSoundProducerActive = current_sound_producer_editing_index;
+	
 }
