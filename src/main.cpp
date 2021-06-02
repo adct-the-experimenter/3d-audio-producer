@@ -77,7 +77,12 @@ void ApplicationLoop()
 void InitRaylibSystem()
 {
 	
-	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT  );  // Set MSAA 4X hint before windows creation
+	// Window configuration flags
+	// Set MSAA 4X hint before windows creation, multi-sample anti aliasing
+	// set v sync
+	//set resizeable window
+	//set to high DPI for very high resolutions
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI); 
 	
     InitWindow(screenWidth, screenHeight, "3d Audio Producer");
 	
