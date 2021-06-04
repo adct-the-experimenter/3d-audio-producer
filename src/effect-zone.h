@@ -59,7 +59,7 @@ public:
 	
 	void SetColor(Color color);
 	
-	void SetPickedBool(bool state);
+	virtual void SetPickedBool(bool state);
 	
 	//OpenAL Soft effects properties
 	

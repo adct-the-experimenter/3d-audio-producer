@@ -31,11 +31,8 @@ public:
 	//function to create echo zone
 	void CreateEchoZone(std::string& name, float& x, float& y, float& z, float& width, EchoZoneProperties& properties);
 	
-	//function to return a pointer to reverb zone vector
-	std::vector <EffectZone*> *GetReferenceToEffectZoneVector();
 	
 	//function to return a pointer to reverb zone from index in vector
-	EffectZone* GetPointerToEffectZone(size_t& index);
 	ReverbZone* GetPointerToStandardReverbZone(size_t& index);
 	ReverbZone* GetPointerToEAXReverbZone(size_t& index);
 	EchoZone* GetPointerToEchoZone(size_t& index);
@@ -75,15 +72,14 @@ private:
 	//pointer to listener
 	Listener* m_listener_ptr;
 	
-	//vector to contain many reverb zone objects
-	std::vector <EffectZone*> effect_zones_vector;
-	
+	//effect zone vectors
 	std::vector <ReverbZone> standard_reverb_zones_vector;
 	std::vector <ReverbZone> eax_reverb_zones_vector;
 	
 	std::vector <EchoZone> echo_zones_vector;
 	
-	
+	//function to determine if effect zone should be applied or not
+	void ApplyEffectZoneBasedOnListenerPosition(EffectZone* thisZone);
 	
 	//function to return bool of if a listener is in a reverb zone
 	bool IsListenerInThisEffectZone(EffectZone* thisZone);

@@ -392,6 +392,7 @@ void MainGuiEditor::logic()
 			
 			if(index != -1 && type != EffectsManager::EffectZoneType::NONE)
 			{
+				std::cout << "\nreturned index: " << index << std::endl;
 				effect_zone_type_picked = type;
 				effect_zone_picked = index;
 				effects_manager_ptr->SetEffectZonePicked(true,effect_zone_type_picked, effect_zone_picked);
