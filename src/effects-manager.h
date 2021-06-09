@@ -53,6 +53,10 @@ public:
 	
 	void SetEffectZonePicked(bool state,EffectZoneType& type, int& index);
 	
+	void RemoveStandardReverbZone(int& index);
+	void RemoveEAXReverbZone(int& index);
+	void RemoveEchoZone(int& index);
+	
 	friend class CreateEAXReverbZoneDialog;
 	friend class CreateStandardReverbZoneDialog;
 	friend class CreateEchoZoneDialog;

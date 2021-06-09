@@ -119,9 +119,16 @@ float SoundProducer::GetPositionZ(){return producer_position.z;}
 
 void SoundProducer::CreateSource()
 {
+	ALenum err;
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "1 create source. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
 	alGenSources(1, &m_source);
 	alSourcei(m_source, AL_SOURCE_RELATIVE, AL_FALSE);
-	assert(alGetError()==AL_NO_ERROR && "Failed to setup sound source.");
+	assert(alGetError() == AL_NO_ERROR && "Failed to setup sound source.");
 }
 
 void SoundProducer::setSource(ALuint& thisSource){m_source = thisSource;}

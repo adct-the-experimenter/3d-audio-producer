@@ -73,10 +73,7 @@ ReverbZone::ReverbZone() : EffectZone()
 
 ReverbZone::~ReverbZone()
 {
-	if(m_effect != 0 && m_slot != 0)
-	{	
-		FreeEffects();
-	}
+	
 }
 
 /* LoadEffect loads the given reverb properties into a new OpenAL effect
@@ -141,7 +138,7 @@ ALuint ReverbZone::LoadStandardReverbEffect(const EFXEAXREVERBPROPERTIES *reverb
     err = alGetError();
     if(err != AL_NO_ERROR)
     {
-        fprintf(stderr, "OpenAL error: %s\n", alGetString(err));
+        fprintf(stderr, "1. OpenAL error: %s\n", alGetString(err));
         if(alIsEffect(effect))
             alDeleteEffects(1, &effect);
         return 0;
@@ -209,9 +206,6 @@ ALuint ReverbZone::LoadEAXReverbEffect(const EFXEAXREVERBPROPERTIES *reverb)
 		if(err != AL_NO_ERROR)
 		{
 			fprintf(stderr, "value above code wrong. OpenAL error: %s\n", alGetString(err));
-			//if(alIsEffect(effect))
-			//    alDeleteEffects(1, &effect);
-			//return 0;
 		}
         
         alEffectf(effect, AL_EAXREVERB_REFLECTIONS_GAIN, reverb->flReflectionsGain);
@@ -622,16 +616,42 @@ ALuint ReverbZone::GetEffectsSlot(){return m_slot;}
 
 void ReverbZone::FreeEffects()
 {
-	if(m_effect != 0)
+	std::cout << "\nFree effects called!\n";
+	ALenum err;
+	
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "1. free effects. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
+	if(m_effect)
 	{
 		alDeleteEffects(1, &m_effect);
 		m_effect = 0;
 	}
-	if(m_slot != 0)
+	
+	m_effect = 0;
+	
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "2. free effects. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
+	if(m_slot)
 	{
 		 alDeleteAuxiliaryEffectSlots(1, &m_slot);
 		 m_slot = 0;
 	}
+	
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "3. free effects. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
+	m_slot = 0;
 }
 
 

@@ -45,33 +45,45 @@ void EffectsManager::Draw3DModels()
 
 void EffectsManager::CreateStandardReverbZone(std::string& name, float& x, float& y, float& z, float& width, ReverbStandardProperties& properties)
 {
-	ReverbZone r_zone;
-	
-	standard_reverb_zones_vector.push_back(r_zone);
-	
+	standard_reverb_zones_vector.emplace_back(ReverbZone());
 	standard_reverb_zones_vector.back().InitStandardReverbZoneWithGraphicalObject(name,x,y,z,width,properties);
-		
+}
+
+void EffectsManager::RemoveStandardReverbZone(int& index)
+{
+	standard_reverb_zones_vector[index].FreeEffects();
+	std::swap(standard_reverb_zones_vector[index],standard_reverb_zones_vector.back());
+	standard_reverb_zones_vector.pop_back();
 }
 
 
 void EffectsManager::CreateEAXReverbZone(std::string& name, float& x, float& y, float& z, float& width, ReverbEAXProperties& properties)
 {
-	ReverbZone r_zone;
-	
-	eax_reverb_zones_vector.push_back(r_zone);
-	
+		
+	eax_reverb_zones_vector.emplace_back(ReverbZone());	
 	eax_reverb_zones_vector.back().InitEAXReverbZoneWithGraphicalObject(name,x,y,z,width,properties);
-	
 }
+
+void EffectsManager::RemoveEAXReverbZone(int& index)
+{
+	eax_reverb_zones_vector[index].FreeEffects();
+	std::swap(eax_reverb_zones_vector[index],eax_reverb_zones_vector.back());
+	eax_reverb_zones_vector.pop_back();
+}
+	
 
 void EffectsManager::CreateEchoZone(std::string& name, float& x, float& y, float& z, float& width, EchoZoneProperties& properties)
 {
-	EchoZone e_zone;
-	
-	echo_zones_vector.push_back(e_zone);
-	
+	echo_zones_vector.emplace_back(EchoZone());
 	echo_zones_vector.back().InitEchoZoneWithGraphicalObject(name,x,y,z,width,properties);
 	
+}
+
+void EffectsManager::RemoveEchoZone(int& index)
+{
+	echo_zones_vector[index].FreeEffects();
+	std::swap(echo_zones_vector[index],echo_zones_vector.back());
+	echo_zones_vector.pop_back();
 }
 
 void EffectsManager::SetPointerToListener(Listener* listener){m_listener_ptr = listener;}
@@ -85,88 +97,7 @@ EchoZone* EffectsManager::GetPointerToEchoZone(size_t& index){return &echo_zones
 
 void EffectsManager::PerformEffectThreadOperation()
 {
-	
-	/*
-	//if there are effect zones
-	if( effect_zones_vector.size() > 0 && m_sound_producer_reg_ptr != nullptr)
-	{
-		//for each effect zone
-		for(size_t i = 0; i < effect_zones_vector.size(); i++)
-		{
-			//check if listener is in reverb zone
-			EffectZone* thisZone = effect_zones_vector[i];
-			
-			//check if zone is initialized
-			if( thisZone->GetWidth() != 0)
-			{
-				if(EffectsManager::IsListenerInThisEffectZone(thisZone))
-				{
-					//if listener is in the reverb zone
-					
-					//check if sound producers are inside the zone
-					if(m_sound_producer_reg_ptr->sound_producer_sources_vec.size() > 0)
-					{
-						for(size_t i = 0; i < m_sound_producer_reg_ptr->sound_producer_vector_ref->size(); i++)
-						{
-							SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
-							
-							//if no reverb is applied
-							if(!thisSoundProducer->GetEffectAppliedBool())
-							{
-								ALuint* source_ptr = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i)->getSource();
-							
-								//if there is a sound producer attached to sound producer track
-								if(thisSoundProducer != nullptr)
-								{
-									//if sound producer is inside the zone
-									if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone))
-									{										
-										//apply reverb to source of sound producer track
-										EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
-										
-									}
-								}
-							}
-							
-						}
-					}
-					else
-					{
-						break;
-					}
-				}
-				else
-				{
-					//if listener is not in the reverb zone
-					
-					for(size_t i = 0; i < m_sound_producer_reg_ptr->sound_producer_vector_ref->size(); i++)
-					{						
-						SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
-						
-						ALuint* source_ptr = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i)->getSource(); 
-						
-						//if there is a sound producer attached to sound producer track
-						if(thisSoundProducer != nullptr)
-						{
-							//if sound producer is inside the zone
-							if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone)
-							   || thisSoundProducer->GetEffectAppliedBool())
-							{
-								//remove reverb effect from sound producer track
-								EffectsManager::RemoveEffectFromThisSource(source_ptr);
-							}
-						}
-					}
-					
-				}
-				
-			}
-			
-		}
 		
-	}
-	*/
-	
 	//if there are effect zones
 	if( !m_sound_producer_reg_ptr)
 	{
@@ -425,7 +356,6 @@ void EffectsManager::CheckEffectZones3DPicking(Ray& picker_ray,EffectZoneType& t
 				
 				index = i;
 				type = EffectZoneType::STANDARD_REVERB;
-				std::cout << "\ncollision happened!\n" << "index:" << index << std::endl;
 				break;
 				return;
 			}
@@ -494,8 +424,6 @@ void EffectsManager::SetEffectZonePicked(bool state,EffectZoneType& type, int& i
 	{
 		case EffectZoneType::STANDARD_REVERB:
 		{
-			std::cout << "\nindex in set effect zone picked: " << index << std::endl;
-			std::cout << "state: " << state << std::endl;
 			standard_reverb_zones_vector[index].SetPickedBool(state);
 			break;
 		}

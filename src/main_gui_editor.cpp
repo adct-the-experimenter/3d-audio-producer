@@ -402,7 +402,6 @@ void MainGuiEditor::logic()
 			
 			if(index != -1 && type != EffectsManager::EffectZoneType::NONE)
 			{
-				std::cout << "\nreturned index: " << index << std::endl;
 				effect_zone_type_picked = type;
 				effect_zone_picked = index;
 				effects_manager_ptr->SetEffectZonePicked(true,effect_zone_type_picked, effect_zone_picked);
@@ -421,12 +420,28 @@ void MainGuiEditor::logic()
 	{
 		if(soundproducer_picked != -1)
 		{
-			std::cout << "delete sound producer " << soundproducer_picked << std::endl;
+			//std::cout << "delete sound producer " << soundproducer_picked << std::endl;
 			
 			std::swap( sound_producer_vector[soundproducer_picked],sound_producer_vector.back());
 			sound_producer_vector.pop_back();
 			
 			frame->soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(soundproducer_picked);
+			
+			soundproducer_picked = -1;
+		}
+		
+		if(effect_zone_picked != -1)
+		{
+			switch(effect_zone_type_picked)
+			{
+				case EffectsManager::EffectZoneType::STANDARD_REVERB:{ effects_manager_ptr->RemoveStandardReverbZone(effect_zone_picked); break;}
+				case EffectsManager::EffectZoneType::EAX_REVERB:{ effects_manager_ptr->RemoveEAXReverbZone(effect_zone_picked); break;}
+				case EffectsManager::EffectZoneType::ECHO:{ effects_manager_ptr->RemoveEchoZone(effect_zone_picked); break;}
+				default:{ break;}
+			}
+			
+			effect_zone_picked = -1;
+			effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
 		}
 	}
 	
