@@ -114,8 +114,6 @@ bool MainGuiEditor::OnInit()
 		// Create the main frame window
 		std::unique_ptr <MainFrame> thisFrame( new MainFrame("3D Audio Producer",&audio_engine) );
 		frame = std::move(thisFrame);
-
-
 		
 		MainGuiEditor::initListener();
 
@@ -215,7 +213,8 @@ static int effect_zone_picked = -1;
 //represent type of effect zone picked
 static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
 
-bool editKeyPressed = false;
+static bool editKeyPressed = false;
+static bool deleteKeyPressed = false;
 
 void MainGuiEditor::HandleEvents()
 {
@@ -270,6 +269,12 @@ void MainGuiEditor::HandleEvents()
 		editKeyPressed = true;
 	}
 	else{editKeyPressed = false;}
+	
+	if(IsKeyReleased(KEY_DELETE))
+	{
+		deleteKeyPressed = true;
+	}
+	else{deleteKeyPressed = false;}
 	
 	/*
 		//if b key pressed
@@ -374,7 +379,12 @@ void MainGuiEditor::logic()
 				sound_producer_vector[i]->SetPickedBool(collision);
 				
 				//break loop if one collision has happened
-				if(collision){soundproducer_picked = i; break;}
+				if(collision)
+				{
+					soundproducer_picked = i; 
+					
+					break;
+				}
 			}
 				
 		}
@@ -407,6 +417,18 @@ void MainGuiEditor::logic()
 		
 	}
 	
+	if(deleteKeyPressed)
+	{
+		if(soundproducer_picked != -1)
+		{
+			std::cout << "delete sound producer " << soundproducer_picked << std::endl;
+			
+			std::swap( sound_producer_vector[soundproducer_picked],sound_producer_vector.back());
+			sound_producer_vector.pop_back();
+			
+			frame->soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(soundproducer_picked);
+		}
+	}
 	
 	//run state for immediate mode sound player
 	im_sound_player.RunStateForPlayer();

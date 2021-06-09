@@ -129,3 +129,13 @@ void SoundProducerRegistry::RemoveSourceOfLastTrackFromSoundProducerTrackManager
 {
 	sound_producer_sources_vec.pop_back();
 }
+
+void SoundProducerRegistry::RemoveThisSourceFromSoundProducerRegistry(int& index)
+{
+	if(index >= 0)
+	{
+		std::swap(sound_producer_sources_vec[index],sound_producer_sources_vec.back());
+		sound_producer_sources_vec.pop_back();
+	}
+	
+}

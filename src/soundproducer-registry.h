@@ -42,10 +42,12 @@ public:
 	//function to clear all
 	void ClearAll();
 	
-	//function
+	//function to handle adding and removing sources in sound producer registry
 	void AddSourceOfLastSoundProducerToSoundProducerRegistry();
 	
 	void RemoveSourceOfLastTrackFromSoundProducerTrackManager();
+	
+	void RemoveThisSourceFromSoundProducerRegistry(int& index);
 	
 	friend class ImmediateModeSoundPlayer;
 	friend class EffectsManager;

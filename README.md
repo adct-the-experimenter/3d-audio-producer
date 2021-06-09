@@ -93,6 +93,7 @@ TODO
 
 Key 1 - Edit whatever was picked with mouse in 3d space.
 
+Key Delete or Key Del - Remove whatever was picked with mouse in 3d space.
 
 ## Feedback 
 
