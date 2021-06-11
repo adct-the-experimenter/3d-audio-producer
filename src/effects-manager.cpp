@@ -99,7 +99,7 @@ void EffectsManager::PerformEffectThreadOperation()
 {
 		
 	//if there are effect zones
-	if( !m_sound_producer_reg_ptr)
+	if( m_sound_producer_reg_ptr)
 	{
 		if(m_sound_producer_reg_ptr->sound_producer_sources_vec.size())
 		{
@@ -155,7 +155,6 @@ void EffectsManager::ApplyEffectZoneBasedOnListenerPosition(EffectZone* thisZone
 						{										
 							//apply reverb to source of sound producer track
 							EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
-							
 						}
 					}
 				}

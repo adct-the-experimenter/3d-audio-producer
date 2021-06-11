@@ -610,7 +610,6 @@ void MainGuiEditor::draw_object_creation_menu()
 			case EffectsManager::EffectZoneType::STANDARD_REVERB:
 			{ 
 				g_state = GuiState::EDIT_SR_ZONE;
-				dialogInUse = true;
 				edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 				edit_sr_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 				edit_sr_zone_dialog.InitGUI(); 
@@ -619,7 +618,6 @@ void MainGuiEditor::draw_object_creation_menu()
 			case EffectsManager::EffectZoneType::EAX_REVERB:
 			{
 				g_state = GuiState::EDIT_ER_ZONE;
-				dialogInUse = true;
 				edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 				edit_er_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 				edit_er_zone_dialog.InitGUI();
@@ -628,7 +626,6 @@ void MainGuiEditor::draw_object_creation_menu()
 			case EffectsManager::EffectZoneType::ECHO:
 			{
 				g_state = GuiState::EDIT_ECHO_ZONE; 
-				dialogInUse = true;
 				edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 				edit_echo_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 				edit_echo_zone_dialog.InitGUI(); 

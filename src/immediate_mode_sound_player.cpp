@@ -120,6 +120,7 @@ void ImmediateModeSoundPlayer::PlayAll()
 	//launch worker thread to apply certain effect if listener is in a certain effect zone
     std::thread effect_worker_thread(DetermineEffect);
   
+	//m_effects_manager_ptr->PerformEffectThreadOperation();
     
 	if(m_state == IMSoundPlayerState::NONE)
 	{

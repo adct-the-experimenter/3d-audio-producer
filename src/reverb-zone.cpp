@@ -652,6 +652,7 @@ void ReverbZone::FreeEffects()
 	}
 	
 	m_slot = 0;
+	
 }
 
 
