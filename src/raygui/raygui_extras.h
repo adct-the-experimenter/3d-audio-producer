@@ -126,6 +126,7 @@ bool GuiTextBox_ValidValueFloat(Rectangle rect, int textSize, bool editMode,
 			
 			//set text to current value
 			sprintf(textBuffer, "%f", *current_value);
+			textBuffer[8] = '\0';
 		}
 		
 		*valueChanged = false;
@@ -183,6 +184,7 @@ bool GuiTextBox_ValidValueFloatSimple(Rectangle rect, int textSize, ValidFloatPa
 			
 			//set text to current value
 			sprintf(param->textBuffer, "%f", param->current_value);
+			param->textBuffer[8] = '\0';
 		}
 		
 		param->valueChanged = false;
