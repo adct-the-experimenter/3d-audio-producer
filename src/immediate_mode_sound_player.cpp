@@ -4,9 +4,10 @@
 
 #include "raygui/raygui.h"
 
-#include <thread> //for uisng thread
+#include <thread> //for using thread
+#include <chrono>
 
-#define TIME_RESOLUTION 500
+#define TIME_RESOLUTION 100
 
 ImmediateModeSoundPlayer::ImmediateModeSoundPlayer()
 {
@@ -38,6 +39,8 @@ void ImmediateModeSoundPlayer::SetPointerToEffectsManager(EffectsManager* effect
 
 void ImmediateModeSoundPlayer::RunStateForPlayer()
 {
+	
+	
 	switch(m_state)
 	{
 		case IMSoundPlayerState::NONE:
@@ -70,7 +73,7 @@ void ImmediateModeSoundPlayer::RunStateForPlayer()
 			break;
 		}
 		case IMSoundPlayerState::PLAYING:{ ImmediateModeSoundPlayer::PlayAll(); break;}
-		case IMSoundPlayerState::PAUSED:{ break;}
+		case IMSoundPlayerState::PAUSED:{ ImmediateModeSoundPlayer::PauseAll(); break;}
 		case IMSoundPlayerState::FAST_FORWARDING:{ break;}
 		case IMSoundPlayerState::REWINDING:{ break;}
 	}
@@ -116,6 +119,9 @@ void DetermineEffect()
 
 void ImmediateModeSoundPlayer::PlayAll()
 {
+	typedef std::chrono::high_resolution_clock clock;
+	typedef std::chrono::duration<float, std::milli> duration;
+	
 	
 	//launch worker thread to apply certain effect if listener is in a certain effect zone
     std::thread effect_worker_thread(DetermineEffect);
@@ -152,8 +158,28 @@ void ImmediateModeSoundPlayer::PlayAll()
 		effect_worker_thread.join();
   	
 	}
+	else if(m_state == IMSoundPlayerState::PAUSED)
+	{
+		//wait for worker thread to finish effect operation
+		effect_worker_thread.join();
+		
+		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
+		{
+			std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+			std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
+			
+			if(stream_filepath != "")
+			{
+				ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
+				buffering_audio_players_vec[it].ClearQueue(sourceToManipulatePtr);
+				buffering_audio_players_vec[it].StartPlayerBuffering(sourceToManipulatePtr,m_current_time);
+			}	
+			
+		}
+	}
 	else
 	{
+		clock::time_point start_time = clock::now();
 		
 		//buffer audio for all sound producer sources with buffer audio players
 		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
@@ -177,11 +203,19 @@ void ImmediateModeSoundPlayer::PlayAll()
 			mainAudioPlayer.PlayMultipleUpdatedPlayerBuffers(&m_sound_producer_reg_ptr->sound_producer_sources_vec);
 		}
 		
+		clock::time_point end_time = clock::now();
 		
 		//buffering time is 500 milliseconds
+		//m_current_time += time_res_seconds;
+		duration time_inc = end_time - start_time;
+		time_res_seconds = static_cast <double> (time_inc.count() / 1000); 
 		m_current_time += time_res_seconds;
 		
+		
+		//std::cout << "\n current time: " << m_current_time << std::endl;
+		
 	}
+	
 	
 	
 }
@@ -189,19 +223,28 @@ void ImmediateModeSoundPlayer::PlayAll()
 //pause playing sounds
 void ImmediateModeSoundPlayer::PauseAll()
 {
-	for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
+	
+	if(m_state != IMSoundPlayerState::PAUSED)
 	{
-		std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
-		std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
+		m_state = IMSoundPlayerState::PAUSED;
 		
-		if(stream_filepath != "")
+		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 		{
-			ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
-			buffering_audio_players_vec[it].RewindSource(sourceToManipulatePtr);
-			buffering_audio_players_vec[it].ClearQueue(sourceToManipulatePtr);
+			std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+			std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
+			
+			if(stream_filepath != "")
+			{
+				ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
+				buffering_audio_players_vec[it].RewindSource(sourceToManipulatePtr);
+				buffering_audio_players_vec[it].ClearQueue(sourceToManipulatePtr);
+			}
+			
 		}
 		
+		m_current_time += time_res_seconds;
 	}
+	
 }
 	
 //stop and restart all sounds
