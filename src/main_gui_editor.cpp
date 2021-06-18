@@ -292,8 +292,6 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			//float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() - distanceToMove; 
-			//sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
 			soundproducer_velocity_z = -soundproducer_speed;
 		}
 	}
@@ -302,8 +300,6 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			//float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() - distanceToMove; 
-			//sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
 			soundproducer_velocity_x = -soundproducer_speed;
 		}
 	}
@@ -312,8 +308,6 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			//float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() + distanceToMove; 
-			//sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
 			soundproducer_velocity_z = soundproducer_speed;
 		}
 	
@@ -323,8 +317,6 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			//float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() + distanceToMove; 
-			//sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
 			soundproducer_velocity_x = soundproducer_speed;
 		}
 		
@@ -334,8 +326,6 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			//float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() - distanceToMove; 
-			//sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
 			soundproducer_velocity_y = -soundproducer_speed;
 		}
 		
@@ -345,8 +335,6 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			//float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() + distanceToMove; 
-			//sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
 			soundproducer_velocity_y = soundproducer_speed;
 		}
 		
@@ -367,13 +355,13 @@ void MainGuiEditor::logic()
 	new_listener_position_y = listener->getPositionY() + listener_velocity_y*dt;
 	new_listener_position_z = listener->getPositionZ() + listener_velocity_z*dt;
 	
-	listener_velocity_x = 0;
-	listener_velocity_y = 0;
-	listener_velocity_z = 0;
-	
 	listener->setPositionX(new_listener_position_x);
 	listener->setPositionY(new_listener_position_y);
 	listener->setPositionZ(new_listener_position_z);
+	
+	listener_velocity_x = 0;
+	listener_velocity_y = 0;
+	listener_velocity_z = 0;
 	
 	//move sound producer picked
 	if(soundproducer_picked != -1)
