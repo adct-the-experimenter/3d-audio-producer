@@ -27,8 +27,6 @@
 #include "raygui/gui_file_dialog.h"
 
 
-
-
 //#include "setup-serial-dialog.h"
 
 
@@ -183,7 +181,6 @@ void MainGuiEditor::Draw3DModels()
 	{
 		for(size_t i = 0; i < sound_producer_vector.size(); i++)
 		{
-			
 			//draw model of sound producer
 			sound_producer_vector[i]->DrawModel();
 		}
@@ -215,6 +212,20 @@ static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::
 static bool editKeyPressed = false;
 static bool deleteKeyPressed = false;
 
+//listener movement variables
+static float listener_speed = 10.0f;
+
+static float listener_velocity_x = 0;
+static float listener_velocity_y = 0;
+static float listener_velocity_z = 0;
+
+//sound producer movement variables
+static float soundproducer_speed = 10.0f;
+
+static float soundproducer_velocity_x = 0;
+static float soundproducer_velocity_y = 0;
+static float soundproducer_velocity_z = 0;
+
 void MainGuiEditor::HandleEvents()
 {
 	if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -234,32 +245,32 @@ void MainGuiEditor::HandleEvents()
 	//if w key pressed
 	if( IsKeyDown(KEY_W) )
 	{
-		if(listener){listener->MoveForward(distanceToMove);}
+		listener_velocity_z = -listener_speed;
 	}
 	//if a key pressed
 	if( IsKeyDown(KEY_A) )
 	{
-		if(listener){listener->MoveLeft(distanceToMove);}
+		listener_velocity_x = -listener_speed;
 	}
 	//if s key pressed
 	if( IsKeyDown(KEY_S) )
 	{
-		if(listener){listener->MoveBack(distanceToMove);}
+		listener_velocity_z = listener_speed;
 	}
 	//if d key pressed
 	if( IsKeyDown(KEY_D) )
 	{
-		if(listener){listener->MoveRight(distanceToMove);}
+		listener_velocity_x = listener_speed;
 	}
 	//if q key pressed
 	if( IsKeyDown(KEY_Q) )
 	{
-		if(listener){listener->MoveDown(distanceToMove);}
+		listener_velocity_y = -listener_speed;
 	}
 	//if e key pressed
 	if( IsKeyDown(KEY_E) )
 	{
-		if(listener){listener->MoveUp(distanceToMove);}
+		listener_velocity_y = listener_speed;
 	}
 	
 	//if key 1 is pressed
@@ -275,24 +286,15 @@ void MainGuiEditor::HandleEvents()
 	}
 	else{deleteKeyPressed = false;}
 	
-	/*
-		//if b key pressed
-		case 66:
-		{
-			if(sound_producer_vector.size() > 0)
-			{
-				frame->soundproducertrack_manager_ptr->BrowseAudioForThisSoundProducer(sound_producer_vector.back().get());
-			}
-			break;
-		}
-	*/	
+		
 	//if i key pressed
 	if( IsKeyDown(KEY_I) )
 	{
 		if(soundproducer_picked != -1)
 		{	
-			float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() - distanceToMove; 
-			sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+			//float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() - distanceToMove; 
+			//sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+			soundproducer_velocity_z = -soundproducer_speed;
 		}
 	}
 	//j key pressed
@@ -300,8 +302,9 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() - distanceToMove; 
-			sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+			//float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() - distanceToMove; 
+			//sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+			soundproducer_velocity_x = -soundproducer_speed;
 		}
 	}
 	//k key pressed
@@ -309,8 +312,9 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() + distanceToMove; 
-			sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+			//float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() + distanceToMove; 
+			//sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+			soundproducer_velocity_z = soundproducer_speed;
 		}
 	
 	}
@@ -319,8 +323,9 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() + distanceToMove; 
-			sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+			//float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() + distanceToMove; 
+			//sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+			soundproducer_velocity_x = soundproducer_speed;
 		}
 		
 	}
@@ -329,8 +334,9 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() - distanceToMove; 
-			sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
+			//float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() - distanceToMove; 
+			//sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
+			soundproducer_velocity_y = -soundproducer_speed;
 		}
 		
 	}
@@ -339,17 +345,52 @@ void MainGuiEditor::HandleEvents()
 	{
 		if(soundproducer_picked != -1)
 		{	
-			float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() + distanceToMove; 
-			sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
+			//float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() + distanceToMove; 
+			//sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
+			soundproducer_velocity_y = soundproducer_speed;
 		}
 		
 	}
 
 }
 
+static float new_listener_position_x = 0;
+static float new_listener_position_y = 0;
+static float new_listener_position_z = 0;
 
 void MainGuiEditor::logic()
 {
+	float dt = GetFrameTime();
+	
+	//move listener
+	new_listener_position_x = listener->getPositionX() + listener_velocity_x*dt;
+	new_listener_position_y = listener->getPositionY() + listener_velocity_y*dt;
+	new_listener_position_z = listener->getPositionZ() + listener_velocity_z*dt;
+	
+	listener_velocity_x = 0;
+	listener_velocity_y = 0;
+	listener_velocity_z = 0;
+	
+	listener->setPositionX(new_listener_position_x);
+	listener->setPositionY(new_listener_position_y);
+	listener->setPositionZ(new_listener_position_z);
+	
+	//move sound producer picked
+	if(soundproducer_picked != -1)
+	{
+		float newX = sound_producer_vector.at(soundproducer_picked)->GetPositionX() + soundproducer_velocity_x*dt;
+		float newY = sound_producer_vector.at(soundproducer_picked)->GetPositionY() + soundproducer_velocity_y*dt;
+		float newZ = sound_producer_vector.at(soundproducer_picked)->GetPositionZ() + soundproducer_velocity_z*dt; 
+		
+		sound_producer_vector.at(soundproducer_picked)->SetPositionX(newX);
+		sound_producer_vector.at(soundproducer_picked)->SetPositionY(newY);
+		sound_producer_vector.at(soundproducer_picked)->SetPositionZ(newZ);
+		
+		soundproducer_velocity_x = 0;
+		soundproducer_velocity_y = 0;
+		soundproducer_velocity_z = 0;
+	}
+	
 	//if picker ray launched, and dialog is not in use.
 	if(picker_ray_launched && !dialogInUse)
 	{

@@ -152,7 +152,7 @@ void EffectsManager::ApplyEffectZoneBasedOnListenerPosition(EffectZone* thisZone
 					{
 						//if sound producer is inside the zone
 						if(EffectsManager::IsThisSoundProducerInsideEffectZone(thisSoundProducer,thisZone))
-						{										
+						{			
 							//apply reverb to source of sound producer track
 							EffectsManager::ApplyThisEffectZoneEffectToThisSource(source_ptr,thisZone);
 						}
