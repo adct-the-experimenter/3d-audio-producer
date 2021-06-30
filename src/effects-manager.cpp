@@ -444,3 +444,16 @@ void EffectsManager::SetEffectZonePicked(bool state,EffectZoneType& type, int& i
 		default:{ break;}
 	}
 }
+
+void EffectsManager::RemoveEffectFromAllSources()
+{
+	for(size_t i = 0; i < m_sound_producer_reg_ptr->sound_producer_vector_ref->size(); i++)
+	{						
+		SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(i).get();
+		
+		ALuint* source_ptr = thisSoundProducer->getSource(); 		
+		
+		EffectsManager::RemoveEffectFromThisSource(source_ptr);
+		thisSoundProducer->SetEffectAppliedBool(false);
+	}
+}

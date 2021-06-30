@@ -68,6 +68,8 @@ public:
 	friend class SaveSystem;
 	friend class LoadSystem;
 	
+	void RemoveEffectFromAllSources();
+	
 private:
 	
 	//pointer to manager that contains all soundproducer tracks used
@@ -101,6 +103,8 @@ private:
 	
 	//std::vector <SoundProducerTrack*> *GetReferenceToSoundProducerTracksVector();
 	SoundProducerRegistry* m_sound_producer_reg_ptr;
+	
+	
 };
 
 

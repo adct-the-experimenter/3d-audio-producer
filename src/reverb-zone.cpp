@@ -616,7 +616,7 @@ ALuint ReverbZone::GetEffectsSlot(){return m_slot;}
 
 void ReverbZone::FreeEffects()
 {
-	std::cout << "\nFree effects called!\n";
+	//std::cout << "\nFree effects called!\n";
 	ALenum err;
 	
 	err = alGetError();

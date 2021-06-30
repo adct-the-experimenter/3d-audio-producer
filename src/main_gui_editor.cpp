@@ -346,6 +346,8 @@ static float new_listener_position_x = 0;
 static float new_listener_position_y = 0;
 static float new_listener_position_z = 0;
 
+static bool sound_player_active = false;
+
 void MainGuiEditor::logic()
 {
 	float dt = GetFrameTime();
@@ -444,7 +446,7 @@ void MainGuiEditor::logic()
 		
 	}
 	
-	if(deleteKeyPressed)
+	if(deleteKeyPressed && !sound_player_active)
 	{
 		if(soundproducer_picked != -1)
 		{
@@ -476,6 +478,7 @@ void MainGuiEditor::logic()
 	//run state for immediate mode sound player
 	im_sound_player.RunStateForPlayer();
 	
+	sound_player_active = im_sound_player.PlayerInActiveUse();
 }
 
 void MainGuiEditor::DrawGUI_Items()

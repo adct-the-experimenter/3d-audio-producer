@@ -27,6 +27,9 @@ public:
 	
 	enum class IMSoundPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, REWINDING, FAST_FORWARDING };
 	
+	//function to indicate that player is not in none or paused state.
+	bool PlayerInActiveUse();
+	
 private:
 	
 	//state of immmediate mode player
@@ -65,6 +68,9 @@ private:
 	
 	//amonut of time to increment for playback
 	double time_res_seconds;
+	
+	bool player_active_use;
+	
 };
 
 #endif

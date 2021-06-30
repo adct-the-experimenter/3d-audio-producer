@@ -18,6 +18,8 @@ ImmediateModeSoundPlayer::ImmediateModeSoundPlayer()
 	m_sound_producer_reg_ptr = nullptr;
 	
 	time_res_seconds = double(TIME_RESOLUTION) / 1000;
+	
+	player_active_use = false;
 }
 
 ImmediateModeSoundPlayer::~ImmediateModeSoundPlayer()
@@ -36,6 +38,8 @@ void ImmediateModeSoundPlayer::SetPointerToEffectsManager(EffectsManager* effect
 	m_effects_manager_ptr = effects_manager;
 	local_effect_manager_ptr = effects_manager;
 }
+
+bool ImmediateModeSoundPlayer::PlayerInActiveUse(){return player_active_use;}
 
 void ImmediateModeSoundPlayer::RunStateForPlayer()
 {
@@ -119,6 +123,8 @@ void DetermineEffect()
 
 void ImmediateModeSoundPlayer::PlayAll()
 {
+	player_active_use = true;
+	
 	typedef std::chrono::high_resolution_clock clock;
 	typedef std::chrono::duration<float, std::milli> duration;
 	
@@ -243,6 +249,9 @@ void ImmediateModeSoundPlayer::PauseAll()
 		}
 		
 		m_current_time += time_res_seconds;
+		
+		player_active_use = false;
+		m_effects_manager_ptr->RemoveEffectFromAllSources();
 	}
 	
 }
@@ -267,6 +276,9 @@ void ImmediateModeSoundPlayer::StopAll()
 		}
 		
 	}
+	
+	player_active_use = false;
+	m_effects_manager_ptr->RemoveEffectFromAllSources();
 	
 	m_current_time = 0;
 }

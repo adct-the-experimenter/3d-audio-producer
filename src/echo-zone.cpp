@@ -69,10 +69,7 @@ EchoZone::EchoZone() : EffectZone()
 
 EchoZone::~EchoZone()
 {
-	if(m_effect != 0 && m_slot != 0)
-	{	
-		FreeEffects();
-	}
+	
 }
 
 void EchoZone::InitEchoZone(std::string& thisName,
@@ -210,16 +207,42 @@ ALuint EchoZone::GetEffectsSlot(){return m_slot;}
 
 void EchoZone::FreeEffects()
 {
-	if(m_effect != 0)
+	//std::cout << "\nFree effects called!\n";
+	ALenum err;
+	
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "1. free effects. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
+	if(m_effect)
 	{
 		alDeleteEffects(1, &m_effect);
 		m_effect = 0;
 	}
-	if(m_slot != 0)
+	
+	m_effect = 0;
+	
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "2. free effects. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
+	if(m_slot)
 	{
 		 alDeleteAuxiliaryEffectSlots(1, &m_slot);
 		 m_slot = 0;
 	}
+	
+	err = alGetError();
+	if(err != AL_NO_ERROR)
+	{
+		fprintf(stderr, "3. free effects. value above code wrong. OpenAL error: %s\n", alGetString(err));
+	}
+	
+	m_slot = 0;
 }
 
 EchoZoneSaveData EchoZone::GetEchoZoneSaveData()
