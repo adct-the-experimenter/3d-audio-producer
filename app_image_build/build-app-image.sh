@@ -10,7 +10,7 @@
 
 #script:
 
-VERSION=1.0
+VERSION=1.0.1
 
 if [ -d "build" ]; then
 	echo "build directory exists."
@@ -62,5 +62,6 @@ fi
 
 cp 3D*.AppImage 3d-audio-producer-$VERSION
 cp -r ../../data ./3d-audio-producer-$VERSION/3d-audio-producer-data
+rm ./3d-audio-producer-$VERSION/3d-audio-producer-data/resources/*.wav
 cp ../app_image_resources/INSTALL ./3d-audio-producer-$VERSION
 tar -czvf 3d-audio-producer-$VERSION.tar.gz ./3d-audio-producer-$VERSION
