@@ -42,7 +42,7 @@ else
 	cp ../app_image_resources/$DESKTOP_FILE ./AppDir
 fi
 
-cmake ../.. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DDATAPATH=${HOME}/3d-audio-producer-data && make -j$(nproc) && make install DESTDIR=AppDir
+cmake ../.. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DDATAPATH=${HOME}/3d-audio-producer-data/resources && make -j$(nproc) && make install DESTDIR=AppDir
 
 if [ -f "linuxdeploy-x86_64.AppImage" ]; then
 	echo "linuxdeploy-x86_64.AppImage exists."

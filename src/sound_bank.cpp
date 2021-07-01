@@ -3,17 +3,18 @@
 #include "audio-stream-container.h"
 #include <sndfile.h>
 
+///Data Directory File Path
+
 #define QUOTE(name) #name
 #define STR(macro) QUOTE(macro)
 
-
+//DATADIR macro used by automake for path to data files
+//if DATADIR macro is not defined, define it as data
 #ifndef DATADIR
-    #define DATADIR "../data/resources/"
+    #define DATADIR "../data/resources"
 #endif
 
 #define DATADIR_NAME STR(DATADIR)
-
-std::string DATADIR_STR = DATADIR_NAME;
 
 #include <unistd.h>
 
@@ -34,7 +35,7 @@ SoundBank::SoundBank()
 		
 		std::string datadir; 
 	
-		datadir = DATADIR_STR;
+		datadir = DATADIR_NAME;
 		if(datadir == "")
 		{
 			datadir = "../data/resources/";
@@ -44,7 +45,7 @@ SoundBank::SoundBank()
 		datadir = "../data/resources/";
 		#endif
 		
-		std::string filepath_stream = datadir + "stream-file" + std::to_string(i) + ".wav";
+		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
 		m_sound_accounts[i].stream_file_path = filepath_stream;
 	}
 	
