@@ -31,10 +31,14 @@ set ( PROJECT_LINK_LIBS  raylib openal sndfile ${Boost_LIBRARIES} ${CMAKE_THREAD
 #where to find library files .so 
 link_directories( /usr/lib /usr/local/lib ) 
 
-if (WIN32)
-    #add -lwsock32 to library dependencies for windows
-    set (PROJECT_LINK_LIBS ${PROJECT_LINK_LIBS} -lwsock32)
-endif (WIN32)
+if (MINGW)
+    # need to link with mingw32 before SDL2
+    list(APPEND _link_libraries mingw32)
+endif ()
+
+if(WIN32)
+	set ( PROJECT_LINK_LIBS  ${PROJECT_LINK_LIBS} opengl32 gdi32 winmm)
+endif()
 
 set ( PROJECT_INCLUDE_DIR ./src)
 
