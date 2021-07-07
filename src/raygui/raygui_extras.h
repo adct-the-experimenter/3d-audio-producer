@@ -147,7 +147,7 @@ ValidFloatParamSettings InitValidFloatParamSettings(float current_value, float d
 	settings.min = min;
 	settings.max = max;
 	
-	strncpy(settings.textBuffer, initialText, 20);
+	strncpy(settings.textBuffer, initialText, 9);
 	settings.textBuffer[8] = '\0';
 	settings.valueChanged = false;
 	
