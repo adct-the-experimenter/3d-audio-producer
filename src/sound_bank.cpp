@@ -66,6 +66,8 @@ std::array <std::string,10> filepath_textboxes;
 char fileNameToLoad[512] = { 0 };
 std::uint8_t current_file_button_edit = 0;
 
+
+
 void SoundBank::DrawGui_Item()
 {
 	//draw rectangle
@@ -76,8 +78,9 @@ void SoundBank::DrawGui_Item()
 	for(std::uint8_t i = 0; i < m_sound_accounts.size(); i++)
 	{
 		//draw account number
-		char num = *(std::to_string(i).c_str());
-		GuiTextBox((Rectangle){leftX,100 + i*30,20,25}, &num, 20, false);
+		char num[3];
+		strncpy ( num, std::to_string(i).c_str(), sizeof(num) );
+		GuiTextBox((Rectangle){leftX,100 + i*30,20,25}, &num[0], 20, false);
 		//draw textbox with name of sound and account number
 		if( GuiTextBox((Rectangle){leftX + 25,100 + i*30,100,25}, 
 						name_textboxes[i].char_name, 20, name_textboxes[i].name_box_pressed
