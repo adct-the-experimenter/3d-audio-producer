@@ -339,6 +339,11 @@ void MainGuiEditor::HandleEvents()
 		}
 		
 	}
+	
+	//if control key down
+		//if s key down
+	
+		//if o key down
 
 }
 
@@ -499,6 +504,11 @@ void MainGuiEditor::DrawGUI_Items()
 	
 	//draw HRTF edit menu
 	MainGuiEditor::draw_hrtf_menu();
+	
+	//draw save button
+	
+	//draw load button
+	
 }
 
 bool dropDownObjectTypeMode = false;

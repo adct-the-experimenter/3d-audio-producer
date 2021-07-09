@@ -13,11 +13,9 @@ XMLReader::~XMLReader()
 }
 	
 void XMLReader::LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_producer_save_data,
-							   std::vector <SoundProducerTrackSaveData> *ptrSPTracksSaveDataVec,
 							   std::vector <EchoZoneSaveData> *echoZonesSaveData,
 							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
 							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
-							   ListenerTrackSaveData& listener_track_data,
 							   ListenerSaveData& listener_data,
 							   std::string path)
 {
@@ -39,12 +37,10 @@ void XMLReader::LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_p
     pugi::xml_node root = doc.child("BAEXMLRoot");
     
     XMLReader::LoadData_SoundProducers(root, sound_producer_save_data);
-	XMLReader::LoadData_SoundProducerTracks(root,ptrSPTracksSaveDataVec);
 	XMLReader::LoadData_EchoZones(root,echoZonesSaveData);
 	XMLReader::LoadData_StandardRevZones(root,standardRevZonesSaveData);
 	XMLReader::LoadData_EAXRevZones(root,eaxRevZonesSaveData);
 	
-	XMLReader::LoadData_ListenerTrack(root,listener_track_data);
 	XMLReader::LoadData_Listener(root,listener_data);
 }
 
@@ -79,84 +75,6 @@ void XMLReader::LoadData_SoundProducers(pugi::xml_node& root, std::vector <Sound
 	
 }
 
-void XMLReader::LoadData_SoundProducerTracks(pugi::xml_node& root,
-											 std::vector <SoundProducerTrackSaveData> *ptrSPTracksSaveDataVec)
-{
-	pugi::xml_node spTrackRoot = root.child("SoundProducerTracks");
-	
-	for(pugi::xml_node track_node = spTrackRoot.first_child(); track_node; track_node = track_node.next_sibling() )
-	{
-		
-		SoundProducerTrackSaveData data;
-		std::string valString;
-		
-		valString = track_node.child("Name").attribute("name").value();
-		data.soundproducer_name = valString;
-		
-		valString = track_node.child("Filepath").attribute("filepath").value();
-		data.soundfilepath = valString;
-
-		pugi::xml_node positionXTimeNodeChild = track_node.child("PositionXTimes");
-		
-		DDMap* ddMapX = new DDMap();
-		
-		for(pugi::xml_node ddtrack_node = positionXTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-		{
-			std::string valIn, valOut;
-			
-			valIn = ddtrack_node.attribute("time").value();
-			valOut = ddtrack_node.attribute("x").value();
-			
-			double in = atof(valIn.c_str());
-			double out = atof(valOut.c_str());
-			
-			ddMapX->emplace(in,out);
-		}
-		
-		data.time_value_map_x_ptr = ddMapX;
-		
-		
-		pugi::xml_node positionYTimeNodeChild = track_node.child("PositionYTimes");
-		
-		DDMap* ddMapY = new DDMap();
-		
-		for(pugi::xml_node ddtrack_node = positionYTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-		{
-			std::string valIn, valOut;
-			
-			valIn = ddtrack_node.attribute("time").value();
-			valOut = ddtrack_node.attribute("y").value();
-			
-			double in = atof(valIn.c_str());
-			double out = atof(valOut.c_str());
-			
-			ddMapY->emplace(in,out);
-		}
-		
-		data.time_value_map_y_ptr = ddMapY;
-		
-		pugi::xml_node positionZTimeNodeChild = track_node.child("PositionZTimes");
-		
-		DDMap* ddMapZ = new DDMap();
-		
-		for(pugi::xml_node ddtrack_node = positionZTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-		{
-			std::string valIn, valOut;
-			
-			valIn = ddtrack_node.attribute("time").value();
-			valOut = ddtrack_node.attribute("z").value();
-			
-			double in = atof(valIn.c_str());
-			double out = atof(valOut.c_str());
-			
-			ddMapZ->emplace(in,out);
-		}
-		
-		data.time_value_map_z_ptr = ddMapZ;
-		
-		ptrSPTracksSaveDataVec->push_back(data);
-	}
-}
 
 void XMLReader::LoadData_EchoZones(pugi::xml_node& root,std::vector <EchoZoneSaveData> *echoZonesSaveData)
 {
@@ -360,160 +278,6 @@ void XMLReader::LoadData_EAXRevZones(pugi::xml_node& root,std::vector <EAXReverb
 	}
 }
 
-void XMLReader::LoadData_ListenerTrack(pugi::xml_node& root, ListenerTrackSaveData& listener_track_data)
-{
-	pugi::xml_node ltTrackRoot = root.child("ListenerTrack");
-	
-	pugi::xml_node track_node = ltTrackRoot.first_child();
-		
-	ListenerTrackSaveData data;
-	std::string valString;
-	
-	
-	pugi::xml_node positionXTimeNodeChild = track_node.child("PositionXTimes");
-	
-	DDMap* ddMapX = new DDMap();
-	
-	for(pugi::xml_node ddtrack_node = positionXTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("x").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapX->emplace(in,out);
-	}
-	
-	data.time_value_map_posx_ptr = ddMapX;
-	
-	
-	pugi::xml_node positionYTimeNodeChild = track_node.child("PositionYTimes");
-	
-	DDMap* ddMapY = new DDMap();
-	
-	for(pugi::xml_node ddtrack_node = positionYTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("y").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapY->emplace(in,out);
-	}
-	
-	data.time_value_map_posy_ptr = ddMapY;
-	
-	pugi::xml_node positionZTimeNodeChild = track_node.child("PositionZTimes");
-	
-	DDMap* ddMapZ = new DDMap();
-	
-	for(pugi::xml_node ddtrack_node = positionZTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("z").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapZ->emplace(in,out);
-	}
-	
-	data.time_value_map_posz_ptr = ddMapZ;
-	
-	
-	
-	DDMap* ddMapQuatW = new DDMap();
-	
-	pugi::xml_node orientationWTimeNodeChild = track_node.child("OrientationWTimes");
-	
-	for(pugi::xml_node ddtrack_node = orientationWTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("qw").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapQuatW->emplace(in,out);
-	}
-	
-	data.time_value_map_orientw_ptr = ddMapQuatW;
-	
-	
-	
-	DDMap* ddMapQuatX = new DDMap();
-	
-	pugi::xml_node orientationXTimeNodeChild = track_node.child("OrientationXTimes");
-	
-	for(pugi::xml_node ddtrack_node = orientationXTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("qx").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapQuatX->emplace(in,out);
-	}
-	
-	data.time_value_map_orientx_ptr = ddMapQuatX;
-	
-	
-	
-	DDMap* ddMapQuatY = new DDMap();
-	
-	pugi::xml_node orientationYTimeNodeChild = track_node.child("OrientationYTimes");
-	
-	for(pugi::xml_node ddtrack_node = orientationYTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("qy").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapQuatY->emplace(in,out);
-	}
-	
-	data.time_value_map_orienty_ptr = ddMapQuatY;
-	
-	
-	
-	DDMap* ddMapQuatZ = new DDMap();
-	
-	pugi::xml_node orientationZTimeNodeChild = track_node.child("OrientationZTimes");
-	
-	for(pugi::xml_node ddtrack_node = orientationZTimeNodeChild.first_child(); ddtrack_node; ddtrack_node = ddtrack_node.next_sibling() )
-	{
-		std::string valIn, valOut;
-		
-		valIn = ddtrack_node.attribute("time").value();
-		valOut = ddtrack_node.attribute("qz").value();
-		
-		double in = atof(valIn.c_str());
-		double out = atof(valOut.c_str());
-		
-		ddMapQuatZ->emplace(in,out);
-	}
-	
-	data.time_value_map_orientz_ptr = ddMapQuatZ;
-	
-	listener_track_data = data;
-}
 
 void XMLReader::LoadData_Listener(pugi::xml_node& root, ListenerSaveData& listener_save_data)
 {

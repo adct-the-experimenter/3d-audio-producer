@@ -24,6 +24,20 @@ struct ListenerSaveData
 {
 	bool freeRoam;
 	bool externalOrientation;
+
+//position	
+	float x;
+	float y;
+	float z;
+
+//orientation
+	float fx; 
+	float fy; 
+	float fz; 
+	float ux;
+	float uy; 
+	float uz;
+	
 };
 
 class Listener

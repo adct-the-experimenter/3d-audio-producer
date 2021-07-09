@@ -81,6 +81,8 @@ void Listener::setPositionX(float& x)
 	listener_position.x = x;
 	
 	Listener::setListenerPosition();
+	
+	m_saveData.x = x;
 } 
 
 float Listener::getPositionX(){return listener_position.x;} 
@@ -89,6 +91,8 @@ void Listener::setPositionY(float& y)
 {
 	listener_position.y = y;
 	Listener::setListenerPosition();
+	
+	m_saveData.y = y;
 } 
 
 float Listener::getPositionY(){return listener_position.y;}
@@ -97,7 +101,9 @@ void Listener::setPositionZ(float& z)
 {
 	listener_position.z = z;
 
-	Listener::setListenerPosition();	
+	Listener::setListenerPosition();
+	
+	m_saveData.z = z;
 }
  
 float Listener::getPositionZ(){return listener_position.z;}
