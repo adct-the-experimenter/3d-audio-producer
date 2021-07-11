@@ -95,6 +95,10 @@ Key 1 - Edit whatever was picked with mouse in 3d space.
 
 Key Delete or Key Del - Remove whatever was picked with mouse in 3d space.
 
+Control S - Save project data to file.
+
+Control O - Load project data from file.
+
 ## Feedback 
 
 Please email questions or comments to this email address bringerofawesomefood @ gmail . com without spaces.

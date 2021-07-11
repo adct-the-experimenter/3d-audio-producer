@@ -24,7 +24,7 @@
 
 #include <cstring>
 
-GuiFileDialogState fileDialogState;
+static GuiFileDialogState fileDialogState;
 
 SoundBank::SoundBank()
 {
@@ -91,8 +91,6 @@ void SoundBank::DrawGui_Item()
 		}
 			
 	}
-	
-	
 	
 	
 	if (fileDialogState.SelectFilePressed)

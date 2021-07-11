@@ -38,6 +38,19 @@
 **********************************************************************************************/
 
 
+
+/*******************************************************************************************
+Modified by Pablo Camacho
+
+fileNameTextBoxInputCopy added as variable to save text input in text box
+for saving file
+
+
+To Do:
+Ask user if want to overwrite file.
+
+*/
+
 #include "raylib.h"
 
 // WARNING: raygui implementation is expected to be defined before including this header
@@ -79,6 +92,8 @@ typedef struct {
     char fileNameTextCopy[256];
 
     int prevFilesListActive;
+    
+    char fileNameTextBoxInputCopy[256];
 
 } GuiFileDialogState;
 
@@ -337,8 +352,12 @@ void GuiFileDialog(GuiFileDialogState *state)
 
         if (GuiTextBox((Rectangle){ state->position.x + 75, state->position.y + winHeight - 60, winWidth - 200, 25 }, state->fileNameText, 128, state->fileNameEditMode))
         {
+			
             if (*state->fileNameText)
             {
+				//save text box input
+				strcpy(state->fileNameTextBoxInputCopy, state->fileNameText);
+				
                 // Verify if a valid filename has been introduced
                 if (FileExists(TextFormat("%s/%s", state->dirPathText, state->fileNameText)))
                 {

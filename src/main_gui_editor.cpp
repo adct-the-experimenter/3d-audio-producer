@@ -30,14 +30,6 @@
 //#include "setup-serial-dialog.h"
 
 
-//#include "CreateStandardReverbZoneDialog.h"
-//#include "CreateEAXReverbZoneDialog.h"
-
-
-//#include "EditMultipleStandardReverbZonesDialog.h"
-//#include "EditMultipleEAXReverbZonesDialog.h"
-
-
 
 bool init_listener_once = false;
 
@@ -51,6 +43,7 @@ ImmediateModeSoundPlayer im_sound_player;
 HRTFTestDialog hrtf_test_dialog;
 ChangeHRTFDialog change_hrtf_dialog;
 
+//dialogs for manipulating effect zones
 CreateEchoZoneDialog create_echo_zone_dialog;
 EditMultipleEchoZonesDialog edit_echo_zone_dialog;
 
@@ -59,6 +52,12 @@ EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
 CreateEAXReverbZoneDialog create_er_zone_dialog;
 EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
+
+//dialog for saving and loading project file
+static GuiFileDialogState fileDialogState;
+enum class ProjectFileState : std::uint8_t{NONE=0, SAVE,LOAD};
+static ProjectFileState proj_file_state;
+
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -107,36 +106,32 @@ bool MainGuiEditor::OnInit()
 	else
 	{
 
-
-		// Create the main frame window
-		std::unique_ptr <MainFrame> thisFrame( new MainFrame("3D Audio Producer",&audio_engine) );
-		frame = std::move(thisFrame);
-		
 		MainGuiEditor::initListener();
-
-		//connect mainframe to listener
-		frame->SetListenerReference(listener.get());
-
-		//connect mainframe to external listener
-		//frame->SetListenerExternalReference(listenerExternal.get());
-
-		//connect mainframe to soundproducer vector
-		frame->SetSoundProducerVectorRef(&sound_producer_vector);
-
-		//connect mainframe to openal soft audio engine
-		frame->SetAudioEngineReference(&audio_engine);
 		
 		//initialize effects manager
 		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager() );
 		effects_manager_ptr->SetPointerToListener(listener.get());
-		effects_manager_ptr->SetPointerToSoundProducerRegistry(&frame->soundproducer_registry);
+		effects_manager_ptr->SetPointerToSoundProducerRegistry(&soundproducer_registry);
 		
 		create_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 		
-		//connect mainframe to effects manager
-		frame->SetEffectsManagerReference(effects_manager_ptr.get());
+		//set pointers in immediate mode sound player
+		im_sound_player.SetPointerToSoundProducerRegistry(&soundproducer_registry);
 		im_sound_player.SetPointerToSoundBank(&m_sound_bank);
 		im_sound_player.SetPointerToEffectsManager(effects_manager_ptr.get());
+		
+		//intialize sound producer registry
+		soundproducer_registry.SetReferenceToSoundProducerVector(&sound_producer_vector);
+		
+		//initialize file dialog
+		fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+		fileDialogState.position = {200,200};
+		
+		//initialize save system
+		save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
+		
+		//initialize load system
+		load_system_ptr = std::unique_ptr <LoadSystem> (new LoadSystem());
 	}
 
 
@@ -239,7 +234,7 @@ void MainGuiEditor::HandleEvents()
 	if(GetMouseX() > GetScreenWidth() - 200){disableHotkeys = true;}
 	else{disableHotkeys = false;}
 	
-	if(disableHotkeys || dialogInUse){return;}
+	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive){return;}
 	
 	
 	//if w key pressed
@@ -341,9 +336,22 @@ void MainGuiEditor::HandleEvents()
 	}
 	
 	//if control key down
+	if( IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
+	{
 		//if s key down
-	
+		if(IsKeyDown(KEY_S))
+		{
+			proj_file_state = ProjectFileState::SAVE;
+			fileDialogState.fileDialogActive = true; //activate file dialog
+		}
 		//if o key down
+		else if(IsKeyDown(KEY_O))
+		{
+			proj_file_state = ProjectFileState::LOAD;
+			fileDialogState.fileDialogActive = true; //activate file dialog
+		}
+	}
+		
 
 }
 
@@ -460,7 +468,7 @@ void MainGuiEditor::logic()
 			std::swap( sound_producer_vector[soundproducer_picked],sound_producer_vector.back());
 			sound_producer_vector.pop_back();
 			
-			frame->soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(soundproducer_picked);
+			soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(soundproducer_picked);
 			
 			soundproducer_picked = -1;
 		}
@@ -484,6 +492,7 @@ void MainGuiEditor::logic()
 	im_sound_player.RunStateForPlayer();
 	
 	sound_player_active = im_sound_player.PlayerInActiveUse();
+		
 }
 
 void MainGuiEditor::DrawGUI_Items()
@@ -509,6 +518,7 @@ void MainGuiEditor::DrawGUI_Items()
 	
 	//draw load button
 	
+	MainGuiEditor::draw_project_file_dialog();
 }
 
 bool dropDownObjectTypeMode = false;
@@ -703,7 +713,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				create_sp_dialog.getNewPosition(x,y,z);
 				bool freeRoam = create_sp_dialog.getFreeRoamBool();
 				std::uint8_t account_num =  create_sp_dialog.getAccountNumber();
-				frame->CreateSoundProducer(name,x, y, z, freeRoam, account_num);
+				MainGuiEditor::CreateSoundProducer(name,x, y, z, freeRoam, account_num);
 									
 				g_state = GuiState::NONE;
 				create_sp_dialog.resetConfig();
@@ -938,6 +948,76 @@ void MainGuiEditor::draw_hrtf_menu()
 	}
 }
 
+void MainGuiEditor::draw_project_file_dialog()
+{
+	if (fileDialogState.fileDialogActive){ GuiLock();}
+	
+	if(proj_file_state == ProjectFileState::LOAD)
+	{
+		if (fileDialogState.SelectFilePressed)
+		{			
+			// Load project file (if supported extension)
+			if (IsFileExtension(fileDialogState.fileNameText, ".xml") )
+			{
+				char projectFile[512] = { 0 };
+				
+				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+				std::string filepath = std::string(projectFile);
+				
+				std::cout << "load filepath in main gui editor: " << filepath << std::endl;
+				
+				//load project
+				MainGuiEditor::LoadProject(filepath);
+			}
+
+			fileDialogState.SelectFilePressed = false;
+		}
+		
+	}
+	else if(proj_file_state == ProjectFileState::SAVE)
+	{
+		if (fileDialogState.SelectFilePressed)
+		{
+			
+			// save project file (if supported extension)
+			
+			//if file name was put in text box
+			if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".xml") )
+			{
+				char projectFile[512] = { 0 };
+				
+				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
+				std::string filepath = std::string(projectFile);
+				
+				std::cout << "save filepath in main gui editor: " << filepath << std::endl;
+				
+				//save project
+				MainGuiEditor::SaveProject(filepath);
+			}
+			//else if file name was selected
+			else if(IsFileExtension(fileDialogState.fileNameText, ".xml"))
+			{
+				char projectFile[512] = { 0 };
+				
+				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+				std::string filepath = std::string(projectFile);
+				
+				std::cout << "save filepath in main gui editor: " << filepath << std::endl;
+				
+				//save project
+				MainGuiEditor::SaveProject(filepath);
+			}
+
+			fileDialogState.SelectFilePressed = false;
+		}
+	}
+	
+	GuiUnlock();
+	
+	// call GuiFileDialog menu
+	GuiFileDialog(&fileDialogState);
+}
+
 void MainGuiEditor::InitCamera()
 {
 	main_camera = { 0 };
@@ -955,397 +1035,151 @@ Camera3D* MainGuiEditor::GetPointerToCamera()
 	return &main_camera;
 }
 
-/* My frame constructor */
-MainFrame::MainFrame(const std::string& title,
-    OpenAlSoftAudioEngine* thisAudioEngine)
+void MainGuiEditor::UnloadAll()
 {
-	MainFrame::SetAudioEngineReference(thisAudioEngine);
+	//free effects
+	effects_manager_ptr->RemoveEffectFromAllSources();
+	effects_manager_ptr->FreeEffects();
 	
-	
-	im_sound_player.SetPointerToSoundProducerRegistry(&soundproducer_registry);
-	
-	
-    //initliaze save system
-    //save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
-	
-    //make toolbar for active sound producer
-	
-	
-    
-    //Code to initialize timeline track editor part of GUI
-
-	//timeFrame = new TimelineFrame(this);
-
-	/*
-	soundproducertrack_manager_ptr = std::unique_ptr <SoundProducerTrackManager>(new SoundProducerTrackManager("SoundProducer Track Manager",
-																		audioEnginePtr->GetReferenceToAudioDevice(),
-																		audioEnginePtr->GetReferenceToAudioContext() ) ) ;
-
-	soundproducertrack_manager_ptr->SetReferenceToSoundProducerTrackVector(&m_soundproducer_track_vec);
-	
-//Initialize listener track
-	MainFrame::CreateListenerTrack();
-
-//Initialize SoundProducer Track
-	
-	MainFrame::CreateFirstSoundProducerTrack();
-	
-	timeFrame->Layout();
-	timeFrame->Show(true); //show the timeframe
-	*/
-}
-
-
-void MainFrame::SetSoundProducerVectorRef(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector)
-{
-	sound_producer_vector_ref = sound_producer_vector;
-
-	soundproducer_registry.SetReferenceToSoundProducerVector(sound_producer_vector_ref);
-}
-
-void MainFrame::SetListenerReference(Listener* thisListener)
-{
-	listenerPtr = thisListener;
-	//m_listener_track->SetReferenceToListenerToManipulate(listenerPtr);
-}
-
-/*
-void MainFrame::SetListenerExternalReference(ListenerExternal* thisListenerExternal)
-{
-	listenerExternalPtr = thisListenerExternal;
-	m_listener_track->SetReferenceToExternalListener(listenerExternalPtr);
-}
-*/
-
-void MainFrame::SetAudioEngineReference(OpenAlSoftAudioEngine* audioEngine){ audioEnginePtr = audioEngine;}
-
-void MainFrame::SetEffectsManagerReference(EffectsManager* effectsManager){effectsManagerPtr = effectsManager;}
-
-//SoundProducerTrackManager* MainFrame::GetReferenceToSoundProducerTrackManager(){return soundproducertrack_manager_ptr.get();}
-
-/*
-void MainFrame::OnIdle(wxIdleEvent &event)
-{
-    if (!_viewer->isRealized())
-        return;
-
-    _viewer->frame();
-
-    event.RequestMore();
-
-    //std::cout << "App is Idle." << std::endl;
-}
-
-void MainFrame::OnExit(wxCommandEvent& event)
-{
-    Close( true ); //close window
-}
-
-void MainFrame::OnAbout(wxCommandEvent& event)
-{
-	//show message box with ok icon,
-	//window title:About Binaural Audio Editor
-	//message:
-    wxMessageBox( "Version 1.5 of Binaural Audio Editor. \n This program is for producing and editing binaural audio from mono samples of audio.",
-                  "About Binaural Audio Editor", wxOK | wxICON_INFORMATION );
-}
-
-void MainFrame::OnOpen(wxCommandEvent& WXUNUSED(event))
-{
-
-	wxFileDialog fileDlg(this, _("Choose the WAV file"), wxEmptyString, wxEmptyString, _("WAV file|*.wav|All files|*.*"));
-	if (fileDlg.ShowModal() == wxID_OK)
-	{
-		wxString path = fileDlg.GetPath();
-		//use this path in your app
-	}
-
-}
-
-void MainFrame::OnNewProject(wxCommandEvent& WXUNUSED(event))
-{
-	MainFrame::CreateNewProject();	
-}
-
-void MainFrame::OnSaveProject(wxCommandEvent& WXUNUSED(event))
-{
-	 MainFrame::SaveProject();
-}
-
-void MainFrame::OnLoadProject(wxCommandEvent& WXUNUSED(event))
-{
-	MainFrame::LoadProject();
-}
-
-void MainFrame::CreateNewProject()
-{
-	//TODO free everything
-	MainFrame::UnloadAll();
-	
-	if(timeFrame)
-	{
-		delete timeFrame;
-		timeFrame = nullptr;
-	}
-	
-	
-	
-	timeFrame = new TimelineFrame(this);
-	
-	//Initialize listener track
-	MainFrame::CreateListenerTrack();
-	
-	m_listener_track->SetReferenceToListenerToManipulate(listenerPtr);
-	m_listener_track->SetReferenceToExternalListener(listenerExternalPtr);
-
-//Initialize SoundProducer Track
-	
-	MainFrame::CreateFirstSoundProducerTrack();
-	
-	timeFrame->Layout();
-	timeFrame->Show(true); //show the timeframe
-}
-    
-void MainFrame::SaveProject()
-{
-	wxFileDialog fileDlg(this, _("Save XML file"), "", "",
-                       "XML files (*.xml)|*.xml", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-	if (fileDlg.ShowModal() == wxID_OK)
-	{
-		
-		wxString path = fileDlg.GetPath();
-		//use this path in your app
-		std::string saveFilePath = std::string(path.mb_str());
-		
-		//if .xml is not in ending of file name
-		if(saveFilePath.substr(saveFilePath.length() - 4,saveFilePath.length() - 1) != ".xml")
-		{
-			saveFilePath.append(".xml");
-			
-		}
-		
-		std::cout << "Input save file path:" << saveFilePath << std::endl;
-		
-		save_system_ptr->SetSaveFilePath(saveFilePath);
-		save_system_ptr->SaveProjectToSetFile(sound_producer_vector_ref,effectsManagerPtr,m_listener_track,listenerPtr);
-	}
-}
-    
-void MainFrame::LoadProject()
-{
-	wxFileDialog fileDlg(this, _("Open XML file"), "", "",
-                       "XML files (*.xml)|*.xml", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
-    
-	if (fileDlg.ShowModal() == wxID_OK)
-	{
-		//Start new project
-		MainFrame::CreateNewProject();
-		
-		//set objects in new projects based on saved data read
-		
-		wxString path = fileDlg.GetPath();
-		//use this path in your app
-		std::string loadFilePath = std::string(path.mb_str());
-				
-		std::cout << "Input open file path:" << loadFilePath << std::endl;
-		
-		std::vector <SoundProducerSaveData> sound_producer_save_data;
-		std::vector <SoundProducerTrackSaveData> ptrSPTracksSaveDataVec;
-		std::vector <EchoZoneSaveData> echoZonesSaveData;
-		std::vector <StandardReverbZoneSaveData> standardRevZonesSaveData;
-		std::vector <EAXReverbZoneSaveData> eaxRevZonesSaveData;
-		ListenerTrackSaveData lt_save_data;
-		ListenerSaveData listener_data;
-		
-		load_system_ptr->LoadProject(&sound_producer_save_data,
-							   &ptrSPTracksSaveDataVec,
-							   &echoZonesSaveData,
-							   &standardRevZonesSaveData,
-							   &eaxRevZonesSaveData,
-							   lt_save_data,
-							   listener_data,
-							   loadFilePath);
-							   
-		
-		//initialize sound producers from save data
-		if(sound_producer_save_data.size() > 0)
-		{
-			for(size_t i = 0; i < sound_producer_save_data.size(); i++)
-			{
-				std::string null_str = "";
-				ALuint empty_buffer = 0;
-				MainFrame::CreateSoundProducer(sound_producer_save_data[i].name, 
-												null_str, empty_buffer,
-												sound_producer_save_data[i].x, sound_producer_save_data[i].y, sound_producer_save_data[i].z,false);
-			}
-		}
-		
-		if(echoZonesSaveData.size() > 0)
-		{
-			for(size_t i = 0; i < echoZonesSaveData.size(); i++)
-			{
-				
-				effectsManagerPtr->CreateEchoZone(echoZonesSaveData[i].name,
-												 echoZonesSaveData[i].x,
-												 echoZonesSaveData[i].y,
-												 echoZonesSaveData[i].z,
-												 echoZonesSaveData[i].width,
-												 echoZonesSaveData[i].properties);
-		
-				//add position attitude transform to root group of nodes
-				_rootNode->addChild( (effectsManagerPtr->GetReferenceToEffectZoneVector())->back()->getTransformNode() );
-			}
-		}
-		
-		if(standardRevZonesSaveData.size() > 0)
-		{
-			for(size_t i = 0; i < standardRevZonesSaveData.size(); i++)
-			{
-				
-				effectsManagerPtr->CreateStandardReverbZone(standardRevZonesSaveData[i].name,
-												 standardRevZonesSaveData[i].x,
-												 standardRevZonesSaveData[i].y,
-												 standardRevZonesSaveData[i].z,
-												 standardRevZonesSaveData[i].width,
-												 standardRevZonesSaveData[i].properties);
-		
-				//add position attitude transform to root group of nodes
-				_rootNode->addChild( (effectsManagerPtr->GetReferenceToEffectZoneVector())->back()->getTransformNode() );
-			}
-		}
-		
-		if(eaxRevZonesSaveData.size() > 0)
-		{
-			for(size_t i = 0; i < eaxRevZonesSaveData.size(); i++)
-			{
-				
-				effectsManagerPtr->CreateEAXReverbZone(eaxRevZonesSaveData[i].name,
-												 eaxRevZonesSaveData[i].x,
-												 eaxRevZonesSaveData[i].y,
-												 eaxRevZonesSaveData[i].z,
-												 eaxRevZonesSaveData[i].width,
-												 eaxRevZonesSaveData[i].properties);
-		
-				//add position attitude transform to root group of nodes
-				_rootNode->addChild( (effectsManagerPtr->GetReferenceToEffectZoneVector())->back()->getTransformNode() );
-			}
-		}
-		
-		//initialize sound producer tracks based on save data
-		
-		if(ptrSPTracksSaveDataVec.size() > 0)
-		{
-			for(size_t i = 0; i < ptrSPTracksSaveDataVec.size(); i++)
-			{
-				
-				if(i >= 1)
-				{
-					//detach sizer containing add/rm soundproducertrack buttons from window, add it back later
-					timeFrame->GetTimelineWindow()->GetSizer()->Detach(m_add_rm_box_sizer);
-
-					//create new sound producer track and add it to vector of sound producer tracks in MainFrame
-					MainFrame::CreateNewSoundProducerTrack();
-
-					//move add sound producer track button to bottom of new sound producer track
-
-					//add sizer containing add/rm soundproducer track buttons to bottom of window
-					timeFrame->GetTimelineWindow()->GetSizer()->Add(m_add_rm_box_sizer);
-
-					timeFrame->Layout();
-				}
-				
-				
-				
-				m_soundproducer_track_vec.at(i)->LoadSoundProducerTrackSaveData(ptrSPTracksSaveDataVec.at(i));
-				
-				
-				if(ptrSPTracksSaveDataVec.at(i).soundproducer_name != "")
-				{
-					m_soundproducer_track_vec.at(i)->SelectSoundProducerByName(ptrSPTracksSaveDataVec.at(i).soundproducer_name);
-					m_soundproducer_track_vec.at(i)->SetComboBoxToThisSelectionName(ptrSPTracksSaveDataVec.at(i).soundproducer_name);
-				}
-				
-			}
-		}
-		
-		//initialize listener track from save data
-		if(m_listener_track)
-		{
-			m_listener_track->LoadListenerTrackSaveData(lt_save_data);
-		}
-		
-		//initialize listener from save data
-		if(listenerPtr)
-		{
-			listenerPtr->LoadListenerSaveData(listener_data);
-		}
-		
-	}
-}
-
-
-
-void MainFrame::UnloadAll()
-{
 	//clear sound producer registry
 	soundproducer_registry.ClearAll();
 	
-	//clear objects in root node
-	int total_objs_remove = 5;
-	_rootNode->removeChildren(1,total_objs_remove);
-	
-	//clear vector of sound producers
-	sound_producer_vector_ref->clear();
-	
-	//free effects
-	effectsManagerPtr->FreeEffects();
-	
-	//free contents of sound producer tracks
-	m_soundproducer_track_vec.clear();
-		
+	//remove all sound producers in vector
+	sound_producer_vector.clear();
 }
 
-void MainFrame::OnCreateSoundProducer(wxCommandEvent& event)
+void MainGuiEditor::CreateNewProject()
 {
-	//show message box with ok icon,
-	//window title:about hello world
-	//message: This is a wxWidgets Helo world sample
-    //wxMessageBox( "Create Sound Producer", "Create Sound Producer",wxOK | wxCANCEL |wxICON_INFORMATION );
-
-    std::unique_ptr <CreateSoundProducerDialog> soundProducerNewDialog(new CreateSoundProducerDialog(wxT("Create New Sound Producer"),
-																									audioEnginePtr) );
-    soundProducerNewDialog->Show(true);
-
-    if(soundProducerNewDialog->OkClickedOn())
-    {
-		double x,y,z;
-
-		soundProducerNewDialog->getNewPosition(x,y,z);
-		std::string name = soundProducerNewDialog->getNewName();
-		std::string filePath = soundProducerNewDialog->getSoundFilePath();
-		ALuint buffer = soundProducerNewDialog->getBuffer();
-		bool freeRoam = soundProducerNewDialog->getFreeRoamBool();
-		MainFrame::CreateSoundProducer(name,filePath,buffer,x,y,z,freeRoam);
-	}
-
+	//free everything
+	MainGuiEditor::UnloadAll();
+	
 }
-*/
 
-void MainFrame::CreateSoundProducer(std::string& name,float& x, float& y, float& z, 
+void MainGuiEditor::SaveProject(std::string& filepath)
+{
+	std::string saveFilePath = filepath;
+	
+	//if .xml is not in ending of file name
+	if(saveFilePath.substr(saveFilePath.length() - 4,saveFilePath.length() - 1) != ".xml")
+	{
+		saveFilePath.append(".xml");
+		
+	}
+	
+	std::cout << "Save project file path:" << saveFilePath << std::endl;
+	
+	save_system_ptr->SetSaveFilePath(saveFilePath);
+	save_system_ptr->SaveProjectToSetFile(&sound_producer_vector,effects_manager_ptr.get(),listener.get());
+	
+}
+
+void MainGuiEditor::LoadProject(std::string& filepath)
+{
+	
+	//Start new project
+	MainGuiEditor::CreateNewProject();
+	
+	//set objects in new projects based on saved data read
+	
+			
+	std::cout << "Input project load file path:" << filepath << std::endl;
+	
+	std::vector <SoundProducerSaveData> sound_producer_save_data;
+
+	std::vector <EchoZoneSaveData> echoZonesSaveData;
+	std::vector <StandardReverbZoneSaveData> standardRevZonesSaveData;
+	std::vector <EAXReverbZoneSaveData> eaxRevZonesSaveData;
+
+	ListenerSaveData listener_data;
+	
+	load_system_ptr->LoadProject(&sound_producer_save_data,
+						   &echoZonesSaveData,
+						   &standardRevZonesSaveData,
+						   &eaxRevZonesSaveData,
+						   listener_data,
+						   filepath);
+						   
+	
+	//initialize sound producers from save data
+	if(sound_producer_save_data.size() > 0)
+	{
+		for(size_t i = 0; i < sound_producer_save_data.size(); i++)
+		{
+			//create sound producer
+			bool freeRoam = false;
+			std::uint8_t account_num =  0;
+			MainGuiEditor::CreateSoundProducer(sound_producer_save_data[i].name,
+												sound_producer_save_data[i].x, sound_producer_save_data[i].y, sound_producer_save_data[i].z, 
+												freeRoam, account_num);
+		}
+	}
+	
+	if(echoZonesSaveData.size() > 0)
+	{
+		for(size_t i = 0; i < echoZonesSaveData.size(); i++)
+		{
+			
+			effects_manager_ptr->CreateEchoZone(echoZonesSaveData[i].name,
+											 echoZonesSaveData[i].x,
+											 echoZonesSaveData[i].y,
+											 echoZonesSaveData[i].z,
+											 echoZonesSaveData[i].width,
+											 echoZonesSaveData[i].properties);
+	
+		}
+	}
+	
+	if(standardRevZonesSaveData.size() > 0)
+	{
+		for(size_t i = 0; i < standardRevZonesSaveData.size(); i++)
+		{
+			
+			effects_manager_ptr->CreateStandardReverbZone(standardRevZonesSaveData[i].name,
+											 standardRevZonesSaveData[i].x,
+											 standardRevZonesSaveData[i].y,
+											 standardRevZonesSaveData[i].z,
+											 standardRevZonesSaveData[i].width,
+											 standardRevZonesSaveData[i].properties);
+	
+		}
+	}
+	
+	if(eaxRevZonesSaveData.size() > 0)
+	{
+		for(size_t i = 0; i < eaxRevZonesSaveData.size(); i++)
+		{
+			
+			effects_manager_ptr->CreateEAXReverbZone(eaxRevZonesSaveData[i].name,
+											 eaxRevZonesSaveData[i].x,
+											 eaxRevZonesSaveData[i].y,
+											 eaxRevZonesSaveData[i].z,
+											 eaxRevZonesSaveData[i].width,
+											 eaxRevZonesSaveData[i].properties);
+	
+		}
+	}
+	
+	//initialize listener from save data
+	if(listener)
+	{
+		listener->LoadListenerSaveData(listener_data);
+	}
+}
+
+
+void MainGuiEditor::CreateSoundProducer(std::string& name,float& x, float& y, float& z, 
 									bool freeRoam, std::uint8_t account_num)
 {
-	sound_producer_vector_ref->push_back( std::unique_ptr <SoundProducer>(new SoundProducer()) );
+	sound_producer_vector.push_back( std::unique_ptr <SoundProducer>(new SoundProducer()) );
 
-	sound_producer_vector_ref->back()->InitSoundProducer(name,x,y,z);
-	sound_producer_vector_ref->back()->SetFreeRoamBool(freeRoam);
-	sound_producer_vector_ref->back()->SetAccountNumber(account_num);
+	sound_producer_vector.back()->InitSoundProducer(name,x,y,z);
+	sound_producer_vector.back()->SetFreeRoamBool(freeRoam);
+	sound_producer_vector.back()->SetAccountNumber(account_num);
 
 	soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
 	
 	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
-	//m_sp_toolbar_combobox->Append(name);
 
-	//soundproducer_registry.UpdateAllComboBoxesList();
 }
 
 /*
@@ -1361,554 +1195,5 @@ void MainFrame::OnSetupSerial(wxCommandEvent& event)
     setupSerialDialog->Show(true);
 }
 
-void MainFrame::OnCreateStandardReverbZone(wxCommandEvent& event)
-{
-	//show message box with ok icon,
-	//window title:about hello world
-	//message: This is a wxWidgets Helo world sample
-    //wxMessageBox( "Create Sound Producer", "Create Sound Producer",wxOK | wxCANCEL |wxICON_INFORMATION );
 
-    std::unique_ptr <CreateStandardReverbZoneDialog> reverbZoneNewDialog(new CreateStandardReverbZoneDialog(wxT("Create New Standard Reverb Zone"),
-																									effectsManagerPtr) );
-    reverbZoneNewDialog->Show(true);
-
-    if(reverbZoneNewDialog->OkClicked())
-    {
-		double x,y,z,width;
-		ReverbStandardProperties properties;
-		
-		reverbZoneNewDialog->getNewPosition(x,y,z);
-		std::string name = reverbZoneNewDialog->getNewName();
-		width = reverbZoneNewDialog->getNewWidth();
-		properties = reverbZoneNewDialog->getNewProperties();
-		
-		effectsManagerPtr->CreateStandardReverbZone(name,x,y,z,width,properties);
-		
-		//add position attitude transform to root group of nodes
-		_rootNode->addChild( (effectsManagerPtr->GetReferenceToEffectZoneVector())->back()->getTransformNode() );
-	}
-
-}
-
-void MainFrame::OnCreateEAXReverbZone(wxCommandEvent& event)
-{
-	//show message box with ok icon,
-	//window title:about hello world
-	//message: This is a wxWidgets Helo world sample
-    //wxMessageBox( "Create Sound Producer", "Create Sound Producer",wxOK | wxCANCEL |wxICON_INFORMATION );
-
-    std::unique_ptr <CreateEAXReverbZoneDialog> reverbZoneNewDialog(new CreateEAXReverbZoneDialog(wxT("Create New EAX Reverb Zone"),
-																									effectsManagerPtr) );
-    reverbZoneNewDialog->Show(true);
-
-    if(reverbZoneNewDialog->OkClicked())
-    {
-		double x,y,z,width;
-		ReverbEAXProperties properties;
-		
-		reverbZoneNewDialog->getNewPosition(x,y,z);
-		std::string name = reverbZoneNewDialog->getNewName();
-		width = reverbZoneNewDialog->getNewWidth();
-		properties = reverbZoneNewDialog->getNewProperties();
-		
-		effectsManagerPtr->CreateEAXReverbZone(name,x,y,z,width,properties);
-		
-		//add position attitude transform to root group of nodes
-		_rootNode->addChild( (effectsManagerPtr->GetReferenceToEffectZoneVector())->back()->getTransformNode() );
-	}
-
-}
-
-void MainFrame::OnCreateEchoZone(wxCommandEvent& event)
-{
-	std::unique_ptr <CreateEchoZoneDialog> echoZoneNewDialog(new CreateEchoZoneDialog(wxT("Create New Echo Zone"),
-																									effectsManagerPtr) );
-    echoZoneNewDialog->Show(true);
-
-    if(echoZoneNewDialog->OkClicked())
-    {
-		double x,y,z,width;
-		EchoZoneProperties properties;
-		
-		echoZoneNewDialog->getNewPosition(x,y,z);
-		std::string name = echoZoneNewDialog->getNewName();
-		width = echoZoneNewDialog->getNewWidth();
-		properties = echoZoneNewDialog->getNewProperties();
-		
-		effectsManagerPtr->CreateEchoZone(name,x,y,z,width,properties);
-		
-		//add position attitude transform to root group of nodes
-		_rootNode->addChild( (effectsManagerPtr->GetReferenceToEffectZoneVector())->back()->getTransformNode() );
-	}
-}
-
-void MainFrame::OnEditMultipleStandardReverbZones(wxCommandEvent& event)
-{
-	std::unique_ptr <EditMultipleStandardReverbZonesDialog> reverbZoneEditDialog(new EditMultipleStandardReverbZonesDialog( wxT("Edit Reverb Zones"),
-																													effectsManagerPtr));
-																				
-
-    reverbZoneEditDialog->Show(true);
-
-}
-
-void MainFrame::OnEditMultipleEAXReverbZones(wxCommandEvent& event)
-{
-	std::unique_ptr <EditMultipleEAXReverbZonesDialog> reverbZoneEditDialog(new EditMultipleEAXReverbZonesDialog( wxT("Edit Reverb Zones"),
-																													effectsManagerPtr));
-																				
-
-    reverbZoneEditDialog->Show(true);
-
-}
-
-void MainFrame::OnEditMultipleEchoZones(wxCommandEvent& event)
-{
-	
-	std::unique_ptr <EditMultipleEchoZonesDialog> echoZoneEditDialog(new EditMultipleEchoZonesDialog( wxT("Edit Echo Zones"),
-																													effectsManagerPtr));																			
-
-    echoZoneEditDialog->Show(true);
-}
-
-void MainFrame::OnAddSoundProducerTrack(wxCommandEvent& event)
-{
-	//move remove sound producer track button to top of new sound producer track
-
-	//detach sizer containing add/rm soundproducertrack buttons from window, add it back later
-	timeFrame->GetTimelineWindow()->GetSizer()->Detach(m_add_rm_box_sizer);
-
-	//create new sound producer track and add it to vector of sound producer tracks in MainFrame
-	MainFrame::CreateNewSoundProducerTrack();
-
-	//move add sound producer track button to bottom of new sound producer track
-
-	//add sizer containing add/rm soundproducer track buttons to bottom of window
-	timeFrame->GetTimelineWindow()->GetSizer()->Add(m_add_rm_box_sizer);
-
-	timeFrame->Layout();
-
-}
-
-void MainFrame::CreateListenerTrack()
-{
-	m_listener_track = new ListenerTrack("Listener Track");
-
-	int space = 20; //the distance,in pixels, between track and previous item(timeline or previous track)
-	double start = -10.0f; //lowest value
-	double end = 10.0f; //highest value
-	int numTicks = 11; //number of ticks between lowest value and highest value including zero
-	double resolution = 1; //the fineness of how much variable can be incremented/decremented by
-
-	double ostart = -1;
-	double oend = 1;
-	double oresolution = 0.1;
-
-	//initialize listener track
-	m_listener_track->InitTrack(timeFrame,nullptr);
-	m_listener_track->SetupAxisForPositionVariable(start,end,resolution,numTicks);
-
-	m_listener_track->SetupAxisForOrientationVariable(ostart,oend,oresolution,numTicks);
-
-	//add block of space between Timeline Ruler and Sound Producer Track
-	timeFrame->AddSpacerBlock(40);
-
-	//add text to indicate it is a Listener Track
-	wxBoxSizer* hboxTextListener = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textListener = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Track"),wxDefaultPosition );
-	hboxTextListener->Add(textListener);
-	timeFrame->AddBoxSizer(hboxTextListener);
-
-	//add x,y,z tracks of ListenerTrack to time frame
-
-	//add label for x track
-	wxBoxSizer* hboxLXText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLX = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener X Position"),wxDefaultPosition );
-	hboxLXText->Add(textLX);
-	timeFrame->AddBoxSizer(hboxLXText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToXTrack(),space);
-
-	//add label for y track
-	wxBoxSizer* hboxLYText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLY = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Y Position"),wxDefaultPosition );
-	hboxLYText->Add(textLY);
-	timeFrame->AddBoxSizer(hboxLYText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToYTrack(),space);
-
-	//add label for z track
-	wxBoxSizer* hboxLZText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLZ = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Z Position"),wxDefaultPosition );
-	hboxLZText->Add(textLZ);
-	timeFrame->AddBoxSizer(hboxLZText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToZTrack(),space);
-
-	//add quat w,x,y,z tracks of ListenerTrack to time frame
-
-	//add label for w quat track
-	wxBoxSizer* hboxLQWText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLQW = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Quaternion W"),wxDefaultPosition );
-	hboxLQWText->Add(textLQW);
-	timeFrame->AddBoxSizer(hboxLQWText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToQuatWTrack(),space);
-
-	//add label for x quat track
-	wxBoxSizer* hboxLQXText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLQX = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Quaternion X"),wxDefaultPosition );
-	hboxLQXText->Add(textLQX);
-	timeFrame->AddBoxSizer(hboxLQXText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToQuatXTrack(),space);
-
-	//add label for y quat track
-	wxBoxSizer* hboxLQYText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLQY = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Quaternion Y"),wxDefaultPosition );
-	hboxLQYText->Add(textLQY);
-	timeFrame->AddBoxSizer(hboxLQYText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToQuatYTrack(),space);
-
-	//add label for z quat track
-	wxBoxSizer* hboxLQZText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textLQZ = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Listener Quaternion Z"),wxDefaultPosition );
-	hboxLQZText->Add(textLQZ);
-	timeFrame->AddBoxSizer(hboxLQZText);
-
-	timeFrame->AddTrack(m_listener_track->GetReferenceToQuatZTrack(),space);
-
-
-	timeFrame->AddTrackFunctionToCallInTimerLoopPlayState(m_listener_track);
-
-	//add block of space between Sound Producer Track and Listener Track
-	timeFrame->AddSpacerBlock(40);
-}
-
-void MainFrame::CreateFirstSoundProducerTrack()
-{
-	int space = 20; //the distance,in pixels, between track and previous item(timeline or previous track)
-	double start = -10.0f; //lowest value
-	double end = 10.0f; //highest value
-	int numTicks = 11; //number of ticks between lowest value and highest value including zero
-	double resolution = 1; //the fineness of how much variable can be incremented/decremented by
-
-	double ostart = -1;
-	double oend = 1;
-	double oresolution = 0.1;
-	
-	m_soundproducer_track_vec.push_back(new SoundProducerTrack("SoundProducer Track",
-											audioEnginePtr->GetReferenceToAudioDevice(),
-											audioEnginePtr->GetReferenceToAudioContext())
-										);
-	soundproducertrack_manager_ptr->AddSourceOfLastTrackToSoundProducerTrackManager();
-	
-	//initialize sound producer track stuff
-	m_soundproducer_track_vec[0]->InitTrack(timeFrame->GetTimelineWindow(),nullptr);
-
-	//initialize audio track
-	wxButton* browseButton = new wxButton(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Browse"), wxDefaultPosition, wxSize(70, 30) );
-	m_soundproducer_track_vec[0]->GetReferenceToStereoAudioTrack()->SetReferenceToBrowseButton(browseButton);
-	m_soundproducer_track_vec[0]->GetReferenceToStereoAudioTrack()->InitTrack(timeFrame->GetTimelineWindow(),nullptr);
-	m_soundproducer_track_vec.at(0)->SetReferenceToPlaybackControls(timeFrame->GetPlaybackControlsReference());
-	
-	wxButton* importAudioDAWButton = new wxButton(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Import DAW Audio"), wxDefaultPosition, wxSize(150, 30) ); 
-	m_soundproducer_track_vec.at(0)->SetReferenceToImportAudioDAWButton(importAudioDAWButton);
-	
-	
-	
-	//initialize double tracks
-	m_soundproducer_track_vec[0]->SetupAxisForVariable(start,end,resolution,numTicks); //setup bounds for vertical axes
-	m_soundproducer_track_vec[0]->SetReferenceToSoundProducerRegistry(&soundproducer_registry);
-	m_soundproducer_track_vec[0]->UpdateComboBoxListFromSoundProducerRegistry();
-	soundproducer_registry.AddReferenceToComboBox(m_soundproducer_track_vec[0]->GetReferenceToComboBox());
-
-	//add text to indicate it is a Sound Producer Track
-	wxBoxSizer* hboxTextSPTrack = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textSPTrack = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Sound Producer Track(x,y,z)"),wxDefaultPosition );
-	hboxTextSPTrack->Add(textSPTrack);
-	hboxTextSPTrack->Add(m_soundproducer_track_vec[0]->GetReferenceToComboBox());
-	timeFrame->AddBoxSizer(hboxTextSPTrack);
-
-	sound_producer_track_count = 1;
-
-	double audio_start = 0.0f; //lowest value
-	double audio_end = 10.0f; //highest value
-	int audio_numTicks = 11; //number of ticks between lowest value and highest value including zero
-	double audio_resolution = 0.1; //the fineness of how much variable can be incremented/decremented by
-
-	//setup bounds for vertical axis
-	m_soundproducer_track_vec[0]->SetupAxisForAudio(audio_start,audio_end,audio_resolution,audio_numTicks);
-
-	timeFrame->AddSpacerBlock(50);
-
-	//setup browse button and text label for stereo audio track
-	wxBoxSizer* hboxButtonText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textButtonText = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Stereo Audio Track"),wxDefaultPosition );
-	hboxButtonText->Add(textButtonText);
-	hboxButtonText->Add(browseButton);
-	hboxButtonText->Add(importAudioDAWButton);
-	timeFrame->AddBoxSizer(hboxButtonText);
-
-	//add label for left channel audio
-	wxBoxSizer* hboxAudioLeftText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textAudioLeft = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Left Channel Audio"),wxDefaultPosition );
-	hboxAudioLeftText->Add(textAudioLeft);
-	timeFrame->AddBoxSizer(hboxAudioLeftText);
-
-	//add left channel track to time frame
-	timeFrame->AddTrack(m_soundproducer_track_vec[0]->GetReferenceToStereoAudioTrack()->GetReferenceToLeftChannelTrack(),space);
-
-	//add label for right channel audio
-	wxBoxSizer* hboxAudioRightText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textAudioRight = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Right Channel Audio"),wxDefaultPosition );
-	hboxAudioRightText->Add(textAudioRight);
-	timeFrame->AddBoxSizer(hboxAudioRightText);
-
-	//add right channel track to time frame
-	timeFrame->AddTrack(m_soundproducer_track_vec[0]->GetReferenceToStereoAudioTrack()->GetReferenceToRightChannelTrack(),space);
-
-	//add track functions to call for sound producer track manager
-	timeFrame->AddTrackFunctionToCallInTimerLoopPlayState(soundproducertrack_manager_ptr.get());
-	timeFrame->AddTrackFunctionToCallInTimerLoopNullState(soundproducertrack_manager_ptr.get());
-	timeFrame->AddTrackFunctionToCallInTimerLoopPauseState(soundproducertrack_manager_ptr.get());
-	timeFrame->AddTrackFunctionToCallInTimerLoopRewindState(soundproducertrack_manager_ptr.get());
-	timeFrame->AddTrackFunctionToCallInTimerLoopFastForwardState(soundproducertrack_manager_ptr.get());
-
-
-	//add x,y,z tracks of SoundProducerTrack to time frame
-
-	//add label for x track
-	wxBoxSizer* hboxXText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textX = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("X"),wxDefaultPosition );
-	hboxXText->Add(textX);
-	timeFrame->AddBoxSizer(hboxXText);
-
-	timeFrame->AddTrack(m_soundproducer_track_vec[0]->GetReferenceToXTrack(),space);
-
-	//add label for y track
-	wxBoxSizer* hboxYText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textY = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Y"),wxDefaultPosition );
-	hboxYText->Add(textY);
-	timeFrame->AddBoxSizer(hboxYText);
-
-	timeFrame->AddTrack(m_soundproducer_track_vec[0]->GetReferenceToYTrack(),space);
-
-	//add label for z track
-	wxBoxSizer* hboxZText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textZ = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Z"),wxDefaultPosition );
-	hboxZText->Add(textZ);
-	timeFrame->AddBoxSizer(hboxZText);
-
-	timeFrame->AddTrack(m_soundproducer_track_vec[0]->GetReferenceToZTrack(),space);
-
-	//add block of space between Sound Producer Track and bottom of window, also extends height of window
-	timeFrame->AddSpacerBlock(100);
-
-	//intialize add and remove buttons for new soundproducer tracks
-	m_add_soundproducertrack_button = new wxButton(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Add SoundProducer Track"), wxDefaultPosition, wxSize(200, 30) );
-	m_add_soundproducertrack_button->Bind(wxEVT_BUTTON, &MainFrame::OnAddSoundProducerTrack,this);
-
-
-	m_remove_soundproducertrack_button = new wxButton(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Remove SoundProducer Track"), wxDefaultPosition, wxSize(200, 30) );
-	m_remove_soundproducertrack_button->Bind(wxEVT_BUTTON, &MainFrame::OnRemoveSoundProducerTrack,this);
-
-	m_add_rm_box_sizer = new wxBoxSizer(wxVERTICAL);
-
-	m_add_rm_box_sizer->Add(m_remove_soundproducertrack_button);
-	m_add_rm_box_sizer->AddSpacer(25);
-	m_add_rm_box_sizer->Add(m_add_soundproducertrack_button);
-
-	timeFrame->AddBoxSizer(m_add_rm_box_sizer);
-}
-
-void MainFrame::CreateNewSoundProducerTrack()
-{
-	std::cout << "Count of items in timeline window size:" << timeFrame->GetTimelineWindow()->GetSizer()->GetItemCount() << std::endl;
-	//set title based on how many sound producer tracks there are
-	sound_producer_track_count += 1;
-
-	//convert number to string
-	std::string result;          // string which will contain the result
-	std::ostringstream convert;   // stream used for the conversion
-	convert << sound_producer_track_count;      // insert the textual representation of 'Number' in the characters in the stream
-	result = convert.str(); // set 'Result' to the contents of the stream
-
-	wxString title = wxString("SoundProducer Track " + result);
-
-	m_soundproducer_track_vec.push_back(new SoundProducerTrack(title,
-											audioEnginePtr->GetReferenceToAudioDevice(),
-											audioEnginePtr->GetReferenceToAudioContext())
-										);
-	soundproducertrack_manager_ptr->AddSourceOfLastTrackToSoundProducerTrackManager();
-
-	//initialize sound producer track stuff
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->InitTrack(timeFrame->GetTimelineWindow(),nullptr);
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->SetReferenceToPlaybackControls(timeFrame->GetPlaybackControlsReference());
-
-	//initialize audio track
-	wxButton* browseButton = new wxButton(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Browse"), wxDefaultPosition, wxSize(70, 30) );
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToStereoAudioTrack()->SetReferenceToBrowseButton(browseButton);
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToStereoAudioTrack()->InitTrack(timeFrame->GetTimelineWindow(),nullptr);
-	
-	wxButton* importAudioDAWButton = new wxButton(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Import DAW Audio"), wxDefaultPosition, wxSize(150, 30) ); 
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->SetReferenceToImportAudioDAWButton(importAudioDAWButton);
-	
-	//initialize double tracks
-
-	int space = 20; //the distance,in pixels, between track and previous item(timeline or previous track)
-	double start = -10.0f; //lowest value
-	double end = 10.0f; //highest value
-	int numTicks = 11; //number of ticks between lowest value and highest value including zero
-	double resolution = 1; //the fineness of how much variable can be incremented/decremented by
-
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->SetupAxisForVariable(start,end,resolution,numTicks); //setup bounds for vertical axes
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->SetReferenceToSoundProducerRegistry(&soundproducer_registry);
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->UpdateComboBoxListFromSoundProducerRegistry();
-	soundproducer_registry.AddReferenceToComboBox(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToComboBox());
-
-	//add text to indicate it is a Sound Producer Track
-	wxBoxSizer* hboxTextSPTrack = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textSPTrack = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Sound Producer Track(x,y,z)"),wxDefaultPosition );
-	hboxTextSPTrack->Add(textSPTrack);
-	hboxTextSPTrack->Add(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToComboBox());
-	timeFrame->AddBoxSizer(hboxTextSPTrack);
-
-
-
-	double audio_start = 0.0f; //lowest value
-	double audio_end = 10.0f; //highest value
-	int audio_numTicks = 11; //number of ticks between lowest value and highest value including zero
-	double audio_resolution = 0.1; //the fineness of how much variable can be incremented/decremented by
-
-	//setup bounds for vertical axis
-	m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->SetupAxisForAudio(audio_start,audio_end,audio_resolution,audio_numTicks);
-
-	timeFrame->AddSpacerBlock(50);
-
-	//setup browse button and text label for stereo audio track
-	wxBoxSizer* hboxButtonText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textButtonText = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Stereo Audio Track"),wxDefaultPosition );
-	hboxButtonText->Add(textButtonText);
-	hboxButtonText->Add(browseButton);
-	hboxButtonText->Add(importAudioDAWButton);
-	timeFrame->AddBoxSizer(hboxButtonText);
-
-	//add label for left channel audio
-	wxBoxSizer* hboxAudioLeftText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textAudioLeft = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Left Channel Audio"),wxDefaultPosition );
-	hboxAudioLeftText->Add(textAudioLeft);
-	timeFrame->AddBoxSizer(hboxAudioLeftText);
-
-	//add left channel track to time frame
-	timeFrame->AddTrack(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToStereoAudioTrack()->GetReferenceToLeftChannelTrack(),space);
-
-	//add label for right channel audio
-	wxBoxSizer* hboxAudioRightText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textAudioRight = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Right Channel Audio"),wxDefaultPosition );
-	hboxAudioRightText->Add(textAudioRight);
-	timeFrame->AddBoxSizer(hboxAudioRightText);
-
-	//add right channel track to time frame
-	timeFrame->AddTrack(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToStereoAudioTrack()->GetReferenceToRightChannelTrack(),space);
-
-	//add x,y,z tracks of SoundProducerTrack to time frame
-
-	//add label for x track
-	wxBoxSizer* hboxXText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textX = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("X"),wxDefaultPosition );
-	hboxXText->Add(textX);
-	timeFrame->AddBoxSizer(hboxXText);
-
-	timeFrame->AddTrack(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToXTrack(),space);
-
-	//add label for y track
-	wxBoxSizer* hboxYText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textY = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Y"),wxDefaultPosition );
-	hboxYText->Add(textY);
-	timeFrame->AddBoxSizer(hboxYText);
-
-	timeFrame->AddTrack(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToYTrack(),space);
-
-	//add label for z track
-	wxBoxSizer* hboxZText = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *textZ = new wxStaticText(timeFrame->GetTimelineWindow(), wxID_ANY, wxT("Z"),wxDefaultPosition );
-	hboxZText->Add(textZ);
-	timeFrame->AddBoxSizer(hboxZText);
-
-	timeFrame->AddTrack(m_soundproducer_track_vec.at(m_soundproducer_track_vec.size()-1)->GetReferenceToZTrack(),space);
-
-	//add block of space between Sound Producer Track and bottom of window, also extends height of window
-	timeFrame->AddSpacerBlock(100);
-}
-
-void MainFrame::OnRemoveSoundProducerTrack(wxCommandEvent& event)
-{
-	size_t itemCount = 	timeFrame->GetTimelineWindow()->GetSizer()->GetItemCount();
-	std::cout << "\nItem Count: " << itemCount << std::endl;
-
-	//if item count is more than 25, which means the initial items to not be deleted are in the timeline window.
-	if(itemCount > 33)
-	{
-		//remove x,y,z tracks of soundproducer track added to timelinewindow
-		//and remove the combo box and text label
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-2);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-3);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-4);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-5);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-6);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-7);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-8);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-9);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-10);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-11);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-12);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-13);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-14);
-		timeFrame->GetTimelineWindow()->GetSizer()->Remove(itemCount-15);
-
-		//resize frame properly
-		timeFrame->Layout();
-
-		//destroy last soundproducertrack from vector containing soundproducertracks
-		m_soundproducer_track_vec.pop_back();
-		soundproducertrack_manager_ptr->RemoveSourceOfLastTrackFromSoundProducerTrackManager();
-		soundproducer_registry.RemoveLastComboBoxReference();
-
-		std::cout << "\nItem Count: " << timeFrame->GetTimelineWindow()->GetSizer()->GetItemCount() << std::endl;
-	}
-
-}
-
-void MainFrame::OnPopupClick(wxCommandEvent& evt)
-{
-	//void *data=static_cast<wxMenu *>( evt.GetEventObject() )->GetClientData();
-	//switch(evt.GetId())
-	//{
-	//	case ID_SOMETHING:{break;}
-	//	case ID_SOMETHING_ELSE:{break;}
-	//}
-}
-
-void MainFrame::OnListRightClick(wxListEvent& evt)
-{
-	void *data = reinterpret_cast<void *>(evt.GetItem().GetData());
-	wxMenu menu;
-	menu.SetClientData( data );
-	menu.Connect(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainFrame::OnPopupClick), NULL, this);
-	PopupMenu(&menu);
-}
-
-void MainFrame::OnKeyDown(wxKeyEvent &event)
-{
-#if wxUSE_UNICODE
-    int key = event.GetUnicodeKey();
-#else
-    int key = event.GetKeyCode();
-#endif
-
-	std::cout << "KeyDown:" << key << std::endl;
-
-}
 */
