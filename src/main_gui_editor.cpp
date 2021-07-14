@@ -545,18 +545,18 @@ void MainGuiEditor::draw_object_creation_menu()
 	//create,edit object menu panel
 	//draw rectangle panel on the left
 	
-	GuiDrawRectangle((Rectangle){20,80,150,160}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawRectangle((Rectangle){20,120,150,160}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
 	//GuiPanel( (Rectangle){20,80,125,160} );
-	GuiDrawText("Object Creation / Edit", (Rectangle){20,80,125,20}, 1, BLACK);
+	GuiDrawText("Object Creation / Edit", (Rectangle){20,120,125,20}, 1, BLACK);
 	
 	//draw button create
-	bool createObjectClicked = GuiButton( (Rectangle){ 25, 140, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Create") );
+	bool createObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Create") );
 	//draw button edit
-	bool editObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Edit") );
+	bool editObjectClicked = GuiButton( (Rectangle){ 25, 220, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Edit") );
 	
 	//draw GuiDropdownBox for choosing type to manipulate
 	
-	if( GuiDropdownBox((Rectangle){ 25,100,140,30 }, "None;Listener;Sound Producer;Standard Reverb Zone; EAX Reverb Zone; Echo Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
+	if( GuiDropdownBox((Rectangle){ 25,140,140,30 }, "None;Listener;Sound Producer;Standard Reverb Zone; EAX Reverb Zone; Echo Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
 	{
 		dropDownObjectTypeMode = !dropDownObjectTypeMode;
 	}
@@ -893,14 +893,13 @@ void MainGuiEditor::draw_sound_bank()
 
 void MainGuiEditor::draw_hrtf_menu()
 {
-	GuiDrawRectangle((Rectangle){20,10,150,60}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
-	GuiDrawText("HRTF", (Rectangle){20,10,125,20}, 1, BLACK);
+	GuiDrawRectangle((Rectangle){20,300,150,100}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawText("HRTF", (Rectangle){20,300,125,20}, 1, BLACK);
 	
-	//draw button Change
-	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 30, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Change") );
 	//draw button Test
-	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 95, 30, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Test") );
-	
+	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 25, 320, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Test") );
+	//draw button Change
+	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 360, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Change") );
 	
 	if(testHRTFButtonClicked)
 	{
@@ -950,6 +949,25 @@ void MainGuiEditor::draw_hrtf_menu()
 
 void MainGuiEditor::draw_project_file_dialog()
 {
+	GuiDrawRectangle((Rectangle){20,10,150,100}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawText("Project", (Rectangle){20,10,125,20}, 1, BLACK);
+	
+	//draw load button
+	if( GuiButton( (Rectangle){ 25, 30, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "Load Project") ) )
+	{
+		proj_file_state = ProjectFileState::LOAD;
+		fileDialogState.fileDialogActive = true; //activate file dialog
+	}
+	
+	//draw save button
+	if( GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(RICON_FILE_SAVE, "Save Project") ) )
+	{
+		proj_file_state = ProjectFileState::SAVE;
+		fileDialogState.fileDialogActive = true; //activate file dialog
+	}
+	
+	
+	
 	if (fileDialogState.fileDialogActive){ GuiLock();}
 	
 	if(proj_file_state == ProjectFileState::LOAD)
