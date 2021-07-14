@@ -239,4 +239,9 @@ void XMLCreator::SaveDataXML_Listener(pugi::xml_node& root, Listener* listener_p
 	}
 	
 	extOrientNodeChild.append_attribute("status") = value.c_str();
+	
+	pugi::xml_node positionNodeChild = listenerNode.append_child("Position");
+	positionNodeChild.append_attribute("x") = listener_ptr->GetListenerSaveData().x;
+	positionNodeChild.append_attribute("y") = listener_ptr->GetListenerSaveData().y;
+	positionNodeChild.append_attribute("z") = listener_ptr->GetListenerSaveData().z;
 }

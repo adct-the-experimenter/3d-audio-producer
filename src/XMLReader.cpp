@@ -303,5 +303,14 @@ void XMLReader::LoadData_Listener(pugi::xml_node& root, ListenerSaveData& listen
 	
 	data.externalOrientation = status;
 	
+	valString = listenerNodeRoot.child("Position").attribute("x").value();
+	data.x = atof(valString.c_str());
+	
+	valString = listenerNodeRoot.child("Position").attribute("y").value();
+	data.y = atof(valString.c_str());
+	
+	valString = listenerNodeRoot.child("Position").attribute("z").value();
+	data.z = atof(valString.c_str());
+	
 	listener_save_data = data;
 }

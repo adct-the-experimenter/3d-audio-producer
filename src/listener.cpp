@@ -231,6 +231,9 @@ void Listener::LoadListenerSaveData(ListenerSaveData& data)
 	
 	Listener::SetListenerFreeRoamBool(data.freeRoam);
 	Listener::SetListenerExternalDeviceOrientationBool(data.externalOrientation);
+	Listener::setPositionX(data.x);
+	Listener::setPositionY(data.y);
+	Listener::setPositionZ(data.z);
 }
 
 void Listener::DrawModel()
