@@ -17,6 +17,7 @@ void XMLReader::LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_p
 							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
 							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
 							   ListenerSaveData& listener_data,
+							   SoundBankSaveData& sound_bank_save_data,
 							   std::string path)
 {
 	// Create empty XML document within memory
@@ -42,6 +43,7 @@ void XMLReader::LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_p
 	XMLReader::LoadData_EAXRevZones(root,eaxRevZonesSaveData);
 	
 	XMLReader::LoadData_Listener(root,listener_data);
+	XMLReader::LoadData_SoundBank(root,sound_bank_save_data);
 }
 
 void XMLReader::LoadData_SoundProducers(pugi::xml_node& root, std::vector <SoundProducerSaveData> *sound_producer_save_data)
@@ -320,4 +322,29 @@ void XMLReader::LoadData_Listener(pugi::xml_node& root, ListenerSaveData& listen
 	data.z = atof(valString.c_str());
 	
 	listener_save_data = data;
+}
+
+void XMLReader::LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& sound_bank_save_data)
+{
+	std::string valString = "";
+	
+	pugi::xml_node soundBankRoot = root.child("SoundBank");
+	
+	pugi::xml_node accountsNodeRoot = soundBankRoot.child("Accounts");
+	
+	size_t iterator = 0;
+	
+	//go through each sound producer node
+	for (pugi::xml_node account_node = accountsNodeRoot.first_child(); account_node; account_node = account_node.next_sibling() )
+	{
+		valString = account_node.child("Info").attribute("name").value(); 
+		sound_bank_save_data.sound_account_data[iterator].name = valString;
+		
+		valString = account_node.child("Info").attribute("account_num").value(); 
+		sound_bank_save_data.sound_account_data[iterator].account_number = atoi(valString.c_str());
+		
+		valString = account_node.child("Info").attribute("filepath").value(); 
+		sound_bank_save_data.sound_account_data[iterator].stream_file_path = valString;
+	}
+	
 }

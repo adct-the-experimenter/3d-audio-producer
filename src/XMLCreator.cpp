@@ -16,7 +16,8 @@ void XMLCreator::SaveDataToXMLFile(std::vector < std::unique_ptr <SoundProducer>
 						   std::vector <EchoZone> *echoZones,
 						   std::vector <ReverbZone> *standardRevZones,
 						   std::vector <ReverbZone> *eaxRevZones,
-						   Listener* listener_ptr, 
+						   Listener* listener_ptr,
+						   SoundBank* sound_bank_ptr,  
 						   std::string path)
 {
 	
@@ -44,6 +45,8 @@ void XMLCreator::SaveDataToXMLFile(std::vector < std::unique_ptr <SoundProducer>
 	
 	
 	XMLCreator::SaveDataXML_Listener(root,listener_ptr);
+	
+	XMLCreator::SaveDataXML_SoundBank(root,sound_bank_ptr);
 	
 	//write to file
 	
@@ -259,4 +262,27 @@ void XMLCreator::SaveDataXML_Listener(pugi::xml_node& root, Listener* listener_p
 	positionNodeChild.append_attribute("x") = listener_ptr->GetListenerSaveData().x;
 	positionNodeChild.append_attribute("y") = listener_ptr->GetListenerSaveData().y;
 	positionNodeChild.append_attribute("z") = listener_ptr->GetListenerSaveData().z;
+}
+
+void XMLCreator::SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_bank_ptr)
+{
+	if(sound_bank_ptr)
+	{
+		pugi::xml_node soundBankNode = root.append_child("SoundBank");
+		
+		//create sound producers node
+		pugi::xml_node accountsNode = root.append_child("Accounts");
+
+		for(size_t i = 0; i < sound_bank_ptr->GetSaveData().sound_account_data.size(); i++)
+		{
+			pugi::xml_node accountNodeChild = accountsNode.append_child("AccountChild");
+			
+			pugi::xml_node infoNodeChild = accountNodeChild.append_child("Info");
+			infoNodeChild.append_attribute("name") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).name.c_str();
+			infoNodeChild.append_attribute("account_num") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).account_number;
+			infoNodeChild.append_attribute("filepath") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).stream_file_path.c_str();
+			
+		}
+				
+	}
 }

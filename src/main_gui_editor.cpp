@@ -1082,7 +1082,7 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	std::cout << "Save project file path:" << saveFilePath << std::endl;
 	
 	save_system_ptr->SetSaveFilePath(saveFilePath);
-	save_system_ptr->SaveProjectToSetFile(&sound_producer_vector,effects_manager_ptr.get(),listener.get());
+	save_system_ptr->SaveProjectToSetFile(&sound_producer_vector,effects_manager_ptr.get(),listener.get(),&m_sound_bank);
 	
 }
 
@@ -1102,6 +1102,8 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	std::vector <EchoZoneSaveData> echoZonesSaveData;
 	std::vector <StandardReverbZoneSaveData> standardRevZonesSaveData;
 	std::vector <EAXReverbZoneSaveData> eaxRevZonesSaveData;
+	
+	SoundBankSaveData sound_bank_save_data;
 
 	ListenerSaveData listener_data;
 	
@@ -1110,6 +1112,7 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 						   &standardRevZonesSaveData,
 						   &eaxRevZonesSaveData,
 						   listener_data,
+						   sound_bank_save_data,
 						   filepath);
 						   
 	
@@ -1175,6 +1178,11 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	{
 		listener->LoadListenerSaveData(listener_data);
 	}
+	
+	//initialize sound bank from save data
+	m_sound_bank.LoadSaveData(sound_bank_save_data);
+	
+	
 }
 
 

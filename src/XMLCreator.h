@@ -29,7 +29,8 @@ public:
 						   std::vector <EchoZone> *echoZones,
 						   std::vector <ReverbZone> *standardRevZones,
 						   std::vector <ReverbZone> *eaxRevZones,
-						   Listener* listener_ptr, 
+						   Listener* listener_ptr,
+						   SoundBank* sound_bank_ptr, 
 						   std::string path);
 	
 private:
@@ -47,7 +48,8 @@ private:
 	//function to save data from listener to xml file
 	void SaveDataXML_Listener(pugi::xml_node& root, Listener* listener_ptr);
 	
-									
+	//function to save data from sound bank to xml file
+	void SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_bank_ptr);					
 };
 
 #endif

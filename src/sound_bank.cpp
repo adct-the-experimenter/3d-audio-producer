@@ -33,6 +33,8 @@ SoundBank::SoundBank()
 	{
 		m_sound_accounts[i].account_number = i;
 		
+		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
+		
 		std::string datadir; 
 	
 		datadir = DATADIR_NAME;
@@ -101,6 +103,8 @@ void SoundBank::DrawGui_Item()
 			strcpy(fileNameToLoad, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
 			std::string filepath = std::string(fileNameToLoad);
 			filepath_textboxes[current_file_button_edit] = filepath;
+			m_sound_bank_save_data.sound_account_data[current_file_button_edit].stream_file_path = filepath;
+			
 			std::cout << "filepath in main gui editor: " << filepath << std::endl;
 			//load audio data
 			SoundBank::LoadAudioDataFromFileToAccount(filepath,current_file_button_edit);
@@ -244,8 +248,14 @@ void SoundBank::LoadSaveData(SoundBankSaveData& data)
 	{
 		m_sound_accounts[i] = data.sound_account_data[i];
 		
+		filepath_textboxes[i] = data.sound_account_data[i].stream_file_path;
+		
 		account_look_up[i] = data.sound_account_data[i].name;
+		
+		strncpy(name_textboxes[i].char_name,data.sound_account_data[i].name.c_str(),20);
+		name_textboxes[i].char_name[19] = '\0';
 	}
 	
-	
 }
+
+SoundBankSaveData& SoundBank::GetSaveData(){return m_sound_bank_save_data;}

@@ -20,6 +20,7 @@ public:
 							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
 							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
 							   ListenerSaveData& listener_save_data,
+							   SoundBankSaveData& sound_bank_save_data,
 							   std::string path);
 	
 private:

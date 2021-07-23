@@ -30,6 +30,7 @@ public:
 							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
 							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
 							   ListenerSaveData& listener_data,
+							   SoundBankSaveData& sound_bank_save_data,
 							   std::string path);
 	
 private:
@@ -41,6 +42,8 @@ private:
 	void LoadData_EAXRevZones(pugi::xml_node& root,std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData);
 		
 	void LoadData_Listener(pugi::xml_node& root, ListenerSaveData& listener_data);
+	
+	void LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& sound_bank_save_data);
 };
 
 #endif
