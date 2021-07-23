@@ -13,6 +13,7 @@
 #include "echo-zone.h"
 #include "reverb-zone.h"
 
+#include "sound_bank.h"
 
 
 //class used to save data in binaural audio editor into a xml file

@@ -200,6 +200,21 @@ void XMLCreator::SaveDataXML_SoundProducers(pugi::xml_node& root,
 			positionNodeChild.append_attribute("x") = sound_producer_vector_ptr->at(i)->GetSoundProducerSaveData().x;
 			positionNodeChild.append_attribute("y") = sound_producer_vector_ptr->at(i)->GetSoundProducerSaveData().y;
 			positionNodeChild.append_attribute("z") = sound_producer_vector_ptr->at(i)->GetSoundProducerSaveData().z;
+			
+			pugi::xml_node accountNumberNodeChild = spNodeChild.append_child("AccountNumber");
+			accountNumberNodeChild.append_attribute("num") = sound_producer_vector_ptr->at(i)->GetSoundProducerSaveData().account_number;
+			
+			pugi::xml_node freeRoamNodeChild = spNodeChild.append_child("FreeRoam");
+			
+			if(sound_producer_vector_ptr->at(i)->GetSoundProducerSaveData().freeRoam)
+			{
+				freeRoamNodeChild.append_attribute("status") = "true";
+			}
+			else
+			{
+				freeRoamNodeChild.append_attribute("status") = "false";
+			}
+			
 						
 		}
 				

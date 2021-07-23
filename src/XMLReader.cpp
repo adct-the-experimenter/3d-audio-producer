@@ -69,6 +69,13 @@ void XMLReader::LoadData_SoundProducers(pugi::xml_node& root, std::vector <Sound
 		valString = sp_node.child("Position").attribute("z").value();
 		data.z = atof(valString.c_str());
 		
+		valString = sp_node.child("AccountNumber").attribute("num").value();
+		data.account_number = atoi(valString.c_str());
+		
+		valString = sp_node.child("FreeRoam").attribute("status").value();
+		if(valString == "true"){ data.freeRoam = true;}
+		else{data.freeRoam = false;}
+		
 		sound_producer_save_data->push_back(data);		
 	}
 		

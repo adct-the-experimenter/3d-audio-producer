@@ -134,6 +134,8 @@ void SoundBank::ChangeSoundNameForAccount(std::uint8_t account_num,std::string n
 {
 	m_sound_accounts[account_num].name = new_name;
 	account_look_up[account_num] = new_name;
+	
+	m_sound_bank_save_data.sound_account_data[account_num].name = new_name;
 }
 	
 //used for querying sound
@@ -142,7 +144,7 @@ std::array <std::string,10> &SoundBank::GetAccountLookupTable(){return account_l
 #define	BUFFER_LEN	1024
 #define	MAX_CHANNELS	2
 
-void ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr,std::string inputSoundFilePath,SF_INFO& input_sfinfo)
+static void ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr,std::string inputSoundFilePath,SF_INFO& input_sfinfo)
 {
 	SNDFILE *inputFile;
 	
@@ -177,7 +179,7 @@ void ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr
 	sf_close(inputFile);
 }
 
-void CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy_ptr, AudioStreamContainer* audio_data_stream_ptr,std::string streamSoundFilePath,SF_INFO& input_sfinfo)
+static void CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy_ptr, AudioStreamContainer* audio_data_stream_ptr,std::string streamSoundFilePath,SF_INFO& input_sfinfo)
 {
 	
 	//copy input audio data references to audio data stream
@@ -232,4 +234,18 @@ void SoundBank::LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t
 	audio_data_input_copy.clear();
 }
 
-
+void SoundBank::LoadSaveData(SoundBankSaveData& data)
+{
+	m_sound_bank_save_data = data;
+	
+	//set sound account data from save data
+	//set account lookup from save data
+	for(size_t i = 0; i < m_sound_accounts.size(); i++)
+	{
+		m_sound_accounts[i] = data.sound_account_data[i];
+		
+		account_look_up[i] = data.sound_account_data[i].name;
+	}
+	
+	
+}

@@ -29,6 +29,9 @@ struct SoundProducerSaveData
 	
 	//account number from sound bank
 	std::uint8_t account_number;
+	
+	//free roam
+	bool freeRoam;
 };
 
 

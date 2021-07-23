@@ -18,6 +18,11 @@ struct SoundAccount
 	std::string stream_file_path; //path to audio file
 };
 
+struct SoundBankSaveData
+{
+	std::array <SoundAccount,10> sound_account_data;
+};
+
 class SoundBank
 {
 public:
@@ -38,11 +43,17 @@ public:
 		
 	friend class ImmediateModeSoundPlayer;
 	
+	//save / load data operation
+	
+	void LoadSaveData(SoundBankSaveData& data);
+	SoundBankSaveData& GetSaveData();
+	
 private:
 
 	std::array <SoundAccount,10> m_sound_accounts;
 	
 	std::array <std::string,10> account_look_up;
 	
+	SoundBankSaveData m_sound_bank_save_data;
 };
 #endif

@@ -10,6 +10,8 @@
 #include "echo-zone.h"
 #include "reverb-zone.h"
 
+#include "sound_bank.h"
+
 #include "pugixml.hpp"
 #include <iostream>
 

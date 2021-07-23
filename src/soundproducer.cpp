@@ -145,7 +145,11 @@ void SoundProducer::LoadSoundProducerSaveData(SoundProducerSaveData& data)
 	
 }
 
-void SoundProducer::SetFreeRoamBool(bool state){freeRoam = state;}
+void SoundProducer::SetFreeRoamBool(bool state)
+{
+	freeRoam = state; 
+	m_saveData.freeRoam = state;
+}
 
 bool SoundProducer::GetFreeRoamBool(){return freeRoam;}
 
@@ -161,7 +165,7 @@ void SoundProducer::DrawModel()
 	}
 }
 
-void SoundProducer::SetAccountNumber(std::uint8_t num){account_number = num;}
+void SoundProducer::SetAccountNumber(std::uint8_t num){account_number = num; m_saveData.account_number = num;}
 
 std::uint8_t SoundProducer::GetAccountNumber(){return account_number;}
 

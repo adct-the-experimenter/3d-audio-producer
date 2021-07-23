@@ -504,20 +504,15 @@ void MainGuiEditor::DrawGUI_Items()
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
 	
-	//draw object creation/edit menu
-	MainGuiEditor::draw_object_creation_menu();
-	
-	//active sound producer dropdown box
-	
-	//draw gui dropdownbox for choosing sound producer to manipulate with hot keys
 	
 	//draw HRTF edit menu
 	MainGuiEditor::draw_hrtf_menu();
 	
-	//draw save button
+	//draw object creation/edit menu
+	MainGuiEditor::draw_object_creation_menu();
 	
-	//draw load button
 	
+	//draw project file buttons
 	MainGuiEditor::draw_project_file_dialog();
 }
 
@@ -1124,11 +1119,9 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 		for(size_t i = 0; i < sound_producer_save_data.size(); i++)
 		{
 			//create sound producer
-			bool freeRoam = false;
-			std::uint8_t account_num =  0;
 			MainGuiEditor::CreateSoundProducer(sound_producer_save_data[i].name,
 												sound_producer_save_data[i].x, sound_producer_save_data[i].y, sound_producer_save_data[i].z, 
-												freeRoam, account_num);
+												sound_producer_save_data[i].freeRoam, sound_producer_save_data[i].account_number);
 		}
 	}
 	
