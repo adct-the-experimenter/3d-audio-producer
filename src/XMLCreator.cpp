@@ -271,16 +271,15 @@ void XMLCreator::SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_ba
 		pugi::xml_node soundBankNode = root.append_child("SoundBank");
 		
 		//create sound producers node
-		pugi::xml_node accountsNode = root.append_child("Accounts");
+		pugi::xml_node accountsNode = soundBankNode.append_child("Accounts");
 
 		for(size_t i = 0; i < sound_bank_ptr->GetSaveData().sound_account_data.size(); i++)
 		{
 			pugi::xml_node accountNodeChild = accountsNode.append_child("AccountChild");
 			
-			pugi::xml_node infoNodeChild = accountNodeChild.append_child("Info");
-			infoNodeChild.append_attribute("name") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).name.c_str();
-			infoNodeChild.append_attribute("account_num") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).account_number;
-			infoNodeChild.append_attribute("filepath") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).stream_file_path.c_str();
+			accountNodeChild.append_attribute("name") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).name.c_str();
+			accountNodeChild.append_attribute("account_num") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).account_number;
+			accountNodeChild.append_attribute("filepath") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).stream_file_path.c_str();
 			
 		}
 				

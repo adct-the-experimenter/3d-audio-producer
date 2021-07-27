@@ -33,8 +33,6 @@ SoundBank::SoundBank()
 	{
 		m_sound_accounts[i].account_number = i;
 		
-		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
-		
 		std::string datadir; 
 	
 		datadir = DATADIR_NAME;
@@ -48,7 +46,8 @@ SoundBank::SoundBank()
 		#endif
 		
 		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
-		m_sound_accounts[i].stream_file_path = filepath_stream;
+		
+		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
 	}
 	
 	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
@@ -105,7 +104,7 @@ void SoundBank::DrawGui_Item()
 			filepath_textboxes[current_file_button_edit] = filepath;
 			m_sound_bank_save_data.sound_account_data[current_file_button_edit].stream_file_path = filepath;
 			
-			std::cout << "filepath in main gui editor: " << filepath << std::endl;
+			//std::cout << "filepath in main gui editor: " << filepath << std::endl;
 			//load audio data
 			SoundBank::LoadAudioDataFromFileToAccount(filepath,current_file_button_edit);
 		}
@@ -248,12 +247,20 @@ void SoundBank::LoadSaveData(SoundBankSaveData& data)
 	{
 		m_sound_accounts[i] = data.sound_account_data[i];
 		
-		filepath_textboxes[i] = data.sound_account_data[i].stream_file_path;
-		
 		account_look_up[i] = data.sound_account_data[i].name;
+		
+		SoundBank::ChangeSoundNameForAccount( i ,  data.sound_account_data[i].name);
 		
 		strncpy(name_textboxes[i].char_name,data.sound_account_data[i].name.c_str(),20);
 		name_textboxes[i].char_name[19] = '\0';
+		
+		filepath_textboxes[i] = data.sound_account_data[i].stream_file_path;
+		
+		if(!data.sound_account_data[i].stream_file_path.empty())
+		{
+			SoundBank::LoadAudioDataFromFileToAccount(data.sound_account_data[i].stream_file_path, i);
+		}
+		
 	}
 	
 }

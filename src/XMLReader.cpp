@@ -337,14 +337,16 @@ void XMLReader::LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& soun
 	//go through each sound producer node
 	for (pugi::xml_node account_node = accountsNodeRoot.first_child(); account_node; account_node = account_node.next_sibling() )
 	{
-		valString = account_node.child("Info").attribute("name").value(); 
+		valString = account_node.attribute("name").value(); 
 		sound_bank_save_data.sound_account_data[iterator].name = valString;
 		
-		valString = account_node.child("Info").attribute("account_num").value(); 
+		valString = account_node.attribute("account_num").value(); 
 		sound_bank_save_data.sound_account_data[iterator].account_number = atoi(valString.c_str());
 		
-		valString = account_node.child("Info").attribute("filepath").value(); 
+		valString = account_node.attribute("filepath").value(); 
 		sound_bank_save_data.sound_account_data[iterator].stream_file_path = valString;
+		
+		iterator++;
 	}
 	
 }
