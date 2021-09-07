@@ -322,8 +322,12 @@ int Gui_Dropdown_ListView_Simple(DropDownListViewSettings* settings,Rectangle bo
 typedef struct 
 {
 	bool editMode;
-	float current_timeline_position;
-	float max_num_frames;
+	
+	size_t current_timeline_frame;
+	size_t max_num_frames;
+	
+	size_t* array_points_ptr; //array of points to render
+	
 	bool valueChanged;
 	bool addPoint;
 	bool showPropertiesBox;
@@ -332,6 +336,9 @@ typedef struct
 #ifdef __cplusplus
 extern "C" {            // Prevents name mangling of functions
 #endif
+
+
+TimelineSettings InitTimelineSettings(size_t max_num_frames, size_t* points_ptr);
 
 //Draws timeline 
 //returns if timeline was clicked on
@@ -345,24 +352,33 @@ bool Gui_3dObject_Timeline(TimelineSettings* settings);
 
 #if defined(GUI_3D_OBJECT_TIMELINE)
 
+
+TimelineSettings InitTimelineSettings(size_t max_num_frames, size_t* points_ptr)
+{
+	TimelineSettings settings = { 0 };
+	
+	settings.array_points_ptr = points_ptr;
+	settings.max_num_frames = max_num_frames;
+}
+
 bool Gui_3dObject_Timeline(TimelineSettings* settings)
 {
 	
 //draw timeline
+//horizontal axis is the time
+//vertical axis is nothing
 
-//if show timeline is true
+//draw box with background color
 
-	//draw box with background color
+//draw cursor line where mouse pointer is
+//select frame based on where mouse pointer is clicked on 
+
+	//set add point bool to true
 	
-	//draw cursor line where mouse pointer is
 	
-	//if add point is true
-		
-		//add point at current cursor line
-		
-	
-	//if mouse click on point in timeline and add point is false
-		//show properties box to true
+
+//if mouse click on point in timeline and add point is false
+	//show properties box to true
 		
 //draw properties box
 	

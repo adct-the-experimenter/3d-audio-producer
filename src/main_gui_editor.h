@@ -82,6 +82,7 @@ private:
 	void draw_sound_bank();
 	void draw_hrtf_menu();
 	void draw_project_file_dialog();
+	void draw_timeline_menu();
 	
 	//sound bank
 	SoundBank m_sound_bank;

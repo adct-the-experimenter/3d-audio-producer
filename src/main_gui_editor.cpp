@@ -20,6 +20,7 @@
 #include "CreateEAXReverbZoneDialog.h"
 #include "EditMultipleEAXReverbZonesDialog.h"
 
+#include "timeline.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -35,28 +36,31 @@ bool init_listener_once = false;
 
 //Gui items to initialize
 
-CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
-EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
-EditListenerDialog edit_lt_dialog("Edit Listener");
-ImmediateModeSoundPlayer im_sound_player;
+static CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+static EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
+static EditListenerDialog edit_lt_dialog("Edit Listener");
+static ImmediateModeSoundPlayer im_sound_player;
 
-HRTFTestDialog hrtf_test_dialog;
-ChangeHRTFDialog change_hrtf_dialog;
+static HRTFTestDialog hrtf_test_dialog;
+static ChangeHRTFDialog change_hrtf_dialog;
 
 //dialogs for manipulating effect zones
-CreateEchoZoneDialog create_echo_zone_dialog;
-EditMultipleEchoZonesDialog edit_echo_zone_dialog;
+static CreateEchoZoneDialog create_echo_zone_dialog;
+static EditMultipleEchoZonesDialog edit_echo_zone_dialog;
 
-CreateStandardReverbZoneDialog create_sr_zone_dialog;
-EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
+static CreateStandardReverbZoneDialog create_sr_zone_dialog;
+static EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
-CreateEAXReverbZoneDialog create_er_zone_dialog;
-EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
+static CreateEAXReverbZoneDialog create_er_zone_dialog;
+static EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
 
 //dialog for saving and loading project file
 static GuiFileDialogState fileDialogState;
 enum class ProjectFileState : std::uint8_t{NONE=0, SAVE,LOAD};
 static ProjectFileState proj_file_state;
+
+//timeline
+static Timeline timeline_window;
 
 
 MainGuiEditor::MainGuiEditor()
@@ -504,16 +508,17 @@ void MainGuiEditor::DrawGUI_Items()
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
 	
-	
 	//draw HRTF edit menu
 	MainGuiEditor::draw_hrtf_menu();
 	
 	//draw object creation/edit menu
 	MainGuiEditor::draw_object_creation_menu();
 	
-	
 	//draw project file buttons
 	MainGuiEditor::draw_project_file_dialog();
+	
+	//draw timeline 
+	MainGuiEditor::draw_timeline_menu();
 }
 
 bool dropDownObjectTypeMode = false;
@@ -874,15 +879,26 @@ void MainGuiEditor::draw_object_creation_menu()
 
 void MainGuiEditor::draw_sound_bank()
 {
+	//draw on right side of screen
 	
 	float leftX = GetScreenWidth() - 200;
 	
-	GuiDrawRectangle((Rectangle){leftX,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawRectangle((Rectangle){leftX,50,200,350}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
 	GuiDrawText("Sound Bank", (Rectangle){leftX,50,125,20}, 1, BLACK);
 	GuiDrawText("Sound Name", (Rectangle){leftX,70,125,20}, 1, BLACK);
 	GuiDrawText("File", (Rectangle){leftX + 75,70,125,20}, 1, BLACK);
 	
 	m_sound_bank.DrawGui_Item();
+	
+}
+
+void MainGuiEditor::draw_timeline_menu()
+{
+	//draw show timeline button
+	
+	//draw on bottom third of screen	
+	timeline_window.DrawGui_Item();
+	
 	
 }
 
@@ -1198,6 +1214,7 @@ void MainGuiEditor::CreateSoundProducer(std::string& name,float& x, float& y, fl
 	soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
 	
 	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
+	
 
 }
 
