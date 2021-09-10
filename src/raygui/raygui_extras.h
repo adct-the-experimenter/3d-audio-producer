@@ -369,13 +369,23 @@ bool Gui_3dObject_Timeline(TimelineSettings* settings)
 //vertical axis is nothing
 
 //draw box with background color
+float screen_height = GetScreenHeight();
+DrawRectangle(0, 400 , GetScreenWidth(), screen_height, Fade(GRAY, 0.8f));
 
 //draw cursor line where mouse pointer is
+
+Vector2 mousePoint = GetMousePosition();
+
+float cursor_x = mousePoint.x;
+if(cursor_x < 200){cursor_x = 200;}
+
+DrawRectangle(cursor_x,400,2,screen_height,BLACK);
+
 //select frame based on where mouse pointer is clicked on 
 
 	//set add point bool to true
 	
-	
+//draw points
 
 //if mouse click on point in timeline and add point is false
 	//show properties box to true

@@ -67,6 +67,7 @@ MainGuiEditor::MainGuiEditor()
 {
 	edit_sp_dialog.Init(&sound_producer_vector);
 	
+	
 }
 
 MainGuiEditor::~MainGuiEditor()
@@ -111,6 +112,8 @@ bool MainGuiEditor::OnInit()
 	{
 
 		MainGuiEditor::initListener();
+		
+		timeline_window.Init(&sound_producer_vector,listener.get());
 		
 		//initialize effects manager
 		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager() );
@@ -892,13 +895,22 @@ void MainGuiEditor::draw_sound_bank()
 	
 }
 
+static bool show_timeline_toggle_bool = false;
+
 void MainGuiEditor::draw_timeline_menu()
 {
-	//draw show timeline button
-	
 	//draw on bottom third of screen	
 	timeline_window.DrawGui_Item();
 	
+	//draw show timeline button
+	if( GuiButton( (Rectangle){ 25, 420, 70, 30 }, GuiIconText(0, "Timeline") ) )
+	{
+		show_timeline_toggle_bool = !show_timeline_toggle_bool;
+		
+		timeline_window.SetShowTimelineBool(show_timeline_toggle_bool);
+	}
+	
+	if(show_timeline_toggle_bool){timeline_window.InitGUI();}
 	
 }
 
