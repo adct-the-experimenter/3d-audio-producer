@@ -7,7 +7,6 @@
 #include <memory>
 
 
-
 struct TimelinePlotPosition
 {
 	//pointer to dynamically allocated array
@@ -15,6 +14,8 @@ struct TimelinePlotPosition
 	size_t* timeline_points_posy; 
 	size_t* timeline_points_posz; 
 };
+
+enum class ObjectType : uint8_t {NONE,LISTENER,SOUND_PRODUCER};
 
 class Timeline
 {
@@ -28,6 +29,9 @@ public:
 	void InitGUI();
 	
 	void SetListenerInTimeline(Listener* listener_ptr);
+	
+	//picks object to edit in timeline from outside Timeline class
+	void SetObjectPicked(int index, ObjectType type);
 	
 	void AddPlotPositionToTimeline();
 	void RemovePlotPositionFromTimeline(size_t& sound_producer_picked);
@@ -52,6 +56,9 @@ private:
 	
 	//bool to indicate to show timeline.
 	bool showTimeline;
+	
+	//final choice for object to edit in timeline
+	int m_final_edit_obj_index;
 };
 
 #endif

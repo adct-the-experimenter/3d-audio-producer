@@ -899,6 +899,8 @@ static bool show_timeline_toggle_bool = false;
 
 void MainGuiEditor::draw_timeline_menu()
 {
+	//if need to add point to timeline
+	
 	//draw on bottom third of screen	
 	timeline_window.DrawGui_Item();
 	

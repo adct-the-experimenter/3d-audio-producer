@@ -55,6 +55,17 @@ void Timeline::RemovePlotPositionFromTimeline(size_t& sound_producer_picked)
 
 void Timeline::SetShowTimelineBool(bool state){showTimeline = state;}
 
+void Timeline::SetObjectPicked(int index, ObjectType type)
+{
+	switch(type)
+	{
+		case ObjectType::NONE:{ m_final_edit_obj_index = -1; break;}
+		case ObjectType::LISTENER:{ m_final_edit_obj_index = 0; break;}
+		case ObjectType::SOUND_PRODUCER:{ m_final_edit_obj_index = index + 1; break;}
+	}
+	
+}
+
 static size_t max_num_frames = 200;
 
 
@@ -120,15 +131,19 @@ void Timeline::DrawGui_Item()
 																obj_choices.c_str(), edit_obj_listview_itemsCount,
 																edit_obj_listview_activeIndex
 															);
+															
 		if(obj_dropdown_listview_settings.valueChanged )
 		{
-			if(edit_obj_listview_activeIndex != 0)
+			m_final_edit_obj_index = edit_obj_listview_activeIndex;
+			
+			if(m_final_edit_obj_index != 0)
 			{
-				current_sound_producer_editing_index = edit_obj_listview_activeIndex - 1;
+				current_sound_producer_editing_index = m_final_edit_obj_index - 1;
 			}
 			else
 			{
 				current_sound_producer_editing_index = -1;
+				
 			}
 			
 			obj_dropdown_listview_settings.valueChanged = false;

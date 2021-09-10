@@ -323,7 +323,7 @@ typedef struct
 {
 	bool editMode;
 	
-	size_t current_timeline_frame;
+	
 	size_t max_num_frames;
 	
 	size_t* array_points_ptr; //array of points to render
@@ -331,6 +331,12 @@ typedef struct
 	bool valueChanged;
 	bool addPoint;
 	bool showPropertiesBox;
+	
+	//frame selection variables, 
+	size_t current_timeline_frame;
+	bool frameSelected;
+	float frameDrawX;
+	
 } TimelineSettings;
 
 #ifdef __cplusplus
@@ -359,6 +365,7 @@ TimelineSettings InitTimelineSettings(size_t max_num_frames, size_t* points_ptr)
 	
 	settings.array_points_ptr = points_ptr;
 	settings.max_num_frames = max_num_frames;
+	settings.frameSelected = false;
 }
 
 bool Gui_3dObject_Timeline(TimelineSettings* settings)
@@ -370,21 +377,57 @@ bool Gui_3dObject_Timeline(TimelineSettings* settings)
 
 //draw box with background color
 float screen_height = GetScreenHeight();
-DrawRectangle(0, 400 , GetScreenWidth(), screen_height, Fade(GRAY, 0.8f));
+Rectangle drawAreaRect = {0, 400 , GetScreenWidth(), screen_height};
+
+DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.8f));
+
+float leftBound = 200;
+Rectangle mouseArea = {leftBound, 400 , GetScreenWidth(), screen_height};
 
 //draw cursor line where mouse pointer is
 
 Vector2 mousePoint = GetMousePosition();
 
-float cursor_x = mousePoint.x;
-if(cursor_x < 200){cursor_x = 200;}
-
-DrawRectangle(cursor_x,400,2,screen_height,BLACK);
-
 //select frame based on where mouse pointer is clicked on 
+if (CheckCollisionPointRec(mousePoint, mouseArea))
+{
+	float cursor_x = mousePoint.x;
+	if(cursor_x < leftBound){cursor_x = leftBound;}
 
-	//set add point bool to true
+	Color cursor_color = BLACK;
+	if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+	{
+		settings->frameSelected = !settings->frameSelected;
+		
+		if(settings->frameSelected)
+		{
+			settings->frameDrawX = cursor_x;
+		}
+	}
 	
+	if(settings->frameSelected)
+	{
+		cursor_x = settings->frameDrawX;
+		cursor_color = YELLOW;
+	}
+	
+	DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
+}
+else
+{
+	if(settings->frameSelected)
+	{
+		float cursor_x = settings->frameDrawX;
+		Color cursor_color = YELLOW;
+		DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
+	}
+	
+	
+}
+
+
+
+
 //draw points
 
 //if mouse click on point in timeline and add point is false
