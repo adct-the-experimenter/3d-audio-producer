@@ -9,10 +9,13 @@
 
 struct TimelinePlotPosition
 {
-	//pointer to dynamically allocated array
-	size_t* timeline_points_posx; 
-	size_t* timeline_points_posy; 
-	size_t* timeline_points_posz; 
+	//pointer to dynamically allocated array of bools
+	float* timeline_points_posx; 
+	float* timeline_points_posy; 
+	float* timeline_points_posz;
+	
+	//bool array for timeline setting
+	bool* timeline_settings_bool_array;
 };
 
 enum class ObjectType : uint8_t {NONE,LISTENER,SOUND_PRODUCER};
@@ -38,10 +41,17 @@ public:
 	
 	void SetShowTimelineBool(bool state);
 	
+	void SetAddPointToTimelineBool(bool state);
+	void SetRemovePointFromTimelineBool(bool state);
+	
+	
 //loop functions
 	
-	//rendering timeline
+	//render timeline and its parameters
 	void DrawGui_Item();
+	
+	//function to set position of listener and sound producers with timeline
+	void RunPlaybackWithTimeline();
 	
 private:
 	
@@ -59,6 +69,9 @@ private:
 	
 	//final choice for object to edit in timeline
 	int m_final_edit_obj_index;
+	
+	bool addPointToTimeline;
+	bool removePointFromTimeline;
 };
 
 #endif

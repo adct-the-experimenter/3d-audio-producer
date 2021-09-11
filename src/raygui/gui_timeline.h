@@ -53,22 +53,16 @@ typedef struct
 } TimelineSettings;
 
 typedef struct 
-{
-	bool editMode;
-	
-	
+{	
 	size_t max_num_frames;
 	
-	size_t* array_points_ptr; //array of points to render
+	bool* array_points_ptr; //array of points to render
 	
-	bool valueChanged;
-	bool addPoint;
 	bool showPropertiesBox;
 	
-	//frame selection variables, 
-	size_t current_timeline_frame;
-	bool frameSelected;
-	float frameDrawX;
+	//where to draw points
+	int draw_start_x;
+	int draw_y;
 	
 } TimelineParameterSettings;
 
@@ -79,7 +73,7 @@ extern "C" {            // Prevents name mangling of functions
 #endif
 
 TimelineSettings InitTimelineSettings();
-TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, size_t* points_ptr);
+TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y);
 
 //Draws timeline 
 //returns if timeline was clicked on
@@ -98,15 +92,21 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings);
 TimelineSettings InitTimelineSettings()
 {
 	TimelineSettings settings = {0};
+	
+	return settings;
 }
 
-TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, size_t* points_ptr)
+TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y)
 {
 	TimelineParameterSettings settings = { 0 };
 	
 	settings.array_points_ptr = points_ptr;
 	settings.max_num_frames = max_num_frames;
-	settings.frameSelected = false;
+	
+	settings.draw_start_x = x;
+	settings.draw_y = y;
+	
+	return settings;
 }
 
 bool Gui_Timeline(TimelineSettings* settings)
@@ -149,6 +149,11 @@ bool Gui_Timeline(TimelineSettings* settings)
 		{
 			cursor_x = settings->frameDrawX;
 			cursor_color = YELLOW;
+			
+			if(settings->frameDrawX >= 200)
+			{
+				settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
+			}
 		}
 		
 		DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
@@ -157,9 +162,14 @@ bool Gui_Timeline(TimelineSettings* settings)
 	{
 		if(settings->frameSelected)
 		{
-			float cursor_x = settings->frameDrawX;
 			Color cursor_color = YELLOW;
-			DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
+			DrawRectangle(settings->frameDrawX,400,2,screen_height,cursor_color);
+			
+			if(settings->frameDrawX >= 200)
+			{
+				settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
+			}
+			
 		}
 		
 		
@@ -169,17 +179,28 @@ bool Gui_Timeline(TimelineSettings* settings)
 bool Gui_Timeline_Parameter(TimelineParameterSettings* settings)
 {
 
-
-//draw points
-
-//if mouse click on point in timeline and add point is false
-	//show properties box to true
+	//draw points
+	
+	bool* element_ptr = settings->array_points_ptr;
+	size_t i = 0;
+	
+	for(i = 0; i < settings->max_num_frames; i++)
+	{
+		if(*element_ptr)
+		{
+			DrawCircle(settings->draw_start_x + 2*i, settings->draw_y, 2, BLACK);
+		}
 		
-//draw properties box
+		element_ptr++;
+	}
 	
-//if show properties box bool is true
-	
-	//show the contents of the point in timeline such as position and rotation.
+	//if mouse click on point in timeline and add point is false
+		//show properties box to true
+
+		
+	//if show properties box bool is true
+		//draw properties box
+		//show the contents of the point in timeline such as position and rotation.
 	
 }
 

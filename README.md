@@ -99,6 +99,8 @@ Control S - Save project data to file.
 
 Control O - Load project data from file.
 
+Key B - Add point to timeline.
+
 ## Feedback 
 
 Please email questions or comments to this email address bringerofawesomefood @ gmail . com without spaces.

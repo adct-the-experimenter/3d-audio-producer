@@ -214,6 +214,8 @@ static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::
 static bool editKeyPressed = false;
 static bool deleteKeyPressed = false;
 
+static bool frameAddKeyPressed = false;
+
 //listener movement variables
 static float listener_speed = 10.0f;
 
@@ -359,7 +361,11 @@ void MainGuiEditor::HandleEvents()
 		}
 	}
 		
-
+	//if b key pressed
+	if( IsKeyReleased(KEY_B))
+	{
+		frameAddKeyPressed = true;
+	}
 }
 
 static float new_listener_position_x = 0;
@@ -912,7 +918,16 @@ void MainGuiEditor::draw_timeline_menu()
 		timeline_window.SetShowTimelineBool(show_timeline_toggle_bool);
 	}
 	
-	if(show_timeline_toggle_bool){timeline_window.InitGUI();}
+	if(show_timeline_toggle_bool)
+	{
+		timeline_window.InitGUI();
+		
+		if(frameAddKeyPressed)
+		{
+			timeline_window.SetAddPointToTimelineBool(true);
+			frameAddKeyPressed = false;
+		}
+	}
 	
 }
 

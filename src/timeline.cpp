@@ -13,6 +13,8 @@
 Timeline::Timeline()
 {
 	showTimeline = false;
+	addPointToTimeline = false;
+	removePointFromTimeline = false;
 }
 
 Timeline::~Timeline()
@@ -21,6 +23,7 @@ Timeline::~Timeline()
 	delete timeline_plots_position[0].timeline_points_posx;
 	delete timeline_plots_position[0].timeline_points_posy;
 	delete timeline_plots_position[0].timeline_points_posz;
+	delete timeline_plots_position[0].timeline_settings_bool_array;
 	timeline_plots_position.pop_back();
 }
 
@@ -37,10 +40,21 @@ void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_produc
 
 void Timeline::SetListenerInTimeline(Listener* listener_ptr){main_listener_ptr = listener_ptr;}
 
+void Timeline::SetAddPointToTimelineBool(bool state){addPointToTimeline = state;}
 
 void Timeline::AddPlotPositionToTimeline()
 {
-	timeline_plots_position.emplace_back( TimelinePlotPosition{new size_t[200],new size_t[200],new size_t[200] });
+	timeline_plots_position.emplace_back( TimelinePlotPosition{new float[200],new float[200],new float[200], new bool[200] });
+	
+	for(size_t i = 0; i < 200; i++)
+	{
+		timeline_plots_position.back().timeline_points_posx[i] = 0; 
+		timeline_plots_position.back().timeline_points_posy[i] = 0; 
+		timeline_plots_position.back().timeline_points_posz[i] = 0;
+
+		timeline_plots_position.back().timeline_settings_bool_array[i] = false;
+	}
+	
 }
 
 void Timeline::RemovePlotPositionFromTimeline(size_t& sound_producer_picked)
@@ -58,13 +72,20 @@ void Timeline::RemovePlotPositionFromTimeline(size_t& sound_producer_picked)
 
 void Timeline::SetShowTimelineBool(bool state){showTimeline = state;}
 
+static int current_sound_producer_editing_index = -1;
+
 void Timeline::SetObjectPicked(int index, ObjectType type)
 {
 	switch(type)
 	{
 		case ObjectType::NONE:{ m_final_edit_obj_index = -1; break;}
-		case ObjectType::LISTENER:{ m_final_edit_obj_index = 0; break;}
-		case ObjectType::SOUND_PRODUCER:{ m_final_edit_obj_index = index + 1; break;}
+		case ObjectType::LISTENER:{ m_final_edit_obj_index = 0; current_sound_producer_editing_index = -1; break;}
+		case ObjectType::SOUND_PRODUCER:
+		{ 
+			m_final_edit_obj_index = index + 1; 
+			current_sound_producer_editing_index = index; 
+			break;
+		}
 	}
 	
 }
@@ -73,9 +94,7 @@ static size_t max_num_frames = 200;
 
 static TimelineSettings timelineSettings = InitTimelineSettings();
 
-static TimelineParameterSettings positionXTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr);
-static TimelineParameterSettings positionYTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr);
-static TimelineParameterSettings positionZTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr);
+static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
 
 
 //DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
@@ -83,7 +102,6 @@ static DropDownListViewSettings obj_dropdown_listview_settings = InitDropDownLis
 static int edit_obj_listview_activeIndex = 0;
 static int edit_obj_listview_itemsCount = 0;
 
-static int current_sound_producer_editing_index = -1;
 
 static std::string obj_choices = "";
 
@@ -121,12 +139,61 @@ void Timeline::DrawGui_Item()
 		Gui_Timeline(&timelineSettings);
 		
 		//draw position timeline if there are points to draw
-		if(positionXTimelineSettings.array_points_ptr && positionYTimelineSettings.array_points_ptr 
-			&& positionZTimelineSettings.array_points_ptr)
+		if(positionTimelineSettings.array_points_ptr )
 		{
-			Gui_Timeline_Parameter(&positionXTimelineSettings);
-			Gui_Timeline_Parameter(&positionYTimelineSettings);
-			Gui_Timeline_Parameter(&positionZTimelineSettings);
+			
+			//if adding point to timeline
+			if(addPointToTimeline && timelineSettings.frameSelected)
+			{
+				bool addPoint = false;
+				float x,y,z;
+				
+				//if listener
+				if(current_sound_producer_editing_index == -1 && m_final_edit_obj_index == 0)
+				{
+					//get position of listener
+					x = main_listener_ptr->getPositionX();
+					y = main_listener_ptr->getPositionY();
+					z = main_listener_ptr->getPositionZ();
+					addPoint = true;
+					
+				}
+				//else if sound producer
+				else if(current_sound_producer_editing_index != -1)
+				{
+					//get position of sound	producer
+					x = sound_producer_vector_ref->at(current_sound_producer_editing_index)->GetPositionX();
+					y = sound_producer_vector_ref->at(current_sound_producer_editing_index)->GetPositionY();
+					z = sound_producer_vector_ref->at(current_sound_producer_editing_index)->GetPositionZ();
+					
+					addPoint = true;
+					
+				}
+				else
+				{
+					//do nothing
+					addPoint = false;
+				}
+				
+				if(addPoint)
+				{
+					//add point to graphical timeline depending on frame selected
+					timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
+					
+					//add point to position timeline
+					timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame] = x; 
+					timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame] = y; 
+					timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame] = z;
+				}
+				
+				addPointToTimeline = false;
+			}
+			else if(addPointToTimeline)
+			{
+				addPointToTimeline = false;
+			}		
+				
+			Gui_Timeline_Parameter(&positionTimelineSettings);		
 		}
 		
 		//draw dropdown editing box
@@ -146,32 +213,28 @@ void Timeline::DrawGui_Item()
 			else
 			{
 				current_sound_producer_editing_index = -1;
-				
 			}
 			
 			obj_dropdown_listview_settings.valueChanged = false;
 		}
 		
+		
 		if(edit_obj_listview_activeIndex == 0 && current_sound_producer_editing_index == -1)
 		{
 			//show listener position
-			positionXTimelineSettings.array_points_ptr = timeline_plots_position[0].timeline_points_posx;
-			positionYTimelineSettings.array_points_ptr = timeline_plots_position[0].timeline_points_posy;
-			positionZTimelineSettings.array_points_ptr = timeline_plots_position[0].timeline_points_posz;
+			positionTimelineSettings.array_points_ptr = timeline_plots_position[0].timeline_settings_bool_array;
 		}
 		else if(edit_obj_listview_activeIndex >= 1 && current_sound_producer_editing_index != -1)
 		{
 			//show sound producer position
-			positionXTimelineSettings.array_points_ptr = timeline_plots_position[current_sound_producer_editing_index].timeline_points_posx;
-			positionYTimelineSettings.array_points_ptr = timeline_plots_position[current_sound_producer_editing_index].timeline_points_posy;
-			positionZTimelineSettings.array_points_ptr = timeline_plots_position[current_sound_producer_editing_index].timeline_points_posz;
+			positionTimelineSettings.array_points_ptr = timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array;
 		}
 		else
 		{
-			positionXTimelineSettings.array_points_ptr = nullptr;
-			positionYTimelineSettings.array_points_ptr = nullptr;
-			positionZTimelineSettings.array_points_ptr = nullptr;
+			positionTimelineSettings.array_points_ptr = nullptr;
 		}
+		
+		
 		
 	}
 	
