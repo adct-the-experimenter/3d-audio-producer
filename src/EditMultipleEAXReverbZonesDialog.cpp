@@ -2,7 +2,8 @@
 
 #include "global_variables.h"
 
-#include "raygui/raygui_extras.h"
+#include "raygui/gui_valid_float.h"
+#include "raygui/gui_dropdown_listview.h"
 
 #include <string>
 

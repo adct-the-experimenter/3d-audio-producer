@@ -2,9 +2,12 @@
 
 #include "raygui/raygui.h"
 
+//define gui drop down list view
+#include "raygui/gui_dropdown_listview.h"
+
 //define timeline
 #define GUI_3D_OBJECT_TIMELINE
-#include "raygui/raygui_extras.h"
+#include "raygui/gui_timeline.h"
 
 
 Timeline::Timeline()
@@ -68,12 +71,11 @@ void Timeline::SetObjectPicked(int index, ObjectType type)
 
 static size_t max_num_frames = 200;
 
+static TimelineSettings timelineSettings = InitTimelineSettings();
 
-
-static TimelineSettings positionXTimelineSettings = InitTimelineSettings(max_num_frames,nullptr);
-static TimelineSettings positionYTimelineSettings = InitTimelineSettings(max_num_frames,nullptr);
-static TimelineSettings positionZTimelineSettings = InitTimelineSettings(max_num_frames,nullptr);
-
+static TimelineParameterSettings positionXTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr);
+static TimelineParameterSettings positionYTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr);
+static TimelineParameterSettings positionZTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr);
 
 
 //DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
@@ -115,15 +117,16 @@ void Timeline::DrawGui_Item()
 	if( showTimeline )
 	{
 		
-		
+		//draw timeline area
+		Gui_Timeline(&timelineSettings);
 		
 		//draw position timeline if there are points to draw
 		if(positionXTimelineSettings.array_points_ptr && positionYTimelineSettings.array_points_ptr 
 			&& positionZTimelineSettings.array_points_ptr)
 		{
-			Gui_3dObject_Timeline(&positionXTimelineSettings);
-			Gui_3dObject_Timeline(&positionYTimelineSettings);
-			Gui_3dObject_Timeline(&positionZTimelineSettings);
+			Gui_Timeline_Parameter(&positionXTimelineSettings);
+			Gui_Timeline_Parameter(&positionYTimelineSettings);
+			Gui_Timeline_Parameter(&positionZTimelineSettings);
 		}
 		
 		//draw dropdown editing box
