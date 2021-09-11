@@ -15,6 +15,8 @@ Timeline::Timeline()
 	showTimeline = false;
 	addPointToTimeline = false;
 	removePointFromTimeline = false;
+	
+	time_frame_rate = 1;
 }
 
 Timeline::~Timeline()
@@ -91,6 +93,8 @@ void Timeline::SetObjectPicked(int index, ObjectType type)
 	}
 	
 }
+
+void Timeline::SetTimeFrameRate(size_t rate){time_frame_rate = rate;}
 
 static size_t max_num_frames = 200;
 
@@ -221,7 +225,7 @@ void Timeline::DrawGui_Item()
 					//remove point from graphical timeline depending on frame selected
 					timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
 					
-					//remoove point from position timeline with reset
+					//remove point from position timeline with reset
 					timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame] = 0; 
 					timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame] = 0; 
 					timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame] = 0;
@@ -279,4 +283,59 @@ void Timeline::DrawGui_Item()
 		
 	}
 	
+}
+
+static uint32_t second_frame_count = 0;
+
+void Timeline::RunPlaybackWithTimeline()
+{
+	//set edit mode to false so that 
+	timelineSettings.editMode = false;
+	
+	
+	//increment timeline frame assuming 60 frames per second
+	//increment number of frames based on time frame rate which is number of frames per second
+	second_frame_count++;
+	
+	//if 1 second has passed
+	if(second_frame_count == 60)
+	{
+		timelineSettings.current_timeline_frame += time_frame_rate;
+		second_frame_count = 0;
+	}
+	
+	//if there is a point at current timeline_frame
+	if(timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame])
+	{
+		//get location in timeline
+		
+		float& x = timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame]; 
+		float& y = timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame]; 
+		float& z = timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame];
+		
+		//if listener
+		if(m_final_edit_obj_index == 0)
+		{
+			main_listener_ptr->setPositionX(x);
+			main_listener_ptr->setPositionY(y);
+			main_listener_ptr->setPositionZ(z);
+		}
+		//else if sound producer
+		else if(m_final_edit_obj_index >= 1 && current_sound_producer_editing_index != -1)
+		{
+			sound_producer_vector_ref->at(current_sound_producer_editing_index)->SetPositionX(x);
+			sound_producer_vector_ref->at(current_sound_producer_editing_index)->SetPositionY(y);
+			sound_producer_vector_ref->at(current_sound_producer_editing_index)->SetPositionZ(z);
+		}
+		
+	}
+	
+	
+	
+	
+}
+
+void Timeline::ResumeEditModeInTimeline()
+{
+	timelineSettings.editMode = true;
 }

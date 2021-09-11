@@ -902,6 +902,7 @@ void MainGuiEditor::draw_sound_bank()
 }
 
 static bool show_timeline_toggle_bool = false;
+static bool enable_timeline_playback_toggle_bool = false;
 
 void MainGuiEditor::draw_timeline_menu()
 {
@@ -931,7 +932,37 @@ void MainGuiEditor::draw_timeline_menu()
 		{
 			timeline_window.SetRemovePointFromTimelineBool(true);
 		}
+		
+		//draw enable/disable timeline button
+		std::string enable_disable_str;
+		
+		if(enable_timeline_playback_toggle_bool)
+		{
+			enable_disable_str = "Enabled";
+			
+			if(im_sound_player.PlayerInActiveUse())
+			{
+				timeline_window.RunPlaybackWithTimeline();
+			}
+			else
+			{
+				timeline_window.ResumeEditModeInTimeline();
+			}
+			
+		}
+		else
+		{
+			enable_disable_str = "Disabled";
+			timeline_window.ResumeEditModeInTimeline();
+		}
+		
+		if( GuiButton( (Rectangle){ 25, 460, 70, 30 }, GuiIconText(0, enable_disable_str.c_str()) ) )
+		{
+			enable_timeline_playback_toggle_bool = !enable_timeline_playback_toggle_bool;
+		}
 	}
+	
+	
 	
 }
 

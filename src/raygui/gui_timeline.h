@@ -93,6 +93,9 @@ TimelineSettings InitTimelineSettings()
 {
 	TimelineSettings settings = {0};
 	
+	settings.editMode = true;
+	settings.current_timeline_frame = 0;
+	
 	return settings;
 }
 
@@ -124,55 +127,67 @@ bool Gui_Timeline(TimelineSettings* settings)
 	float leftBound = 200;
 	Rectangle mouseArea = {leftBound, 400 , GetScreenWidth(), screen_height};
 
-	//draw cursor line where mouse pointer is
-
-	Vector2 mousePoint = GetMousePosition();
-
-	//select frame based on where mouse pointer is clicked on 
-	if (CheckCollisionPointRec(mousePoint, mouseArea))
+	//if in edit mode
+	if(settings->editMode)
 	{
-		float cursor_x = mousePoint.x;
-		if(cursor_x < leftBound){cursor_x = leftBound;}
+		//draw cursor line where mouse pointer is
+	
+		Vector2 mousePoint = GetMousePosition();
 
-		Color cursor_color = BLACK;
-		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+		//select frame based on where mouse pointer is clicked on 
+		if (CheckCollisionPointRec(mousePoint, mouseArea))
 		{
-			settings->frameSelected = !settings->frameSelected;
+			float cursor_x = mousePoint.x;
+			if(cursor_x < leftBound){cursor_x = leftBound;}
+
+			Color cursor_color = BLACK;
+			if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+			{
+				settings->frameSelected = !settings->frameSelected;
+				
+				if(settings->frameSelected)
+				{
+					settings->frameDrawX = cursor_x;
+				}
+			}
 			
 			if(settings->frameSelected)
 			{
-				settings->frameDrawX = cursor_x;
+				cursor_x = settings->frameDrawX;
+				cursor_color = YELLOW;
+				
+				if(settings->frameDrawX >= 200)
+				{
+					settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
+				}
 			}
-		}
-		
-		if(settings->frameSelected)
-		{
-			cursor_x = settings->frameDrawX;
-			cursor_color = YELLOW;
 			
-			if(settings->frameDrawX >= 200)
-			{
-				settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
-			}
+			DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
 		}
-		
-		DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
+		else
+		{
+			if(settings->frameSelected)
+			{
+				Color cursor_color = YELLOW;
+				DrawRectangle(settings->frameDrawX,400,2,screen_height,cursor_color);
+				
+				if(settings->frameDrawX >= 200)
+				{
+					settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
+				}
+				
+			}
+			
+			
+		}
 	}
+	//else if not in edit mode, i.e. playback mode
 	else
 	{
-		if(settings->frameSelected)
-		{
-			Color cursor_color = YELLOW;
-			DrawRectangle(settings->frameDrawX,400,2,screen_height,cursor_color);
-			
-			if(settings->frameDrawX >= 200)
-			{
-				settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
-			}
-			
-		}
+		//draw cursor at current timeline frame
+		float cursor_x = (settings->current_timeline_frame * 2) + 200;
 		
-		
+		DrawRectangle(cursor_x,400,2,screen_height,BLACK);
 	}
 }
 

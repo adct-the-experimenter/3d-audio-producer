@@ -41,9 +41,12 @@ public:
 	
 	void SetShowTimelineBool(bool state);
 	
+	//functions to tell timeline to add/remove point in current frame in timeline, if true, gets set to false after operation is finished.
 	void SetAddPointToTimelineBool(bool state);
 	void SetRemovePointFromTimelineBool(bool state);
 	
+	//function to set time frame rate, number of time frames per second
+	void SetTimeFrameRate(size_t rate);
 	
 //loop functions
 	
@@ -52,6 +55,10 @@ public:
 	
 	//function to set position of listener and sound producers with timeline
 	void RunPlaybackWithTimeline();
+	
+	//function to set timeline back to edit mode, 
+	//ideally use after playback stopped or paused
+	void ResumeEditModeInTimeline();
 	
 private:
 	
@@ -70,8 +77,13 @@ private:
 	//final choice for object to edit in timeline
 	int m_final_edit_obj_index;
 	
+	//bools to indicate if point needs to be added or removed from timeline
 	bool addPointToTimeline;
 	bool removePointFromTimeline;
+	
+	//number of time frames to increment current frame in timeline settings after 1 second.
+	size_t time_frame_rate;	
+	
 };
 
 #endif
