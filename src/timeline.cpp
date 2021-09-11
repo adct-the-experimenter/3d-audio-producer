@@ -21,12 +21,17 @@ Timeline::Timeline()
 
 Timeline::~Timeline()
 {
-	//delete timeline plot for listener
-	delete timeline_plots_position[0].timeline_points_posx;
-	delete timeline_plots_position[0].timeline_points_posy;
-	delete timeline_plots_position[0].timeline_points_posz;
-	delete timeline_plots_position[0].timeline_settings_bool_array;
-	timeline_plots_position.pop_back();
+	
+	//delete all remaining timeline plot positions 
+	while(timeline_plots_position.size() != 0)
+	{
+		delete timeline_plots_position.back().timeline_points_posx;
+		delete timeline_plots_position.back().timeline_points_posy;
+		delete timeline_plots_position.back().timeline_points_posz;
+		delete timeline_plots_position.back().timeline_settings_bool_array;
+		timeline_plots_position.pop_back();
+	}
+	
 }
 
 void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_producer_vector, Listener* listener)
@@ -297,41 +302,50 @@ void Timeline::RunPlaybackWithTimeline()
 	//increment number of frames based on time frame rate which is number of frames per second
 	second_frame_count++;
 	
-	//if 1 second has passed
-	if(second_frame_count == 60)
+	//if 1 second divided by time frame rate has passed
+	//example: 60 frames_per_second / 3 time_frames_per_second = 20 frames_per_time_frame_second
+	if(second_frame_count == 60 / time_frame_rate)
 	{
-		timelineSettings.current_timeline_frame += time_frame_rate;
+		
+		timelineSettings.current_timeline_frame++;
 		second_frame_count = 0;
-	}
-	
-	//if there is a point at current timeline_frame
-	if(timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame])
-	{
-		//get location in timeline
 		
-		float& x = timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame]; 
-		float& y = timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame]; 
-		float& z = timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame];
 		
-		//if listener
-		if(m_final_edit_obj_index == 0)
+		//for every position plot
+		for(size_t i = 0; i < timeline_plots_position.size(); i++)
 		{
-			main_listener_ptr->setPositionX(x);
-			main_listener_ptr->setPositionY(y);
-			main_listener_ptr->setPositionZ(z);
+			//if there is not a point at current timeline_frame, 
+			//skip rest of loop code below and go to next iteration
+			if(!timeline_plots_position[i].timeline_settings_bool_array[timelineSettings.current_timeline_frame])
+			{
+				continue;
+			}
+			
+			//get location in timeline
+		
+			float& x = timeline_plots_position[i].timeline_points_posx[timelineSettings.current_timeline_frame]; 
+			float& y = timeline_plots_position[i].timeline_points_posy[timelineSettings.current_timeline_frame]; 
+			float& z = timeline_plots_position[i].timeline_points_posz[timelineSettings.current_timeline_frame];
+			
+			//if listener
+			if(i == 0)
+			{
+				main_listener_ptr->setPositionX(x);
+				main_listener_ptr->setPositionY(y);
+				main_listener_ptr->setPositionZ(z);
+			}
+			//else if sound producer
+			else if(i >= 1)
+			{
+				sound_producer_vector_ref->at(i - 1)->SetPositionX(x);
+				sound_producer_vector_ref->at(i - 1)->SetPositionY(y);
+				sound_producer_vector_ref->at(i - 1)->SetPositionZ(z);
+			}
 		}
-		//else if sound producer
-		else if(m_final_edit_obj_index >= 1 && current_sound_producer_editing_index != -1)
-		{
-			sound_producer_vector_ref->at(current_sound_producer_editing_index)->SetPositionX(x);
-			sound_producer_vector_ref->at(current_sound_producer_editing_index)->SetPositionY(y);
-			sound_producer_vector_ref->at(current_sound_producer_editing_index)->SetPositionZ(z);
-		}
+			
+			
 		
 	}
-	
-	
-	
 	
 }
 

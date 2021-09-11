@@ -478,10 +478,7 @@ void MainGuiEditor::logic()
 		{
 			//std::cout << "delete sound producer " << soundproducer_picked << std::endl;
 			
-			std::swap( sound_producer_vector[soundproducer_picked],sound_producer_vector.back());
-			sound_producer_vector.pop_back();
-			
-			soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(soundproducer_picked);
+			MainGuiEditor::RemoveSoundProducer(soundproducer_picked);
 			
 			soundproducer_picked = -1;
 		}
@@ -1279,9 +1276,23 @@ void MainGuiEditor::CreateSoundProducer(std::string& name,float& x, float& y, fl
 	
 	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
 	
-
+	timeline_window.AddPlotPositionToTimeline();
 }
 
+void MainGuiEditor::RemoveSoundProducer(int index)
+{
+	if(index >= 0)
+	{
+		std::swap( sound_producer_vector[index],sound_producer_vector.back());
+		sound_producer_vector.pop_back();
+
+		soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(index);
+		
+		size_t index_n = index;
+		timeline_window.RemovePlotPositionFromTimeline(index_n);
+	}
+	
+}
 /*
 
 void MainFrame::OnSetupSerial(wxCommandEvent& event)
