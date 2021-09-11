@@ -927,6 +927,10 @@ void MainGuiEditor::draw_timeline_menu()
 			timeline_window.SetAddPointToTimelineBool(true);
 			frameAddKeyPressed = false;
 		}
+		else if(deleteKeyPressed)
+		{
+			timeline_window.SetRemovePointFromTimelineBool(true);
+		}
 	}
 	
 }

@@ -42,6 +42,8 @@ void Timeline::SetListenerInTimeline(Listener* listener_ptr){main_listener_ptr =
 
 void Timeline::SetAddPointToTimelineBool(bool state){addPointToTimeline = state;}
 
+void Timeline::SetRemovePointFromTimelineBool(bool state){removePointFromTimeline = state;}
+
 void Timeline::AddPlotPositionToTimeline()
 {
 	timeline_plots_position.emplace_back( TimelinePlotPosition{new float[200],new float[200],new float[200], new bool[200] });
@@ -192,6 +194,45 @@ void Timeline::DrawGui_Item()
 			{
 				addPointToTimeline = false;
 			}		
+			
+			if(removePointFromTimeline && timelineSettings.frameSelected)
+			{
+				bool removePoint = false;
+				
+				//if listener
+				if(current_sound_producer_editing_index == -1 && m_final_edit_obj_index == 0)
+				{
+					removePoint = true;
+					
+				}
+				//else if sound producer
+				else if(current_sound_producer_editing_index != -1)
+				{
+					removePoint = true;
+				}
+				else
+				{
+					//do nothing
+					removePoint = false;
+				}
+				
+				if(removePoint)
+				{
+					//remove point from graphical timeline depending on frame selected
+					timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
+					
+					//remoove point from position timeline with reset
+					timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame] = 0; 
+					timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame] = 0; 
+					timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame] = 0;
+				}
+				
+				removePointFromTimeline = false;
+			}
+			else if(removePointFromTimeline)
+			{
+				removePointFromTimeline = false;
+			}
 				
 			Gui_Timeline_Parameter(&positionTimelineSettings);		
 		}

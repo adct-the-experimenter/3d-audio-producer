@@ -93,7 +93,7 @@ TODO
 
 Key 1 - Edit whatever was picked with mouse in 3d space.
 
-Key Delete or Key Del - Remove whatever was picked with mouse in 3d space.
+Key Delete or Key Del - Remove whatever was picked with mouse in 3d space. Also remove current selected timeline point.
 
 Control S - Save project data to file.
 
