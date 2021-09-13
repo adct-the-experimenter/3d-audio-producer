@@ -48,6 +48,7 @@ SoundBank::SoundBank()
 		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
 		
 		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
+		m_sound_accounts[i].stream_file_path = filepath_stream;
 	}
 	
 	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
