@@ -16,6 +16,12 @@ struct TimelinePlotPosition
 	
 	//bool array for timeline setting
 	bool* timeline_settings_bool_array;
+	
+	//name of timeline plot
+	std::string name;
+	
+	//index of the object to edit
+	int indexObjectToEdit;
 };
 
 enum class ObjectType : uint8_t {NONE,LISTENER,SOUND_PRODUCER};
@@ -36,7 +42,7 @@ public:
 	//picks object to edit in timeline from outside Timeline class
 	void SetObjectPicked(int index, ObjectType type);
 	
-	void AddPlotPositionToTimeline();
+	void AddPlotPositionToTimeline(std::string name);
 	void RemovePlotPositionFromTimeline(size_t& sound_producer_picked);
 	
 	void SetShowTimelineBool(bool state);
@@ -76,6 +82,9 @@ private:
 	
 	//final choice for object to edit in timeline
 	int m_final_edit_obj_index;
+	
+	//current timeline plot being edited
+	size_t current_timeline_parameter_edited;
 	
 	//bools to indicate if point needs to be added or removed from timeline
 	bool addPointToTimeline;

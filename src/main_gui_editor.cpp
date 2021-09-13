@@ -1276,7 +1276,7 @@ void MainGuiEditor::CreateSoundProducer(std::string& name,float& x, float& y, fl
 	
 	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
 	
-	timeline_window.AddPlotPositionToTimeline();
+	//timeline_window.AddPlotPositionToTimeline();
 }
 
 void MainGuiEditor::RemoveSoundProducer(int index)
@@ -1288,8 +1288,8 @@ void MainGuiEditor::RemoveSoundProducer(int index)
 
 		soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(index);
 		
-		size_t index_n = index;
-		timeline_window.RemovePlotPositionFromTimeline(index_n);
+		//size_t index_n = index;
+		//timeline_window.RemovePlotPositionFromTimeline(index_n);
 	}
 	
 }

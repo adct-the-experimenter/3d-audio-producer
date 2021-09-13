@@ -40,7 +40,7 @@ void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_produc
 	sound_producer_vector_ref = sound_producer_vector;
 	
 	//add first timeline plot position for listener
-	Timeline::AddPlotPositionToTimeline();
+	Timeline::AddPlotPositionToTimeline("Default");
 }
 
 
@@ -51,7 +51,7 @@ void Timeline::SetAddPointToTimelineBool(bool state){addPointToTimeline = state;
 
 void Timeline::SetRemovePointFromTimelineBool(bool state){removePointFromTimeline = state;}
 
-void Timeline::AddPlotPositionToTimeline()
+void Timeline::AddPlotPositionToTimeline(std::string name)
 {
 	timeline_plots_position.emplace_back( TimelinePlotPosition{new float[200],new float[200],new float[200], new bool[200] });
 	
@@ -62,6 +62,7 @@ void Timeline::AddPlotPositionToTimeline()
 		timeline_plots_position.back().timeline_points_posz[i] = 0;
 
 		timeline_plots_position.back().timeline_settings_bool_array[i] = false;
+		timeline_plots_position.back().name = name;
 	}
 	
 }
@@ -108,13 +109,22 @@ static TimelineSettings timelineSettings = InitTimelineSettings();
 static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
 
 
+//dropdown list view for timeline being edited
+static DropDownListViewSettings timeline_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
+static int edit_timeline_listview_activeIndex = 0;
+static int edit_timeline_listview_itemsCount = 0;
+static std::string timeline_choices = "";
+
+//dropdown list view for object being edited.
 //DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
 static DropDownListViewSettings obj_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
 static int edit_obj_listview_activeIndex = 0;
 static int edit_obj_listview_itemsCount = 0;
-
-
 static std::string obj_choices = "";
+
+//variables for text input of timeline
+static bool addTimeline = false;
+static char textInput[256] = { 0 };
 
 void Timeline::InitGUI()
 {
@@ -129,9 +139,18 @@ void Timeline::InitGUI()
 			obj_choices += sound_producer_vector_ref->at(i)->GetNameString() + ";";
 		}
 		
-		edit_obj_listview_itemsCount = (int)sound_producer_vector_ref->size() + 1;
+		edit_obj_listview_itemsCount = (int)sound_producer_vector_ref->size();
 				
 	}
+	
+	timeline_choices = "";
+	
+	for(size_t i = 0; i < timeline_plots_position.size(); i++)
+	{
+		timeline_choices += timeline_plots_position[i].name + ";";
+	}
+	
+	edit_timeline_listview_itemsCount = (int)timeline_plots_position.size();
 }
 
 void Timeline::DrawGui_Item()
@@ -149,6 +168,7 @@ void Timeline::DrawGui_Item()
 		//draw timeline area
 		Gui_Timeline(&timelineSettings);
 		
+		
 		//draw position timeline if there are points to draw
 		if(positionTimelineSettings.array_points_ptr )
 		{
@@ -159,8 +179,10 @@ void Timeline::DrawGui_Item()
 				bool addPoint = false;
 				float x,y,z;
 				
+				size_t edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+				
 				//if listener
-				if(current_sound_producer_editing_index == -1 && m_final_edit_obj_index == 0)
+				if(edit_index == 0)
 				{
 					//get position of listener
 					x = main_listener_ptr->getPositionX();
@@ -170,12 +192,13 @@ void Timeline::DrawGui_Item()
 					
 				}
 				//else if sound producer
-				else if(current_sound_producer_editing_index != -1)
+				else if(edit_index >= 1)
 				{
 					//get position of sound	producer
-					x = sound_producer_vector_ref->at(current_sound_producer_editing_index)->GetPositionX();
-					y = sound_producer_vector_ref->at(current_sound_producer_editing_index)->GetPositionY();
-					z = sound_producer_vector_ref->at(current_sound_producer_editing_index)->GetPositionZ();
+					
+					x = sound_producer_vector_ref->at(edit_index - 1)->GetPositionX();
+					y = sound_producer_vector_ref->at(edit_index - 1)->GetPositionY();
+					z = sound_producer_vector_ref->at(edit_index - 1)->GetPositionZ();
 					
 					addPoint = true;
 					
@@ -189,12 +212,12 @@ void Timeline::DrawGui_Item()
 				if(addPoint)
 				{
 					//add point to graphical timeline depending on frame selected
-					timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
+					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
 					
 					//add point to position timeline
-					timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame] = x; 
-					timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame] = y; 
-					timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame] = z;
+					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posx[timelineSettings.current_timeline_frame] = x; 
+					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posy[timelineSettings.current_timeline_frame] = y; 
+					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posz[timelineSettings.current_timeline_frame] = z;
 				}
 				
 				addPointToTimeline = false;
@@ -206,35 +229,14 @@ void Timeline::DrawGui_Item()
 			
 			if(removePointFromTimeline && timelineSettings.frameSelected)
 			{
-				bool removePoint = false;
 				
-				//if listener
-				if(current_sound_producer_editing_index == -1 && m_final_edit_obj_index == 0)
-				{
-					removePoint = true;
-					
-				}
-				//else if sound producer
-				else if(current_sound_producer_editing_index != -1)
-				{
-					removePoint = true;
-				}
-				else
-				{
-					//do nothing
-					removePoint = false;
-				}
+				//remove point from graphical timeline depending on frame selected
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
 				
-				if(removePoint)
-				{
-					//remove point from graphical timeline depending on frame selected
-					timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
-					
-					//remove point from position timeline with reset
-					timeline_plots_position[m_final_edit_obj_index].timeline_points_posx[timelineSettings.current_timeline_frame] = 0; 
-					timeline_plots_position[m_final_edit_obj_index].timeline_points_posy[timelineSettings.current_timeline_frame] = 0; 
-					timeline_plots_position[m_final_edit_obj_index].timeline_points_posz[timelineSettings.current_timeline_frame] = 0;
-				}
+				//remove point from position timeline with reset
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posx[timelineSettings.current_timeline_frame] = 0; 
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posy[timelineSettings.current_timeline_frame] = 0; 
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posz[timelineSettings.current_timeline_frame] = 0;
 				
 				removePointFromTimeline = false;
 			}
@@ -246,44 +248,86 @@ void Timeline::DrawGui_Item()
 			Gui_Timeline_Parameter(&positionTimelineSettings);		
 		}
 		
-		//draw dropdown editing box
-		edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 420, 70, 45 }, 
+		
+		//draw dropdown object editing box
+		edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 480, 70, 45 }, 
 																obj_choices.c_str(), edit_obj_listview_itemsCount,
 																edit_obj_listview_activeIndex
 															);
 															
+		//draw timeline position plot choices dropdown
+		edit_timeline_listview_activeIndex = Gui_Dropdown_ListView_Simple(&timeline_dropdown_listview_settings, (Rectangle){ 100, 420, 70, 45 }, 
+																timeline_choices.c_str(), edit_timeline_listview_itemsCount,
+																edit_timeline_listview_activeIndex
+															);
+															
+		//draw add button to add another timeline
+		if( GuiButton( (Rectangle){ 25, 490, 70, 30 }, GuiIconText(0, "Add") ))
+		{
+			addTimeline = true;
+		}
+		
+		if(addTimeline)
+		{
+			//prompt for timeline name
+			
+			
+			int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2 - 120, GetScreenHeight()/2 - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
+			
+			//if ok clicked
+			if (result == 1)
+			{
+				addTimeline = false;
+				
+				//add timeline position and its name
+				Timeline::AddPlotPositionToTimeline(std::string(textInput));
+				
+			}
+			//else if cancel clicked
+			else if(result == 2)
+			{
+				addTimeline = false;
+			}
+
+			if ((result == 0) || (result == 1) || (result == 2))
+			{
+				strcpy(textInput, "\0");
+			}
+		}
+		
+		//draw remove button to remove current edited timeline
+		if( GuiButton( (Rectangle){ 25, 520, 70, 30 }, GuiIconText(0, "Remove") ) )
+		{
+			//remove timeline position
+			size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+			Timeline::RemovePlotPositionFromTimeline(index);
+		}
+		
+		if(timeline_dropdown_listview_settings.valueChanged)
+		{
+			timeline_dropdown_listview_settings.scrollIndex = edit_timeline_listview_activeIndex;
+			
+			timeline_dropdown_listview_settings.valueChanged = false;
+		}
+															
 		if(obj_dropdown_listview_settings.valueChanged )
 		{
-			m_final_edit_obj_index = edit_obj_listview_activeIndex;
-			
-			if(m_final_edit_obj_index != 0)
-			{
-				current_sound_producer_editing_index = m_final_edit_obj_index - 1;
-			}
-			else
-			{
-				current_sound_producer_editing_index = -1;
-			}
+			obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
 			
 			obj_dropdown_listview_settings.valueChanged = false;
+			
+			timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
 		}
 		
 		
-		if(edit_obj_listview_activeIndex == 0 && current_sound_producer_editing_index == -1)
+		if(edit_timeline_listview_activeIndex >= 0)
 		{
-			//show listener position
-			positionTimelineSettings.array_points_ptr = timeline_plots_position[0].timeline_settings_bool_array;
-		}
-		else if(edit_obj_listview_activeIndex >= 1 && current_sound_producer_editing_index != -1)
-		{
-			//show sound producer position
-			positionTimelineSettings.array_points_ptr = timeline_plots_position[m_final_edit_obj_index].timeline_settings_bool_array;
+			positionTimelineSettings.array_points_ptr = timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
 		}
 		else
 		{
 			positionTimelineSettings.array_points_ptr = nullptr;
 		}
-		
 		
 		
 	}
@@ -328,18 +372,18 @@ void Timeline::RunPlaybackWithTimeline()
 			float& z = timeline_plots_position[i].timeline_points_posz[timelineSettings.current_timeline_frame];
 			
 			//if listener
-			if(i == 0)
+			if(timeline_plots_position[i].indexObjectToEdit == 0)
 			{
 				main_listener_ptr->setPositionX(x);
 				main_listener_ptr->setPositionY(y);
 				main_listener_ptr->setPositionZ(z);
 			}
 			//else if sound producer
-			else if(i >= 1)
+			else if(timeline_plots_position[i].indexObjectToEdit >= 1)
 			{
-				sound_producer_vector_ref->at(i - 1)->SetPositionX(x);
-				sound_producer_vector_ref->at(i - 1)->SetPositionY(y);
-				sound_producer_vector_ref->at(i - 1)->SetPositionZ(z);
+				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionX(x);
+				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionY(y);
+				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionZ(z);
 			}
 		}
 			
