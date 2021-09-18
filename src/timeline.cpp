@@ -181,7 +181,9 @@ void Timeline::DrawGui_Item()
 				bool addPoint = false;
 				float x,y,z;
 				
-				size_t edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+				int edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+				
+				std::cout << "edit index: " << edit_index << std::endl;
 				
 				//if listener
 				if(edit_index == 1)
@@ -328,7 +330,7 @@ void Timeline::DrawGui_Item()
 		}
 		
 		
-		if(edit_timeline_listview_activeIndex >= 1)
+		if(edit_timeline_listview_activeIndex >= 0)
 		{
 			positionTimelineSettings.array_points_ptr = timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
 		}
