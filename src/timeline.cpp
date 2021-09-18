@@ -67,15 +67,15 @@ void Timeline::AddPlotPositionToTimeline(std::string name)
 	
 }
 
-void Timeline::RemovePlotPositionFromTimeline(size_t& sound_producer_picked)
+void Timeline::RemovePlotPositionFromTimeline(size_t& index)
 {
 	//delete points
 	//increment by 1 because of listener
-	delete timeline_plots_position[sound_producer_picked + 1].timeline_points_posx;
-	delete timeline_plots_position[sound_producer_picked + 1].timeline_points_posy;
-	delete timeline_plots_position[sound_producer_picked + 1].timeline_points_posz;
+	delete timeline_plots_position[index].timeline_points_posx;
+	delete timeline_plots_position[index].timeline_points_posy;
+	delete timeline_plots_position[index].timeline_points_posz;
 	
-	std::swap(timeline_plots_position[sound_producer_picked + 1],timeline_plots_position.back());
+	std::swap(timeline_plots_position[index],timeline_plots_position.back());
 	timeline_plots_position.pop_back();
 }
 
@@ -379,7 +379,7 @@ void Timeline::RunPlaybackWithTimeline()
 				main_listener_ptr->setPositionZ(z);
 			}
 			//else if sound producer
-			else if(timeline_plots_position[i].indexObjectToEdit >= 1)
+			else if(timeline_plots_position[i].indexObjectToEdit >= 1 && timeline_plots_position[i].indexObjectToEdit < sound_producer_vector_ref->size())
 			{
 				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionX(x);
 				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionY(y);
