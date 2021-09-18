@@ -50,6 +50,9 @@ typedef struct
 	bool frameSelected;
 	float frameDrawX;
 	
+	//area that mouse can click to add timeline points
+	Rectangle mouseArea;
+	
 } TimelineSettings;
 
 typedef struct 
@@ -118,14 +121,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 	//horizontal axis is the time
 	//vertical axis is nothing
 
-	//draw box with background color
 	float screen_height = GetScreenHeight();
-	Rectangle drawAreaRect = {0, 400 , GetScreenWidth(), screen_height};
-
-	DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.8f));
-
-	float leftBound = 200;
-	Rectangle mouseArea = {leftBound, 400 , GetScreenWidth(), screen_height};
 
 	//if in edit mode
 	if(settings->editMode)
@@ -135,10 +131,10 @@ bool Gui_Timeline(TimelineSettings* settings)
 		Vector2 mousePoint = GetMousePosition();
 
 		//select frame based on where mouse pointer is clicked on 
-		if (CheckCollisionPointRec(mousePoint, mouseArea))
+		if (CheckCollisionPointRec(mousePoint, settings->mouseArea))
 		{
 			float cursor_x = mousePoint.x;
-			if(cursor_x < leftBound){cursor_x = leftBound;}
+			if(cursor_x < settings->mouseArea.x){cursor_x = settings->mouseArea.x;}
 
 			Color cursor_color = BLACK;
 			if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))

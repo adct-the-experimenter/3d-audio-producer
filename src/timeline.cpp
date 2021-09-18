@@ -132,14 +132,14 @@ void Timeline::InitGUI()
 	
 	if(sound_producer_vector_ref)
 	{
-		obj_choices = "Listener;";
+		obj_choices = "None;Listener;";
 		
 		for(size_t i = 0; i < sound_producer_vector_ref->size(); i++)
 		{
 			obj_choices += sound_producer_vector_ref->at(i)->GetNameString() + ";";
 		}
 		
-		edit_obj_listview_itemsCount = (int)sound_producer_vector_ref->size();
+		edit_obj_listview_itemsCount = (int)sound_producer_vector_ref->size() + 2;
 				
 	}
 	
@@ -157,15 +157,17 @@ void Timeline::DrawGui_Item()
 {
 	//draw timeline
 	
-	//draw drop-down box for selecting timeline of object to draw
-		//listener first
-		//sound producers second
-	
-	
 	if( showTimeline )
 	{
+		float leftBound = 200;
+		timelineSettings.mouseArea = {leftBound, 400 , GetScreenWidth(), GetScreenHeight()};
 		
 		//draw timeline area
+		Rectangle drawAreaRect = {0, 400 , GetScreenWidth(), GetScreenHeight()};
+		DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.5f));
+
+		DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
+
 		Gui_Timeline(&timelineSettings);
 		
 		
@@ -182,7 +184,7 @@ void Timeline::DrawGui_Item()
 				size_t edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
 				
 				//if listener
-				if(edit_index == 0)
+				if(edit_index == 1)
 				{
 					//get position of listener
 					x = main_listener_ptr->getPositionX();
@@ -192,7 +194,7 @@ void Timeline::DrawGui_Item()
 					
 				}
 				//else if sound producer
-				else if(edit_index >= 1)
+				else if(edit_index >= 2)
 				{
 					//get position of sound	producer
 					
@@ -303,24 +305,30 @@ void Timeline::DrawGui_Item()
 			Timeline::RemovePlotPositionFromTimeline(index);
 		}
 		
+		//if timeline choice edited has changed
 		if(timeline_dropdown_listview_settings.valueChanged)
 		{
+			timeline_dropdown_listview_settings.valueChanged = false;
+			
 			timeline_dropdown_listview_settings.scrollIndex = edit_timeline_listview_activeIndex;
 			
-			timeline_dropdown_listview_settings.valueChanged = false;
+			edit_obj_listview_activeIndex = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+			
+			obj_dropdown_listview_settings.valueChanged = true;
 		}
-															
+		
+		//if object choice edited by timeline changes													
 		if(obj_dropdown_listview_settings.valueChanged )
 		{
-			obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
-			
 			obj_dropdown_listview_settings.valueChanged = false;
+			
+			obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
 			
 			timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
 		}
 		
 		
-		if(edit_timeline_listview_activeIndex >= 0)
+		if(edit_timeline_listview_activeIndex >= 1)
 		{
 			positionTimelineSettings.array_points_ptr = timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
 		}
@@ -372,14 +380,14 @@ void Timeline::RunPlaybackWithTimeline()
 			float& z = timeline_plots_position[i].timeline_points_posz[timelineSettings.current_timeline_frame];
 			
 			//if listener
-			if(timeline_plots_position[i].indexObjectToEdit == 0)
+			if(timeline_plots_position[i].indexObjectToEdit == 1)
 			{
 				main_listener_ptr->setPositionX(x);
 				main_listener_ptr->setPositionY(y);
 				main_listener_ptr->setPositionZ(z);
 			}
 			//else if sound producer
-			else if(timeline_plots_position[i].indexObjectToEdit >= 1 && timeline_plots_position[i].indexObjectToEdit < sound_producer_vector_ref->size())
+			else if(timeline_plots_position[i].indexObjectToEdit >= 2 && timeline_plots_position[i].indexObjectToEdit < sound_producer_vector_ref->size())
 			{
 				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionX(x);
 				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionY(y);

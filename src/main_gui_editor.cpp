@@ -1288,8 +1288,6 @@ void MainGuiEditor::RemoveSoundProducer(int index)
 
 		soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(index);
 		
-		//size_t index_n = index;
-		//timeline_window.RemovePlotPositionFromTimeline(index_n);
 	}
 	
 }
