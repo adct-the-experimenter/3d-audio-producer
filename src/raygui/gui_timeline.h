@@ -53,6 +53,8 @@ typedef struct
 	//area that mouse can click to add timeline points
 	Rectangle mouseArea;
 	
+	size_t max_num_frames;
+	
 } TimelineSettings;
 
 typedef struct 
@@ -75,7 +77,7 @@ typedef struct
 extern "C" {            // Prevents name mangling of functions
 #endif
 
-TimelineSettings InitTimelineSettings();
+TimelineSettings InitTimelineSettings(size_t max_num_frames);
 TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y);
 
 //Draws timeline 
@@ -92,12 +94,13 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings);
 
 #if defined(GUI_3D_OBJECT_TIMELINE)
 
-TimelineSettings InitTimelineSettings()
+TimelineSettings InitTimelineSettings(size_t max_num_frames)
 {
 	TimelineSettings settings = {0};
 	
 	settings.editMode = true;
 	settings.current_timeline_frame = 0;
+	settings.max_num_frames = max_num_frames;
 	
 	return settings;
 }
@@ -122,7 +125,22 @@ bool Gui_Timeline(TimelineSettings* settings)
 	//vertical axis is nothing
 
 	float screen_height = GetScreenHeight();
-
+	
+	//draw frame marks and frame number
+	for(size_t i = 0; i < settings->max_num_frames; i += 10)
+	{
+		//tick mark
+		DrawRectangle(settings->mouseArea.x + 2*i, settings->mouseArea.y, 2,10, BLACK);
+		
+		//frame number
+		char c_buffer[4];
+		sprintf(c_buffer,"%d",i);
+		DrawText(c_buffer,settings->mouseArea.x + 2*i + 4,settings->mouseArea.y + 10,12,BLACK);
+		
+	}
+	
+	
+	
 	//if in edit mode
 	if(settings->editMode)
 	{

@@ -1276,7 +1276,6 @@ void MainGuiEditor::CreateSoundProducer(std::string& name,float& x, float& y, fl
 	
 	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
 	
-	//timeline_window.AddPlotPositionToTimeline();
 }
 
 void MainGuiEditor::RemoveSoundProducer(int index)

@@ -104,7 +104,7 @@ void Timeline::SetTimeFrameRate(size_t rate){time_frame_rate = rate;}
 
 static size_t max_num_frames = 200;
 
-static TimelineSettings timelineSettings = InitTimelineSettings();
+static TimelineSettings timelineSettings = InitTimelineSettings(max_num_frames);
 
 static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
 
