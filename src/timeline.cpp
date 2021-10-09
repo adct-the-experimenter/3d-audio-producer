@@ -200,9 +200,9 @@ void Timeline::DrawGui_Item()
 				{
 					//get position of sound	producer
 					
-					x = sound_producer_vector_ref->at(edit_index - 1)->GetPositionX();
-					y = sound_producer_vector_ref->at(edit_index - 1)->GetPositionY();
-					z = sound_producer_vector_ref->at(edit_index - 1)->GetPositionZ();
+					x = sound_producer_vector_ref->at(edit_index - 2)->GetPositionX();
+					y = sound_producer_vector_ref->at(edit_index - 2)->GetPositionY();
+					z = sound_producer_vector_ref->at(edit_index - 2)->GetPositionZ();
 					
 					addPoint = true;
 					
@@ -389,11 +389,11 @@ void Timeline::RunPlaybackWithTimeline()
 				main_listener_ptr->setPositionZ(z);
 			}
 			//else if sound producer
-			else if(timeline_plots_position[i].indexObjectToEdit >= 2 && timeline_plots_position[i].indexObjectToEdit < sound_producer_vector_ref->size())
+			else if(timeline_plots_position[i].indexObjectToEdit >= 2 && timeline_plots_position[i].indexObjectToEdit - 2 < sound_producer_vector_ref->size())
 			{
-				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionX(x);
-				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionY(y);
-				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 1)->SetPositionZ(z);
+				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 2)->SetPositionX(x);
+				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 2)->SetPositionY(y);
+				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 2)->SetPositionZ(z);
 			}
 		}
 			

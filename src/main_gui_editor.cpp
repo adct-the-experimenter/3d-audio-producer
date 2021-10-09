@@ -1142,7 +1142,7 @@ void MainGuiEditor::CreateNewProject()
 {
 	//free everything
 	MainGuiEditor::UnloadAll();
-	
+		
 }
 
 void MainGuiEditor::SaveProject(std::string& filepath)
