@@ -65,6 +65,14 @@ public:
 	//function to set timeline back to edit mode, 
 	//ideally use after playback stopped or paused
 	void ResumeEditModeInTimeline();
+
+//Save / Load functions
+	
+	//saves timeline points to file
+	void SaveTimeFramesToFile(std::string filepath);
+	
+	//loads timeline points from file
+	void LoadTimeFramesFromFile(std::string filepath);
 	
 private:
 	

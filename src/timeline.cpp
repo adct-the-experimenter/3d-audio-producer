@@ -9,6 +9,7 @@
 #define GUI_3D_OBJECT_TIMELINE
 #include "raygui/gui_timeline.h"
 
+#include "raygui/gui_file_dialog.h"
 
 Timeline::Timeline()
 {
@@ -126,6 +127,15 @@ static std::string obj_choices = "";
 static bool addTimeline = false;
 static char textInput[256] = { 0 };
 
+//variables for file save/load
+static GuiFileDialogState fileDialogState = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+
+
+static std::string current_frames_file = "";
+
+enum class FileFrameState : std::uint8_t{NONE=0, SAVE_NEW,LOAD_NEW};
+static FileFrameState frames_file_state = FileFrameState::NONE;
+
 void Timeline::InitGUI()
 {
 	obj_choices = "";
@@ -151,6 +161,8 @@ void Timeline::InitGUI()
 	}
 	
 	edit_timeline_listview_itemsCount = (int)timeline_plots_position.size();
+	
+	fileDialogState.position = {200,200};
 }
 
 void Timeline::DrawGui_Item()
@@ -339,7 +351,85 @@ void Timeline::DrawGui_Item()
 			positionTimelineSettings.array_points_ptr = nullptr;
 		}
 		
+		//draw load frames button
+		if( GuiButton( (Rectangle){ 25, 560, 85, 30 }, GuiIconText(0, "Load Frames") ) )
+		{
+			frames_file_state = FileFrameState::LOAD_NEW;
+			fileDialogState.fileDialogActive = true; //activate file dialog
+		}
 		
+		//draw save frames button
+		if( GuiButton( (Rectangle){ 115, 560, 85, 30 }, GuiIconText(0, "Save Frames") ) )
+		{
+			frames_file_state = FileFrameState::SAVE_NEW;
+			fileDialogState.fileDialogActive = true; //activate file dialog
+		}
+		
+		
+		//file operation logic
+		if (fileDialogState.fileDialogActive){ GuiLock();}
+		
+		if(frames_file_state == FileFrameState::LOAD_NEW)
+		{
+			if (fileDialogState.SelectFilePressed)
+			{			
+				// Load project file (if supported extension)
+				if (IsFileExtension(fileDialogState.fileNameText, ".xml") )
+				{
+					char projectFile[512] = { 0 };
+					
+					strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+					std::string filepath = std::string(projectFile);
+					
+					std::cout << "load filepath for frames: " << filepath << std::endl;
+					
+					//load frames from file
+				}
+
+				fileDialogState.SelectFilePressed = false;
+			}
+			
+		}
+		else if(frames_file_state == FileFrameState::SAVE_NEW)
+		{
+			if (fileDialogState.SelectFilePressed)
+			{
+				
+				// save project file (if supported extension)
+				
+				//if file name was put in text box
+				if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".txt") )
+				{
+					char projectFile[512] = { 0 };
+					
+					strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
+					current_frames_file = std::string(projectFile);
+					
+					std::cout << "save filepath for frames: " << current_frames_file << std::endl;
+					
+					//save frames to file
+				}
+				//else if file name was selected
+				else if(IsFileExtension(fileDialogState.fileNameText, ".txt"))
+				{
+					char projectFile[512] = { 0 };
+					
+					strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+					current_frames_file = std::string(projectFile);
+					
+					std::cout << "save filepath for frames: " << current_frames_file << std::endl;
+					
+					//save frames to file
+				}
+
+				fileDialogState.SelectFilePressed = false;
+			}
+		}
+		
+		GuiUnlock();
+		
+		// call GuiFileDialog menu
+		GuiFileDialog(&fileDialogState);
 	}
 	
 }
@@ -406,4 +496,26 @@ void Timeline::RunPlaybackWithTimeline()
 void Timeline::ResumeEditModeInTimeline()
 {
 	timelineSettings.editMode = true;
+}
+
+//saves timeline points to file
+void Timeline::SaveTimeFramesToFile(std::string filepath)
+{
+	//open file for writing 
+	
+	//for current selected timeline
+		//if there is a point added, add it to file
+	
+	//close file
+}
+	
+//loads timeline points from file
+void Timeline::LoadTimeFramesFromFile(std::string filepath)
+{
+	//open file for reading
+	
+	//for current selected timeline
+		//read point from file. index, x value, y value, z value
+	
+	//close file
 }
