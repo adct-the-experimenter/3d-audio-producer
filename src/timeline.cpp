@@ -131,8 +131,6 @@ static char textInput[256] = { 0 };
 static GuiFileDialogState fileDialogState = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
 
 
-static std::string current_frames_file = "";
-
 enum class FileFrameState : std::uint8_t{NONE=0, SAVE_NEW,LOAD_NEW};
 static FileFrameState frames_file_state = FileFrameState::NONE;
 
@@ -171,267 +169,299 @@ void Timeline::DrawGui_Item()
 	
 	if( showTimeline )
 	{
-		float leftBound = 200;
-		timelineSettings.mouseArea = {leftBound, 400 , GetScreenWidth(), GetScreenHeight()};
-		
 		//draw timeline area
 		Rectangle drawAreaRect = {0, 400 , GetScreenWidth(), GetScreenHeight()};
 		DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.5f));
-
-		DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
-
-		Gui_Timeline(&timelineSettings);
+		
+		DrawFramesGUI();
+		
+		DrawTimelinePointsGUI();
+		
+		DrawTimelinePlotEditorGUI();
 		
 		
-		//draw position timeline if there are points to draw
-		if(positionTimelineSettings.array_points_ptr )
-		{
-			
-			//if adding point to timeline
-			if(addPointToTimeline && timelineSettings.frameSelected)
-			{
-				bool addPoint = false;
-				float x,y,z;
-				
-				int edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
-				
-				std::cout << "edit index: " << edit_index << std::endl;
-				
-				//if listener
-				if(edit_index == 1)
-				{
-					//get position of listener
-					x = main_listener_ptr->getPositionX();
-					y = main_listener_ptr->getPositionY();
-					z = main_listener_ptr->getPositionZ();
-					addPoint = true;
-					
-				}
-				//else if sound producer
-				else if(edit_index >= 2)
-				{
-					//get position of sound	producer
-					
-					x = sound_producer_vector_ref->at(edit_index - 2)->GetPositionX();
-					y = sound_producer_vector_ref->at(edit_index - 2)->GetPositionY();
-					z = sound_producer_vector_ref->at(edit_index - 2)->GetPositionZ();
-					
-					addPoint = true;
-					
-				}
-				else
-				{
-					//do nothing
-					addPoint = false;
-				}
-				
-				if(addPoint)
-				{
-					//add point to graphical timeline depending on frame selected
-					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
-					
-					//add point to position timeline
-					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posx[timelineSettings.current_timeline_frame] = x; 
-					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posy[timelineSettings.current_timeline_frame] = y; 
-					timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posz[timelineSettings.current_timeline_frame] = z;
-				}
-				
-				addPointToTimeline = false;
-			}
-			else if(addPointToTimeline)
-			{
-				addPointToTimeline = false;
-			}		
-			
-			if(removePointFromTimeline && timelineSettings.frameSelected)
-			{
-				
-				//remove point from graphical timeline depending on frame selected
-				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
-				
-				//remove point from position timeline with reset
-				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posx[timelineSettings.current_timeline_frame] = 0; 
-				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posy[timelineSettings.current_timeline_frame] = 0; 
-				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posz[timelineSettings.current_timeline_frame] = 0;
-				
-				removePointFromTimeline = false;
-			}
-			else if(removePointFromTimeline)
-			{
-				removePointFromTimeline = false;
-			}
-				
-			Gui_Timeline_Parameter(&positionTimelineSettings);		
-		}
-		
-		
-		//draw dropdown object editing box
-		edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 480, 70, 45 }, 
-																obj_choices.c_str(), edit_obj_listview_itemsCount,
-																edit_obj_listview_activeIndex
-															);
-															
-		//draw timeline position plot choices dropdown
-		edit_timeline_listview_activeIndex = Gui_Dropdown_ListView_Simple(&timeline_dropdown_listview_settings, (Rectangle){ 100, 420, 70, 45 }, 
-																timeline_choices.c_str(), edit_timeline_listview_itemsCount,
-																edit_timeline_listview_activeIndex
-															);
-															
-		//draw add button to add another timeline
-		if( GuiButton( (Rectangle){ 25, 490, 70, 30 }, GuiIconText(0, "Add") ))
-		{
-			addTimeline = true;
-		}
-		
-		if(addTimeline)
-		{
-			//prompt for timeline name
-			
-			
-			int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2 - 120, GetScreenHeight()/2 - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
-			
-			//if ok clicked
-			if (result == 1)
-			{
-				addTimeline = false;
-				
-				//add timeline position and its name
-				Timeline::AddPlotPositionToTimeline(std::string(textInput));
-				
-			}
-			//else if cancel clicked
-			else if(result == 2)
-			{
-				addTimeline = false;
-			}
-
-			if ((result == 0) || (result == 1) || (result == 2))
-			{
-				strcpy(textInput, "\0");
-			}
-		}
-		
-		//draw remove button to remove current edited timeline
-		if( GuiButton( (Rectangle){ 25, 520, 70, 30 }, GuiIconText(0, "Remove") ) )
-		{
-			//remove timeline position
-			size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
-			Timeline::RemovePlotPositionFromTimeline(index);
-		}
-		
-		//if timeline choice edited has changed
-		if(timeline_dropdown_listview_settings.valueChanged)
-		{
-			timeline_dropdown_listview_settings.valueChanged = false;
-			
-			timeline_dropdown_listview_settings.scrollIndex = edit_timeline_listview_activeIndex;
-			
-			edit_obj_listview_activeIndex = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
-			
-			obj_dropdown_listview_settings.valueChanged = true;
-		}
-		
-		//if object choice edited by timeline changes													
-		if(obj_dropdown_listview_settings.valueChanged )
-		{
-			obj_dropdown_listview_settings.valueChanged = false;
-			
-			obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
-			
-			timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
-		}
-		
-		
-		if(edit_timeline_listview_activeIndex >= 0)
-		{
-			positionTimelineSettings.array_points_ptr = timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
-		}
-		else
-		{
-			positionTimelineSettings.array_points_ptr = nullptr;
-		}
-		
-		//draw load frames button
-		if( GuiButton( (Rectangle){ 25, 560, 85, 30 }, GuiIconText(0, "Load Frames") ) )
-		{
-			frames_file_state = FileFrameState::LOAD_NEW;
-			fileDialogState.fileDialogActive = true; //activate file dialog
-		}
-		
-		//draw save frames button
-		if( GuiButton( (Rectangle){ 115, 560, 85, 30 }, GuiIconText(0, "Save Frames") ) )
-		{
-			frames_file_state = FileFrameState::SAVE_NEW;
-			fileDialogState.fileDialogActive = true; //activate file dialog
-		}
-		
-		
-		//file operation logic
-		if (fileDialogState.fileDialogActive){ GuiLock();}
-		
-		if(frames_file_state == FileFrameState::LOAD_NEW)
-		{
-			if (fileDialogState.SelectFilePressed)
-			{			
-				// Load project file (if supported extension)
-				if (IsFileExtension(fileDialogState.fileNameText, ".xml") )
-				{
-					char projectFile[512] = { 0 };
-					
-					strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-					std::string filepath = std::string(projectFile);
-					
-					std::cout << "load filepath for frames: " << filepath << std::endl;
-					
-					//load frames from file
-				}
-
-				fileDialogState.SelectFilePressed = false;
-			}
-			
-		}
-		else if(frames_file_state == FileFrameState::SAVE_NEW)
-		{
-			if (fileDialogState.SelectFilePressed)
-			{
-				
-				// save project file (if supported extension)
-				
-				//if file name was put in text box
-				if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".txt") )
-				{
-					char projectFile[512] = { 0 };
-					
-					strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
-					current_frames_file = std::string(projectFile);
-					
-					std::cout << "save filepath for frames: " << current_frames_file << std::endl;
-					
-					//save frames to file
-				}
-				//else if file name was selected
-				else if(IsFileExtension(fileDialogState.fileNameText, ".txt"))
-				{
-					char projectFile[512] = { 0 };
-					
-					strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-					current_frames_file = std::string(projectFile);
-					
-					std::cout << "save filepath for frames: " << current_frames_file << std::endl;
-					
-					//save frames to file
-				}
-
-				fileDialogState.SelectFilePressed = false;
-			}
-		}
-		
-		GuiUnlock();
-		
-		// call GuiFileDialog menu
-		GuiFileDialog(&fileDialogState);
 	}
 	
+}
+
+void Timeline::DrawTimelinePlotEditorGUI()
+{
+	//draw dropdown object editing box
+	edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 480, 70, 45 }, 
+															obj_choices.c_str(), edit_obj_listview_itemsCount,
+															edit_obj_listview_activeIndex
+														);
+														
+	//draw timeline position plot choices dropdown
+	edit_timeline_listview_activeIndex = Gui_Dropdown_ListView_Simple(&timeline_dropdown_listview_settings, (Rectangle){ 100, 420, 70, 45 }, 
+															timeline_choices.c_str(), edit_timeline_listview_itemsCount,
+															edit_timeline_listview_activeIndex
+														);
+														
+	//draw add button to add another timeline
+	if( GuiButton( (Rectangle){ 25, 490, 70, 30 }, GuiIconText(0, "Add") ))
+	{
+		addTimeline = true;
+	}
+	
+	if(addTimeline)
+	{
+		//prompt for timeline name
+		
+		
+		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2 - 120, GetScreenHeight()/2 - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
+		
+		//if ok clicked
+		if (result == 1)
+		{
+			addTimeline = false;
+			
+			//add timeline position and its name
+			Timeline::AddPlotPositionToTimeline(std::string(textInput));
+			
+		}
+		//else if cancel clicked
+		else if(result == 2)
+		{
+			addTimeline = false;
+		}
+
+		if ((result == 0) || (result == 1) || (result == 2))
+		{
+			strcpy(textInput, "\0");
+		}
+	}
+	
+	//draw remove button to remove current edited timeline
+	if( GuiButton( (Rectangle){ 25, 520, 70, 30 }, GuiIconText(0, "Remove") ) )
+	{
+		//remove timeline position
+		size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+		Timeline::RemovePlotPositionFromTimeline(index);
+	}
+	
+	//if timeline choice edited has changed
+	if(timeline_dropdown_listview_settings.valueChanged)
+	{
+		timeline_dropdown_listview_settings.valueChanged = false;
+		
+		timeline_dropdown_listview_settings.scrollIndex = edit_timeline_listview_activeIndex;
+		
+		edit_obj_listview_activeIndex = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+		
+		obj_dropdown_listview_settings.valueChanged = true;
+	}
+	
+	//if object choice edited by timeline changes													
+	if(obj_dropdown_listview_settings.valueChanged )
+	{
+		obj_dropdown_listview_settings.valueChanged = false;
+		
+		obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
+		
+		timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
+	}
+	
+	
+	if(edit_timeline_listview_activeIndex >= 0)
+	{
+		positionTimelineSettings.array_points_ptr = timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
+	}
+	else
+	{
+		positionTimelineSettings.array_points_ptr = nullptr;
+	}
+}
+
+void Timeline::DrawTimelinePointsGUI()
+{
+	float leftBound = 200;
+	timelineSettings.mouseArea = {leftBound, 400 , GetScreenWidth(), GetScreenHeight()};
+		
+	DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
+
+	Gui_Timeline(&timelineSettings);
+		
+		
+	//draw position timeline if there are points to draw
+	if(positionTimelineSettings.array_points_ptr )
+	{
+		
+		//if adding point to timeline
+		if(addPointToTimeline && timelineSettings.frameSelected)
+		{
+			bool addPoint = false;
+			float x,y,z;
+			
+			int edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+			
+			std::cout << "edit index: " << edit_index << std::endl;
+			
+			//if listener
+			if(edit_index == 1)
+			{
+				//get position of listener
+				x = main_listener_ptr->getPositionX();
+				y = main_listener_ptr->getPositionY();
+				z = main_listener_ptr->getPositionZ();
+				addPoint = true;
+				
+			}
+			//else if sound producer
+			else if(edit_index >= 2)
+			{
+				//get position of sound	producer
+				
+				x = sound_producer_vector_ref->at(edit_index - 2)->GetPositionX();
+				y = sound_producer_vector_ref->at(edit_index - 2)->GetPositionY();
+				z = sound_producer_vector_ref->at(edit_index - 2)->GetPositionZ();
+				
+				addPoint = true;
+				
+			}
+			else
+			{
+				//do nothing
+				addPoint = false;
+			}
+			
+			if(addPoint)
+			{
+				//add point to graphical timeline depending on frame selected
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
+				
+				//add point to position timeline
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posx[timelineSettings.current_timeline_frame] = x; 
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posy[timelineSettings.current_timeline_frame] = y; 
+				timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posz[timelineSettings.current_timeline_frame] = z;
+			}
+			
+			addPointToTimeline = false;
+		}
+		else if(addPointToTimeline)
+		{
+			addPointToTimeline = false;
+		}		
+		
+		if(removePointFromTimeline && timelineSettings.frameSelected)
+		{
+			
+			//remove point from graphical timeline depending on frame selected
+			timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
+			
+			//remove point from position timeline with reset
+			timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posx[timelineSettings.current_timeline_frame] = 0; 
+			timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posy[timelineSettings.current_timeline_frame] = 0; 
+			timeline_plots_position[edit_timeline_listview_activeIndex].timeline_points_posz[timelineSettings.current_timeline_frame] = 0;
+			
+			removePointFromTimeline = false;
+		}
+		else if(removePointFromTimeline)
+		{
+			removePointFromTimeline = false;
+		}
+			
+		Gui_Timeline_Parameter(&positionTimelineSettings);		
+	}
+	
+}
+
+void Timeline::DrawFramesGUI()
+{
+	//draw new frames button
+	if( GuiButton( (Rectangle){ 25, 560, 85, 30 }, GuiIconText(0, "New Frames") ) )
+	{
+		//replace current file in use for frames for plot with empty filepath
+		size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+		timeline_plots_position[index].frames_filepath = "";
+	}
+	
+	//draw load frames button
+	if( GuiButton( (Rectangle){ 25, 600, 85, 30 }, GuiIconText(0, "Load Frames") ) )
+	{
+		frames_file_state = FileFrameState::LOAD_NEW;
+		fileDialogState.fileDialogActive = true; //activate file dialog
+	}
+	
+	//draw save frames button
+	if( GuiButton( (Rectangle){ 115, 600, 85, 30 }, GuiIconText(0, "Save Frames") ) )
+	{
+		frames_file_state = FileFrameState::SAVE_NEW;
+		fileDialogState.fileDialogActive = true; //activate file dialog
+	}
+	
+	
+	//file operation logic
+	if (fileDialogState.fileDialogActive){ GuiLock();}
+	
+	if(frames_file_state == FileFrameState::LOAD_NEW)
+	{
+		if (fileDialogState.SelectFilePressed)
+		{			
+			// Load project file (if supported extension)
+			if (IsFileExtension(fileDialogState.fileNameText, ".xml") )
+			{
+				char projectFile[512] = { 0 };
+				
+				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+				std::string filepath = std::string(projectFile);
+				
+				std::cout << "load filepath for frames: " << filepath << std::endl;
+				
+				//load frames from file
+				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+				timeline_plots_position[index].frames_filepath = filepath;
+			}
+			frames_file_state = FileFrameState::NONE;
+			fileDialogState.SelectFilePressed = false;
+		}
+		
+	}
+	else if(frames_file_state == FileFrameState::SAVE_NEW)
+	{
+		if (fileDialogState.SelectFilePressed)
+		{
+			
+			// save project file (if supported extension)
+			
+			//if file name was put in text box
+			if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".txt") )
+			{
+				char projectFile[512] = { 0 };
+				
+				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
+				std::string filepath = std::string(projectFile);
+				
+				std::cout << "save filepath for frames: " << filepath << std::endl;
+				
+				//save frames to file
+				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+				timeline_plots_position[index].frames_filepath = filepath;
+			}
+			//else if file name was selected
+			else if(IsFileExtension(fileDialogState.fileNameText, ".txt"))
+			{
+				char projectFile[512] = { 0 };
+				
+				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
+				std::string filepath = std::string(projectFile);
+				
+				std::cout << "save filepath for frames: " << filepath << std::endl;
+				
+				//save frames to file
+				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+				timeline_plots_position[index].frames_filepath = filepath;
+			}
+			
+			frames_file_state = FileFrameState::NONE;
+			fileDialogState.SelectFilePressed = false;
+		}
+	}
+	
+	GuiUnlock();
+	
+	// call GuiFileDialog menu
+	GuiFileDialog(&fileDialogState);
 }
 
 static uint32_t second_frame_count = 0;
@@ -519,3 +549,5 @@ void Timeline::LoadTimeFramesFromFile(std::string filepath)
 	
 	//close file
 }
+
+const TimelineSaveData* Timeline::GetPointerToTimelineSaveData(){return &m_save_data;}

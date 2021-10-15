@@ -6,6 +6,21 @@
 
 #include <memory>
 
+struct TimelineSaveData
+{
+	//number of timeline plot position
+	size_t number_of_plots;
+	
+	//vector containing indices of object to edit for each position plot
+	std::vector <int> plots_edit_indices;
+	
+	//vector containing names of timeline position plot
+	std::vector <std::string> plots_names;
+	
+	//vector containing filepaths to frame file for each timeline position plot
+	std::vector <std::string> plots_frames_filepaths;
+	
+};
 
 struct TimelinePlotPosition
 {
@@ -22,6 +37,9 @@ struct TimelinePlotPosition
 	
 	//index of the object to edit
 	int indexObjectToEdit;
+	
+	//current filepath to frames
+	std::string frames_filepath;
 };
 
 enum class ObjectType : uint8_t {NONE,LISTENER,SOUND_PRODUCER};
@@ -74,6 +92,8 @@ public:
 	//loads timeline points from file
 	void LoadTimeFramesFromFile(std::string filepath);
 	
+	const TimelineSaveData* GetPointerToTimelineSaveData();
+	
 private:
 	
 	//main listener
@@ -101,6 +121,19 @@ private:
 	//number of time frames to increment current frame in timeline settings after 1 second.
 	size_t time_frame_rate;	
 	
+	//save data
+	TimelineSaveData m_save_data;
+	
+	//helper functions to managed multiple gui draws in an organized manner.
+	
+	//draw points of plots
+	void DrawTimelinePointsGUI();
+	
+	//draw timeline plot editor 
+	void DrawTimelinePlotEditorGUI();
+	
+	//draw frames buttons and handling
+	void DrawFramesGUI();
 };
 
 #endif
