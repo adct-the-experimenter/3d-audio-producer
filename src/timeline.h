@@ -87,10 +87,10 @@ public:
 //Save / Load functions
 	
 	//saves timeline points to file
-	void SaveTimeFramesToFile(std::string filepath);
+	void SaveTimeFramesToFile(std::string& filepath);
 	
 	//loads timeline points from file
-	void LoadTimeFramesFromFile(std::string filepath);
+	void LoadTimeFramesFromFile(std::string& filepath);
 	
 	const TimelineSaveData* GetPointerToTimelineSaveData();
 	

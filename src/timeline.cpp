@@ -11,6 +11,8 @@
 
 #include "raygui/gui_file_dialog.h"
 
+#include <fstream> //for file read and write
+
 Timeline::Timeline()
 {
 	showTimeline = false;
@@ -179,7 +181,6 @@ void Timeline::DrawGui_Item()
 		
 		DrawTimelinePlotEditorGUI();
 		
-		
 	}
 	
 }
@@ -295,7 +296,7 @@ void Timeline::DrawTimelinePointsGUI()
 			
 			int edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
 			
-			std::cout << "edit index: " << edit_index << std::endl;
+			//std::cout << "edit index: " << edit_index << std::endl;
 			
 			//if listener
 			if(edit_index == 1)
@@ -399,7 +400,7 @@ void Timeline::DrawFramesGUI()
 		if (fileDialogState.SelectFilePressed)
 		{			
 			// Load project file (if supported extension)
-			if (IsFileExtension(fileDialogState.fileNameText, ".xml") )
+			if (IsFileExtension(fileDialogState.fileNameText, ".bin") )
 			{
 				char projectFile[512] = { 0 };
 				
@@ -425,7 +426,7 @@ void Timeline::DrawFramesGUI()
 			// save project file (if supported extension)
 			
 			//if file name was put in text box
-			if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".txt") )
+			if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".bin") )
 			{
 				char projectFile[512] = { 0 };
 				
@@ -437,9 +438,10 @@ void Timeline::DrawFramesGUI()
 				//save frames to file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 				timeline_plots_position[index].frames_filepath = filepath;
+				Timeline::SaveTimeFramesToFile(filepath);
 			}
 			//else if file name was selected
-			else if(IsFileExtension(fileDialogState.fileNameText, ".txt"))
+			else if(IsFileExtension(fileDialogState.fileNameText, ".bin"))
 			{
 				char projectFile[512] = { 0 };
 				
@@ -529,18 +531,35 @@ void Timeline::ResumeEditModeInTimeline()
 }
 
 //saves timeline points to file
-void Timeline::SaveTimeFramesToFile(std::string filepath)
+void Timeline::SaveTimeFramesToFile(std::string& filepath)
 {
 	//open file for writing 
+	std::ofstream outfile (filepath,std::ofstream::binary);
+	
+	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 	
 	//for current selected timeline
+	for(uint16_t i = 0; i < 200; i++)
+	{
 		//if there is a point added, add it to file
-	
+		if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
+		{
+			//write index
+			outfile.write( (char*)&i,sizeof(i));
+			
+			//write floats x,y,z
+			float& x = timeline_plots_position[edit_index].timeline_points_posx[i];
+			outfile.write( (char*)&x, sizeof(x));
+			
+		}
+	}
+		
 	//close file
+	outfile.close();
 }
 	
 //loads timeline points from file
-void Timeline::LoadTimeFramesFromFile(std::string filepath)
+void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 {
 	//open file for reading
 	
