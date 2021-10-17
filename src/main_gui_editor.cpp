@@ -62,6 +62,9 @@ static ProjectFileState proj_file_state;
 //timeline
 static Timeline timeline_window;
 
+//bool to indicate if dialog is in use.
+bool global_dialog_in_use = false;
+
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -243,7 +246,8 @@ void MainGuiEditor::HandleEvents()
 	if(GetMouseX() > GetScreenWidth() - 200){disableHotkeys = true;}
 	else{disableHotkeys = false;}
 	
-	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive){return;}
+	//if any of these are true, do not continue to key input
+	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive || global_dialog_in_use){return;}
 	
 	
 	//if w key pressed

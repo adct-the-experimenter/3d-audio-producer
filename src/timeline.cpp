@@ -13,6 +13,8 @@
 
 #include <fstream> //for file read and write
 
+#include "dialog_var.h"
+
 Timeline::Timeline()
 {
 	showTimeline = false;
@@ -180,6 +182,8 @@ void Timeline::DrawGui_Item()
 		DrawTimelinePointsGUI();
 		
 		DrawTimelinePlotEditorGUI();
+		
+		DrawFramesFileDialog();
 		
 	}
 	
@@ -373,8 +377,14 @@ void Timeline::DrawFramesGUI()
 	if( GuiButton( (Rectangle){ 25, 560, 85, 30 }, GuiIconText(0, "New Frames") ) )
 	{
 		//replace current file in use for frames for plot with empty filepath
-		size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
-		timeline_plots_position[index].frames_filepath = "";
+		size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+		timeline_plots_position[edit_index].frames_filepath = "";
+		
+		//reset all points to false which erases it from GUI.
+		for(uint16_t i = 0; i < 200; i++)
+		{
+			timeline_plots_position[edit_index].timeline_settings_bool_array[i] = false;
+		}
 	}
 	
 	//draw load frames button
@@ -382,6 +392,7 @@ void Timeline::DrawFramesGUI()
 	{
 		frames_file_state = FileFrameState::LOAD_NEW;
 		fileDialogState.fileDialogActive = true; //activate file dialog
+		global_dialog_in_use = true;
 	}
 	
 	//draw save frames button
@@ -389,9 +400,13 @@ void Timeline::DrawFramesGUI()
 	{
 		frames_file_state = FileFrameState::SAVE_NEW;
 		fileDialogState.fileDialogActive = true; //activate file dialog
+		global_dialog_in_use = true;
 	}
 	
-	
+}
+
+void Timeline::DrawFramesFileDialog()
+{
 	//file operation logic
 	if (fileDialogState.fileDialogActive){ GuiLock();}
 	
@@ -412,9 +427,11 @@ void Timeline::DrawFramesGUI()
 				//load frames from file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 				timeline_plots_position[index].frames_filepath = filepath;
+				Timeline::LoadTimeFramesFromFile(filepath);
 			}
 			frames_file_state = FileFrameState::NONE;
 			fileDialogState.SelectFilePressed = false;
+			global_dialog_in_use = false;
 		}
 		
 	}
@@ -453,10 +470,12 @@ void Timeline::DrawFramesGUI()
 				//save frames to file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 				timeline_plots_position[index].frames_filepath = filepath;
+				Timeline::SaveTimeFramesToFile(filepath);
 			}
 			
 			frames_file_state = FileFrameState::NONE;
 			fileDialogState.SelectFilePressed = false;
+			global_dialog_in_use = false;
 		}
 	}
 	
@@ -530,11 +549,24 @@ void Timeline::ResumeEditModeInTimeline()
 	timelineSettings.editMode = true;
 }
 
+//struct
+struct TimeFramePositionData{
+	uint16_t index;
+	float x;
+	float y;
+	float z;
+};
+
 //saves timeline points to file
 void Timeline::SaveTimeFramesToFile(std::string& filepath)
 {
 	//open file for writing 
-	std::ofstream outfile (filepath,std::ofstream::binary);
+	std::ofstream outfile (filepath,std::ofstream::binary | std::ofstream::out);
+	
+	if(!outfile)
+	{
+		std::cout << "Unable to open file for writing: " << filepath << std::endl;
+	}
 	
 	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 	
@@ -544,12 +576,15 @@ void Timeline::SaveTimeFramesToFile(std::string& filepath)
 		//if there is a point added, add it to file
 		if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
 		{
-			//write index
-			outfile.write( (char*)&i,sizeof(i));
+			TimeFramePositionData data;
 			
-			//write floats x,y,z
-			float& x = timeline_plots_position[edit_index].timeline_points_posx[i];
-			outfile.write( (char*)&x, sizeof(x));
+			data.index = i;
+			data.x = timeline_plots_position[edit_index].timeline_points_posx[i];
+			data.y = timeline_plots_position[edit_index].timeline_points_posy[i];
+			data.z = timeline_plots_position[edit_index].timeline_points_posz[i];
+			
+			//write data
+			outfile.write( reinterpret_cast <const char*>( &data) ,sizeof(data));
 			
 		}
 	}
@@ -561,12 +596,37 @@ void Timeline::SaveTimeFramesToFile(std::string& filepath)
 //loads timeline points from file
 void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 {
+	
 	//open file for reading
+	std::ifstream infile (filepath,std::ifstream::binary | std::ifstream::in);
+	
+	if(!infile)
+	{
+		std::cout << "Unable to open file for reading: " << filepath << std::endl;
+	}
 	
 	//for current selected timeline
+	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+		
+	//while have not reached end of file
+	while( !infile.eof())
+	{
+		TimeFramePositionData data;
+		
 		//read point from file. index, x value, y value, z value
-	
+		infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
+		
+		//add point to timeline
+		uint16_t i = data.index;
+		timeline_plots_position[edit_index].timeline_points_posx[i] = data.x;
+		timeline_plots_position[edit_index].timeline_points_posy[i] = data.y;
+		timeline_plots_position[edit_index].timeline_points_posz[i] = data.z;
+		timeline_plots_position[edit_index].timeline_settings_bool_array[i] = true;
+		
+	}
+		
 	//close file
+	infile.close();
 }
 
 const TimelineSaveData* Timeline::GetPointerToTimelineSaveData(){return &m_save_data;}

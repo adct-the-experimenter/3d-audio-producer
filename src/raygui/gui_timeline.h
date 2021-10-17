@@ -134,7 +134,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 		
 		//frame number
 		char c_buffer[4];
-		sprintf(c_buffer,"%d",i);
+		sprintf(c_buffer,"%ld",i);
 		DrawText(c_buffer,settings->mouseArea.x + 2*i + 4,settings->mouseArea.y + 10,12,BLACK);
 		
 	}

@@ -134,6 +134,9 @@ private:
 	
 	//draw frames buttons and handling
 	void DrawFramesGUI();
+	
+	//draw file dialog and handling
+	void DrawFramesFileDialog();
 };
 
 #endif
