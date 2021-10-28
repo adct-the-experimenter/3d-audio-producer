@@ -12,12 +12,7 @@ XMLReader::~XMLReader()
 	
 }
 	
-void XMLReader::LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_producer_save_data,
-							   std::vector <EchoZoneSaveData> *echoZonesSaveData,
-							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
-							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
-							   ListenerSaveData& listener_data,
-							   SoundBankSaveData& sound_bank_save_data,
+void XMLReader::LoadDataFromXMLFile(LoadDataHelper& load_data_helper,
 							   std::string path)
 {
 	// Create empty XML document within memory
@@ -37,13 +32,13 @@ void XMLReader::LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_p
     
     pugi::xml_node root = doc.child("BAEXMLRoot");
     
-    XMLReader::LoadData_SoundProducers(root, sound_producer_save_data);
-	XMLReader::LoadData_EchoZones(root,echoZonesSaveData);
-	XMLReader::LoadData_StandardRevZones(root,standardRevZonesSaveData);
-	XMLReader::LoadData_EAXRevZones(root,eaxRevZonesSaveData);
+    XMLReader::LoadData_SoundProducers(root, load_data_helper.sound_producer_save_data);
+	XMLReader::LoadData_EchoZones(root,load_data_helper.echoZonesSaveData);
+	XMLReader::LoadData_StandardRevZones(root,load_data_helper.standardRevZonesSaveData);
+	XMLReader::LoadData_EAXRevZones(root,load_data_helper.eaxRevZonesSaveData);
 	
-	XMLReader::LoadData_Listener(root,listener_data);
-	XMLReader::LoadData_SoundBank(root,sound_bank_save_data);
+	XMLReader::LoadData_Listener(root,*load_data_helper.listener_data_ptr);
+	XMLReader::LoadData_SoundBank(root,*load_data_helper.sound_bank_save_data_ptr);
 }
 
 void XMLReader::LoadData_SoundProducers(pugi::xml_node& root, std::vector <SoundProducerSaveData> *sound_producer_save_data)
@@ -348,5 +343,10 @@ void XMLReader::LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& soun
 		
 		iterator++;
 	}
+	
+}
+
+void XMLReader::LoadData_Timeline(pugi::xml_node& root, TimelineSaveData& timeline_save_data)
+{
 	
 }

@@ -557,6 +557,60 @@ struct TimeFramePositionData{
 	float z;
 };
 
+void Timeline::LoadSaveData()
+{
+	//assuming m_save_data has been modified from loading from xml file
+	timeline_plots_position.reserve(m_save_data.number_of_plots);
+	//for every timeline plot
+	for(size_t i = 0; i < timeline_plots_position.size();i++)
+	{
+		//load name
+		timeline_plots_position[i].name = m_save_data.plots_names[i];
+		
+		//load edit object index
+		timeline_plots_position[i].indexObjectToEdit = m_save_data.plots_edit_indices[i];
+		
+		//load frame filepath
+		timeline_plots_position[i].frames_filepath = m_save_data.plots_frames_filepaths[i];
+		
+		if(timeline_plots_position[i].frames_filepath != "")
+		{
+			//open file for reading
+			std::ifstream infile (timeline_plots_position[i].frames_filepath,std::ifstream::binary | std::ifstream::in);
+			
+			if(!infile)
+			{
+				std::cout << "Unable to open file for reading: " << timeline_plots_position[i].frames_filepath << std::endl;
+				continue;
+			}
+				
+			//while have not reached end of file
+			while( !infile.eof())
+			{
+				TimeFramePositionData data;
+				
+				//read point from file. index, x value, y value, z value
+				infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
+				
+				//add point to timeline
+				uint16_t arr_index = data.index;
+				timeline_plots_position[i].timeline_points_posx[arr_index] = data.x;
+				timeline_plots_position[i].timeline_points_posy[arr_index] = data.y;
+				timeline_plots_position[i].timeline_points_posz[arr_index] = data.z;
+				timeline_plots_position[i].timeline_settings_bool_array[arr_index] = true;
+				
+			}
+				
+			//close file
+			infile.close();
+		}
+		
+	}
+	
+	
+	
+}
+
 //saves timeline points to file
 void Timeline::SaveTimeFramesToFile(std::string& filepath)
 {
@@ -591,6 +645,7 @@ void Timeline::SaveTimeFramesToFile(std::string& filepath)
 		
 	//close file
 	outfile.close();
+	
 }
 	
 //loads timeline points from file
@@ -629,4 +684,6 @@ void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 	infile.close();
 }
 
-const TimelineSaveData* Timeline::GetPointerToTimelineSaveData(){return &m_save_data;}
+TimelineSaveData* Timeline::GetPointerToTimelineSaveData(){return &m_save_data;}
+
+TimelineSaveData& Timeline::GetReferenceToTimelineSaveData(){return m_save_data;}

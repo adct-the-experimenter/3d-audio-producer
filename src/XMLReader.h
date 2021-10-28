@@ -15,6 +15,18 @@
 
 #include "sound_bank.h"
 
+#include "timeline.h"
+
+struct LoadDataHelper
+{
+	std::vector <SoundProducerSaveData> *sound_producer_save_data;
+	std::vector <EchoZoneSaveData> *echoZonesSaveData;
+	std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData;
+	std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData;
+	ListenerSaveData* listener_data_ptr;
+	SoundBankSaveData* sound_bank_save_data_ptr;
+	TimelineSaveData* timeline_save_data_ptr;
+};
 
 //class used to save data in binaural audio editor into a xml file
 
@@ -25,12 +37,7 @@ public:
 	XMLReader();
 	~XMLReader();
 	
-	void LoadDataFromXMLFile(std::vector <SoundProducerSaveData> *sound_producer_save_data,
-							   std::vector <EchoZoneSaveData> *echoZonesSaveData,
-							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
-							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
-							   ListenerSaveData& listener_data,
-							   SoundBankSaveData& sound_bank_save_data,
+	void LoadDataFromXMLFile(LoadDataHelper& load_data_helper,
 							   std::string path);
 	
 private:
@@ -44,6 +51,8 @@ private:
 	void LoadData_Listener(pugi::xml_node& root, ListenerSaveData& listener_data);
 	
 	void LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& sound_bank_save_data);
+	
+	void LoadData_Timeline(pugi::xml_node& root, TimelineSaveData& timeline_save_data);
 };
 
 #endif

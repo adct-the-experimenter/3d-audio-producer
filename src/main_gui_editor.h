@@ -5,7 +5,6 @@
 
 #include "openalsoftaudioengine.h"
 
-//#include "soundproducer-track-manager.h"
 #include "soundproducer.h"
 #include "listener.h"
 //#include "listener-external.h"
@@ -17,10 +16,6 @@
 
 
 #include "sound_bank.h"
-
-//#include "timeline-frame.h"
-//#include "soundproducer-track.h"
-//#include "listener-track.h"
 
 #include "effects-manager.h"
 

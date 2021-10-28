@@ -1163,7 +1163,15 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	std::cout << "Save project file path:" << saveFilePath << std::endl;
 	
 	save_system_ptr->SetSaveFilePath(saveFilePath);
-	save_system_ptr->SaveProjectToSetFile(&sound_producer_vector,effects_manager_ptr.get(),listener.get(),&m_sound_bank);
+	
+	SaveSystemDataHelper save_system_data_helper; 
+	save_system_data_helper.sound_producer_vector_ptr = &sound_producer_vector;
+	save_system_data_helper.effectsManagerPtr = effects_manager_ptr.get();
+	save_system_data_helper.listener_ptr = listener.get();
+	save_system_data_helper.sound_bank_ptr = &m_sound_bank;
+	save_system_data_helper.timeline_save_data_ptr = timeline_window.GetPointerToTimelineSaveData();
+	
+	save_system_ptr->SaveProjectToSetFile(save_system_data_helper);
 	
 }
 
@@ -1188,13 +1196,16 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 
 	ListenerSaveData listener_data;
 	
-	load_system_ptr->LoadProject(&sound_producer_save_data,
-						   &echoZonesSaveData,
-						   &standardRevZonesSaveData,
-						   &eaxRevZonesSaveData,
-						   listener_data,
-						   sound_bank_save_data,
-						   filepath);
+	LoadDataHelper load_data_helper;
+	load_data_helper.sound_producer_save_data = &sound_producer_save_data;
+	load_data_helper.echoZonesSaveData = &echoZonesSaveData;
+	load_data_helper.standardRevZonesSaveData = &standardRevZonesSaveData;
+	load_data_helper.eaxRevZonesSaveData = &eaxRevZonesSaveData;
+	load_data_helper.listener_data_ptr = &listener_data;
+	load_data_helper.sound_bank_save_data_ptr = &sound_bank_save_data;
+	load_data_helper.timeline_save_data_ptr = timeline_window.GetPointerToTimelineSaveData();
+	
+	load_system_ptr->LoadProject(load_data_helper,filepath);
 						   
 	
 	//initialize sound producers from save data
@@ -1294,6 +1305,8 @@ void MainGuiEditor::RemoveSoundProducer(int index)
 	}
 	
 }
+
+
 /*
 
 void MainFrame::OnSetupSerial(wxCommandEvent& event)
