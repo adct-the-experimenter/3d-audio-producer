@@ -33,6 +33,7 @@ void SaveSystem::SaveProject(SaveSystemDataHelper& save_system_data_helper,
 	save_data_helper.eaxRevZones = &save_system_data_helper.effectsManagerPtr->eax_reverb_zones_vector;
 	save_data_helper.listener_ptr = save_system_data_helper.listener_ptr;
 	save_data_helper.sound_bank_ptr = save_system_data_helper.sound_bank_ptr;
+	save_data_helper.timeline_ptr = save_system_data_helper.timeline_ptr;
 	
 	//for each specific effect zone type
 	xml_creator.SaveDataToXMLFile(save_data_helper,path);
