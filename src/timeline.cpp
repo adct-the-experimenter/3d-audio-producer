@@ -22,6 +22,11 @@ Timeline::Timeline()
 	removePointFromTimeline = false;
 	
 	time_frame_rate = 1;
+	
+	//initialize default save data
+	m_save_data.number_of_plots = 1;
+	m_save_data.plots_save_data.emplace_back(TimelinePlotPositionSaveData({0, "Default", ""}) );
+	
 }
 
 Timeline::~Timeline()
@@ -70,6 +75,9 @@ void Timeline::AddPlotPositionToTimeline(std::string name)
 		timeline_plots_position.back().name = name;
 	}
 	
+	m_save_data.number_of_plots += 1;
+	
+	m_save_data.plots_save_data.emplace_back(TimelinePlotPositionSaveData({0, name, ""}) );
 }
 
 void Timeline::RemovePlotPositionFromTimeline(size_t& index)
@@ -82,6 +90,11 @@ void Timeline::RemovePlotPositionFromTimeline(size_t& index)
 	
 	std::swap(timeline_plots_position[index],timeline_plots_position.back());
 	timeline_plots_position.pop_back();
+	
+	m_save_data.number_of_plots -= 1;
+	
+	std::swap(m_save_data.plots_save_data[index],m_save_data.plots_save_data.back());
+	m_save_data.plots_save_data.pop_back();
 }
 
 
@@ -265,6 +278,8 @@ void Timeline::DrawTimelinePlotEditorGUI()
 		obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
 		
 		timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
+		
+		m_save_data.plots_save_data[edit_timeline_listview_activeIndex].edit_index = edit_obj_listview_activeIndex;
 	}
 	
 	
@@ -427,6 +442,7 @@ void Timeline::DrawFramesFileDialog()
 				//load frames from file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 				timeline_plots_position[index].frames_filepath = filepath;
+				m_save_data.plots_save_data[index].frames_filepath = filepath;
 				Timeline::LoadTimeFramesFromFile(filepath);
 			}
 			frames_file_state = FileFrameState::NONE;
@@ -455,6 +471,7 @@ void Timeline::DrawFramesFileDialog()
 				//save frames to file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 				timeline_plots_position[index].frames_filepath = filepath;
+				m_save_data.plots_save_data[index].frames_filepath = filepath;
 				Timeline::SaveTimeFramesToFile(filepath);
 			}
 			//else if file name was selected
@@ -470,6 +487,7 @@ void Timeline::DrawFramesFileDialog()
 				//save frames to file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 				timeline_plots_position[index].frames_filepath = filepath;
+				m_save_data.plots_save_data[index].frames_filepath = filepath;
 				Timeline::SaveTimeFramesToFile(filepath);
 			}
 			
@@ -557,21 +575,21 @@ struct TimeFramePositionData{
 	float z;
 };
 
-void Timeline::LoadSaveData()
+void Timeline::LoadSaveData(TimelineSaveData& save_data)
 {
 	//assuming m_save_data has been modified from loading from xml file
-	timeline_plots_position.reserve(m_save_data.number_of_plots);
+	timeline_plots_position.reserve(save_data.number_of_plots);
 	//for every timeline plot
 	for(size_t i = 0; i < timeline_plots_position.size();i++)
 	{
 		//load name
-		timeline_plots_position[i].name = m_save_data.plots_names[i];
+		timeline_plots_position[i].name = save_data.plots_save_data[i].name;
 		
 		//load edit object index
-		timeline_plots_position[i].indexObjectToEdit = m_save_data.plots_edit_indices[i];
+		timeline_plots_position[i].indexObjectToEdit = save_data.plots_save_data[i].edit_index;
 		
 		//load frame filepath
-		timeline_plots_position[i].frames_filepath = m_save_data.plots_frames_filepaths[i];
+		timeline_plots_position[i].frames_filepath = save_data.plots_save_data[i].frames_filepath;
 		
 		if(timeline_plots_position[i].frames_filepath != "")
 		{
@@ -610,6 +628,8 @@ void Timeline::LoadSaveData()
 	
 	
 }
+
+TimelineSaveData& Timeline::GetSaveData(){return m_save_data;}
 
 //saves timeline points to file
 void Timeline::SaveTimeFramesToFile(std::string& filepath)
@@ -683,7 +703,3 @@ void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 	//close file
 	infile.close();
 }
-
-TimelineSaveData* Timeline::GetPointerToTimelineSaveData(){return &m_save_data;}
-
-TimelineSaveData& Timeline::GetReferenceToTimelineSaveData(){return m_save_data;}

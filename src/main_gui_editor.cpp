@@ -1169,7 +1169,7 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	save_system_data_helper.effectsManagerPtr = effects_manager_ptr.get();
 	save_system_data_helper.listener_ptr = listener.get();
 	save_system_data_helper.sound_bank_ptr = &m_sound_bank;
-	save_system_data_helper.timeline_save_data_ptr = timeline_window.GetPointerToTimelineSaveData();
+	save_system_data_helper.timeline_ptr = &timeline_window;
 	
 	save_system_ptr->SaveProjectToSetFile(save_system_data_helper);
 	
@@ -1196,6 +1196,8 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 
 	ListenerSaveData listener_data;
 	
+	TimelineSaveData timeline_save_data;
+	
 	LoadDataHelper load_data_helper;
 	load_data_helper.sound_producer_save_data = &sound_producer_save_data;
 	load_data_helper.echoZonesSaveData = &echoZonesSaveData;
@@ -1203,7 +1205,8 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	load_data_helper.eaxRevZonesSaveData = &eaxRevZonesSaveData;
 	load_data_helper.listener_data_ptr = &listener_data;
 	load_data_helper.sound_bank_save_data_ptr = &sound_bank_save_data;
-	load_data_helper.timeline_save_data_ptr = timeline_window.GetPointerToTimelineSaveData();
+	
+	load_data_helper.timeline_save_data_ptr = &timeline_save_data;
 	
 	load_system_ptr->LoadProject(load_data_helper,filepath);
 						   

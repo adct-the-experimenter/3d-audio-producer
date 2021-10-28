@@ -6,19 +6,19 @@
 
 #include <memory>
 
+struct TimelinePlotPositionSaveData
+{
+	int edit_index;
+	std::string name;
+	std::string frames_filepath;
+};
+
 struct TimelineSaveData
 {
 	//number of timeline plot position
 	size_t number_of_plots;
 	
-	//vector containing indices of object to edit for each position plot
-	std::vector <int> plots_edit_indices;
-	
-	//vector containing names of timeline position plot
-	std::vector <std::string> plots_names;
-	
-	//vector containing filepaths to frame file for each timeline position plot
-	std::vector <std::string> plots_frames_filepaths;
+	std::vector <TimelinePlotPositionSaveData> plots_save_data;
 	
 };
 
@@ -86,7 +86,8 @@ public:
 
 //Save / Load functions
 	
-	void LoadSaveData();
+	void LoadSaveData(TimelineSaveData& data);
+	TimelineSaveData& GetSaveData();
 	
 	//saves timeline points to file
 	void SaveTimeFramesToFile(std::string& filepath);
@@ -94,8 +95,6 @@ public:
 	//loads timeline points from file
 	void LoadTimeFramesFromFile(std::string& filepath);
 	
-	TimelineSaveData* GetPointerToTimelineSaveData();
-	TimelineSaveData& GetReferenceToTimelineSaveData();
 	
 private:
 	

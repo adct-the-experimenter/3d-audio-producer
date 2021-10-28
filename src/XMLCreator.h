@@ -27,7 +27,7 @@ struct SaveDataHelper
 	std::vector <ReverbZone> *eaxRevZones;
 	Listener* listener_ptr;
 	SoundBank* sound_bank_ptr;
-	TimelineSaveData* timeline_save_data_ptr;
+	Timeline* timeline_ptr;
 };
 
 class XMLCreator
@@ -60,7 +60,7 @@ private:
 	void SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_bank_ptr);
 	
 	//function to save data from timeline to xml file
-	void SaveDataXML_Timeline(pugi::xml_node& root, TimelineSaveData* timeline_save_data_ptr);					
+	void SaveDataXML_Timeline(pugi::xml_node& root, Timeline* timeline_ptr);					
 };
 
 #endif

@@ -12,7 +12,7 @@ struct SaveSystemDataHelper
 	EffectsManager* effectsManagerPtr;
 	Listener* listener_ptr;
 	SoundBank* sound_bank_ptr;
-	TimelineSaveData* timeline_save_data_ptr;
+	Timeline* timeline_ptr;
 };
 
 class SaveSystem

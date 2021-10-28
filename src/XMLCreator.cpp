@@ -42,6 +42,8 @@ void XMLCreator::SaveDataToXMLFile(SaveDataHelper& save_data_helper,
 	
 	XMLCreator::SaveDataXML_SoundBank(root,save_data_helper.sound_bank_ptr);
 	
+	XMLCreator::SaveDataXML_Timeline(root, save_data_helper.timeline_ptr);
+	
 	//write to file
 	
 	// Save XML tree to file.
@@ -280,9 +282,9 @@ void XMLCreator::SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_ba
 	}
 }
 
-void XMLCreator::SaveDataXML_Timeline(pugi::xml_node& root, TimelineSaveData* timeline_save_data_ptr)
+void XMLCreator::SaveDataXML_Timeline(pugi::xml_node& root, Timeline* timeline_ptr)
 {
-	if(timeline_save_data_ptr)
+	if(timeline_ptr)
 	{
 		//create timeline node
 		pugi::xml_node timelineNode = root.append_child("Timeline");
@@ -290,13 +292,15 @@ void XMLCreator::SaveDataXML_Timeline(pugi::xml_node& root, TimelineSaveData* ti
 		//create Position plots child
 		pugi::xml_node posPlotsNode = timelineNode.append_child("PositionPlots");
 		
-		for(size_t i = 0; i < timeline_save_data_ptr->number_of_plots; i++)
+		TimelineSaveData& save_data = timeline_ptr->GetSaveData();
+		
+		for(size_t i = 0; i < save_data.number_of_plots; i++)
 		{
 			pugi::xml_node posPlotNodeChild = posPlotsNode.append_child("Plot");
 			
-			posPlotNodeChild.append_attribute("editIndex") = std::to_string(timeline_save_data_ptr->plots_edit_indices[i]).c_str();
-			posPlotNodeChild.append_attribute("name") = timeline_save_data_ptr->plots_names[i].c_str();
-			posPlotNodeChild.append_attribute("frames_filepath") = timeline_save_data_ptr->plots_frames_filepaths[i].c_str();
+			posPlotNodeChild.append_attribute("editIndex") = std::to_string(save_data.plots_save_data[i].edit_index).c_str();
+			posPlotNodeChild.append_attribute("name") = save_data.plots_save_data[i].name.c_str();
+			posPlotNodeChild.append_attribute("frames_filepath") = save_data.plots_save_data[i].frames_filepath.c_str();
 			
 		}
 	}
