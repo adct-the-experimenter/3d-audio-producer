@@ -28,8 +28,7 @@ Timeline::Timeline()
 	//initialize default save data
 	m_save_data.plots_save_data.reserve(25);
 	
-	m_save_data.number_of_plots = 1;
-	m_save_data.plots_save_data.emplace_back(TimelinePlotPositionSaveData({0, "Default", ""}) );
+	m_save_data.number_of_plots = 0;
 	
 }
 
@@ -599,6 +598,20 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 		//load frame filepath
 		timeline_plots_position[i].frames_filepath = save_data.plots_save_data[i].frames_filepath;
 		
+		//initialize points of timeline frame
+		timeline_plots_position[i].timeline_points_posx = new float[200];
+		timeline_plots_position[i].timeline_points_posy = new float[200];
+		timeline_plots_position[i].timeline_points_posz = new float[200];
+		timeline_plots_position[i].timeline_settings_bool_array = new bool[200];
+		for(size_t it = 0; it < 200; it++)
+		{
+			timeline_plots_position[i].timeline_points_posx[it] = 0; 
+			timeline_plots_position[i].timeline_points_posy[it] = 0; 
+			timeline_plots_position[i].timeline_points_posz[it] = 0;
+
+			timeline_plots_position[i].timeline_settings_bool_array[it] = false;
+		}
+		
 		if(timeline_plots_position[i].frames_filepath != "")
 		{
 			//open file for reading
@@ -609,6 +622,8 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 				std::cout << "Unable to open file for reading: " << timeline_plots_position[i].frames_filepath << std::endl;
 				continue;
 			}
+			
+			
 				
 			//while have not reached end of file
 			while( !infile.eof())
