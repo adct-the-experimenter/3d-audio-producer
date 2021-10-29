@@ -581,8 +581,12 @@ struct TimeFramePositionData{
 
 void Timeline::LoadSaveData(TimelineSaveData& save_data)
 {
+	m_save_data = save_data;
+	
 	//assuming m_save_data has been modified from loading from xml file
+	timeline_plots_position.clear();
 	timeline_plots_position.resize(save_data.number_of_plots);
+	
 	//for every timeline plot
 	for(size_t i = 0; i < timeline_plots_position.size();i++)
 	{
@@ -629,8 +633,10 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 		
 	}
 	
-	
-	
+	//change editor variables to match the newly loaded position
+	edit_obj_listview_activeIndex = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+	obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
+	Timeline::InitGUI();
 }
 
 TimelineSaveData& Timeline::GetSaveData(){return m_save_data;}

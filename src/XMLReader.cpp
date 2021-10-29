@@ -39,6 +39,7 @@ void XMLReader::LoadDataFromXMLFile(LoadDataHelper& load_data_helper,
 	
 	XMLReader::LoadData_Listener(root,*load_data_helper.listener_data_ptr);
 	XMLReader::LoadData_SoundBank(root,*load_data_helper.sound_bank_save_data_ptr);
+	XMLReader::LoadData_Timeline(root, *load_data_helper.timeline_save_data_ptr);
 }
 
 void XMLReader::LoadData_SoundProducers(pugi::xml_node& root, std::vector <SoundProducerSaveData> *sound_producer_save_data)
@@ -349,4 +350,28 @@ void XMLReader::LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& soun
 void XMLReader::LoadData_Timeline(pugi::xml_node& root, TimelineSaveData& timeline_save_data)
 {
 	
+	pugi::xml_node timelineRoot = root.child("Timeline");
+	
+	pugi::xml_node posPlotsNodeRoot = timelineRoot.child("PositionPlots");
+	
+	size_t iterator = 0;
+	
+	timeline_save_data.number_of_plots = 0;
+	
+	//go through each sound producer node
+	for (pugi::xml_node plot_node = posPlotsNodeRoot.first_child(); plot_node; plot_node = plot_node.next_sibling() )
+	{
+		
+		int edit_index = atoi(plot_node.attribute("editIndex").value()); 
+		
+		std::string name_str = plot_node.attribute("name").value();
+		
+		std::string fp = plot_node.attribute("frames_filepath").value(); 
+		
+		timeline_save_data.plots_save_data.emplace_back(TimelinePlotPositionSaveData({edit_index,name_str,fp}));
+		
+		iterator++;
+	}
+	
+	timeline_save_data.number_of_plots = iterator;
 }

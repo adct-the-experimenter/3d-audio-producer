@@ -1277,6 +1277,8 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	//initialize sound bank from save data
 	m_sound_bank.LoadSaveData(sound_bank_save_data);
 	
+	//initialize timeline from save data
+	timeline_window.LoadSaveData(timeline_save_data);
 	
 }
 
