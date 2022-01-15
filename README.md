@@ -101,6 +101,12 @@ Control O - Load project data from file.
 
 Key B - Add point to timeline.
 
+Key Left Arrow - Timeline frame decrement
+
+Key Right Arrow - Timeline frame incrment
+
+Key Enter - Select timeline frame.
+
 ## Feedback 
 
 Please email questions or comments to this email address bringerofawesomefood @ gmail . com without spaces.

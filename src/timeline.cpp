@@ -150,6 +150,10 @@ static char textInput[256] = { 0 };
 //variables for file save/load
 static GuiFileDialogState fileDialogState = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
 
+//counter variable for timeline
+static uint32_t second_frame_count = 0;
+
+static bool frameRateBoxEditMode = false;
 
 enum class FileFrameState : std::uint8_t{NONE=0, SAVE_NEW,LOAD_NEW};
 static FileFrameState frames_file_state = FileFrameState::NONE;
@@ -421,6 +425,12 @@ void Timeline::DrawFramesGUI()
 		global_dialog_in_use = true;
 	}
 	
+	//draw frame rate control
+	if (GuiValueBox((Rectangle){ 115, 530, 60, 30 }, NULL, &time_frame_rate, 0, 100, frameRateBoxEditMode))
+	{
+		frameRateBoxEditMode = !frameRateBoxEditMode;
+		second_frame_count = 0; //reset just in case
+	} 
 }
 
 void Timeline::DrawFramesFileDialog()
@@ -506,7 +516,7 @@ void Timeline::DrawFramesFileDialog()
 	GuiFileDialog(&fileDialogState);
 }
 
-static uint32_t second_frame_count = 0;
+
 
 void Timeline::RunPlaybackWithTimeline()
 {
@@ -520,6 +530,8 @@ void Timeline::RunPlaybackWithTimeline()
 	
 	//if 1 second divided by time frame rate has passed
 	//example: 60 frames_per_second / 3 time_frames_per_second = 20 frames_per_time_frame_second
+	if(time_frame_rate == 0){return;}
+	
 	if(second_frame_count == 60 / time_frame_rate)
 	{
 		
@@ -568,6 +580,7 @@ void Timeline::RunPlaybackWithTimeline()
 void Timeline::ResumeEditModeInTimeline()
 {
 	timelineSettings.editMode = true;
+	second_frame_count = 0;
 }
 
 //struct
@@ -727,4 +740,34 @@ void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 		
 	//close file
 	infile.close();
+}
+
+void Timeline::HandleInput()
+{
+	if( IsKeyPressed(KEY_LEFT) )
+	{
+		//decrement frame
+		if(timelineSettings.current_timeline_frame > 0)
+		{
+			timelineSettings.current_timeline_frame--;
+		}
+		
+		timelineSettings.mouse_control = false;
+	}
+	else if( IsKeyPressed(KEY_RIGHT) )
+	{
+		//increment frame
+		timelineSettings.current_timeline_frame++;
+		timelineSettings.mouse_control = false;
+	}
+	
+	if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+	{
+		timelineSettings.mouse_control = true;
+	}
+	
+	if(IsKeyPressed(KEY_ENTER))
+	{
+		timelineSettings.frameSelected = !timelineSettings.frameSelected;
+	}
 }

@@ -370,6 +370,8 @@ void MainGuiEditor::HandleEvents()
 	{
 		frameAddKeyPressed = true;
 	}
+	
+	timeline_window.HandleInput();
 }
 
 static float new_listener_position_x = 0;

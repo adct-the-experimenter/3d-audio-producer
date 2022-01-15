@@ -52,6 +52,7 @@ typedef struct
 	
 	//area that mouse can click to add timeline points
 	Rectangle mouseArea;
+	bool mouse_control;
 	
 	size_t max_num_frames;
 	
@@ -101,6 +102,7 @@ TimelineSettings InitTimelineSettings(size_t max_num_frames)
 	settings.editMode = true;
 	settings.current_timeline_frame = 0;
 	settings.max_num_frames = max_num_frames;
+	settings.mouse_control = true;
 	
 	return settings;
 }
@@ -142,7 +144,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 	
 	
 	//if in edit mode
-	if(settings->editMode)
+	if(settings->editMode && settings->mouse_control)
 	{
 		//draw cursor line where mouse pointer is
 	
@@ -155,7 +157,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 			if(cursor_x < settings->mouseArea.x){cursor_x = settings->mouseArea.x;}
 
 			Color cursor_color = BLACK;
-			if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+			if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) )
 			{
 				settings->frameSelected = !settings->frameSelected;
 				
@@ -194,6 +196,19 @@ bool Gui_Timeline(TimelineSettings* settings)
 			
 			
 		}
+	}
+	//if in edit mode, and no mouse countrol
+	else if(settings->editMode && !settings->mouse_control)
+	{
+		Color cursor_color = BLACK;
+		if(settings->frameSelected)
+		{
+			cursor_color = YELLOW;
+		}
+		
+		float cursor_x = (settings->current_timeline_frame * 2) + 200;
+		
+		DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
 	}
 	//else if not in edit mode, i.e. playback mode
 	else

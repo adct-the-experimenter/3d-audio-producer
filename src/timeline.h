@@ -83,6 +83,8 @@ public:
 	//function to set timeline back to edit mode, 
 	//ideally use after playback stopped or paused
 	void ResumeEditModeInTimeline();
+	
+	void HandleInput();
 
 //Save / Load functions
 	
@@ -121,7 +123,7 @@ private:
 	bool removePointFromTimeline;
 	
 	//number of time frames to increment current frame in timeline settings after 1 second.
-	size_t time_frame_rate;	
+	int time_frame_rate;	
 	
 	//save data
 	TimelineSaveData m_save_data;
