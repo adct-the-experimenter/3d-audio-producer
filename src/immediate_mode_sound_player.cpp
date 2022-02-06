@@ -88,21 +88,21 @@ void ImmediateModeSoundPlayer::DrawGui_Item()
 	float center_x = GetScreenWidth()*0.5;
 	
 	//draw play button
-	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, GuiIconText(0, "Play") ))
+	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
 	{
 		ImmediateModeSoundPlayer::PlayAll();
 		m_state = IMSoundPlayerState::PLAYING;
 	}
 	
 	//draw pause button
-	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 }, GuiIconText(0, "Pause") ))
+	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
 	{
 		if(m_state != IMSoundPlayerState::PAUSED){ImmediateModeSoundPlayer::PauseAll();}
 		m_state = IMSoundPlayerState::PAUSED;
 	}
 	
 	//draw stop button
-	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, GuiIconText(0, "Stop") ))
+	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
 	{
 		ImmediateModeSoundPlayer::StopAll();
 		m_state = IMSoundPlayerState::NONE;

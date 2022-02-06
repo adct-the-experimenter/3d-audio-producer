@@ -562,9 +562,9 @@ void MainGuiEditor::draw_object_creation_menu()
 	GuiDrawText("Object Creation / Edit", (Rectangle){20,120,125,20}, 1, BLACK);
 	
 	//draw button create
-	bool createObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Create") );
+	bool createObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, "Create" );
 	//draw button edit
-	bool editObjectClicked = GuiButton( (Rectangle){ 25, 220, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Edit") );
+	bool editObjectClicked = GuiButton( (Rectangle){ 25, 220, 70, 30 }, "Edit" );
 	
 	//draw GuiDropdownBox for choosing type to manipulate
 	
