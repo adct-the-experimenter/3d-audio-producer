@@ -915,7 +915,7 @@ void MainGuiEditor::draw_timeline_menu()
 	timeline_window.DrawGui_Item();
 	
 	//draw show timeline button
-	if( GuiButton( (Rectangle){ 25, 420, 70, 30 }, GuiIconText(0, "Timeline") ) )
+	if( GuiButton( (Rectangle){ 25, 420, 70, 30 }, "Timeline" ) )
 	{
 		show_timeline_toggle_bool = !show_timeline_toggle_bool;
 		
@@ -934,6 +934,7 @@ void MainGuiEditor::draw_timeline_menu()
 		else if(deleteKeyPressed)
 		{
 			timeline_window.SetRemovePointFromTimelineBool(true);
+			deleteKeyPressed = false;
 		}
 		
 		//draw enable/disable timeline button
@@ -959,7 +960,7 @@ void MainGuiEditor::draw_timeline_menu()
 			timeline_window.ResumeEditModeInTimeline();
 		}
 		
-		if( GuiButton( (Rectangle){ 25, 460, 70, 30 }, GuiIconText(0, enable_disable_str.c_str()) ) )
+		if( GuiButton( (Rectangle){ 100, 420, 70, 30 }, enable_disable_str.c_str() ) )
 		{
 			enable_timeline_playback_toggle_bool = !enable_timeline_playback_toggle_bool;
 		}
@@ -975,9 +976,9 @@ void MainGuiEditor::draw_hrtf_menu()
 	GuiDrawText("HRTF", (Rectangle){20,300,125,20}, 1, BLACK);
 	
 	//draw button Test
-	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 25, 320, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Test") );
+	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 25, 320, 70, 30 }, "Test" );
 	//draw button Change
-	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 360, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Change") );
+	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 360, 70, 30 }, "Change" );
 	
 	if(testHRTFButtonClicked)
 	{

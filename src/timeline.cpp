@@ -158,6 +158,7 @@ static bool frameRateBoxEditMode = false;
 enum class FileFrameState : std::uint8_t{NONE=0, SAVE_NEW,LOAD_NEW};
 static FileFrameState frames_file_state = FileFrameState::NONE;
 
+
 void Timeline::InitGUI()
 {
 	obj_choices = "";
@@ -211,20 +212,28 @@ void Timeline::DrawGui_Item()
 
 void Timeline::DrawTimelinePlotEditorGUI()
 {
+	
+	//draw active object label
+	GuiLabel((Rectangle){ 25, 520, 85, 30 }, "Active Object");
+	
 	//draw dropdown object editing box
-	edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 480, 70, 45 }, 
+	edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 520, 70, 35 }, 
 															obj_choices.c_str(), edit_obj_listview_itemsCount,
 															edit_obj_listview_activeIndex
 														);
-														
+												
+	//Draw active timeline label
+	GuiLabel((Rectangle){ 25, 450, 85, 30 }, "Active Timeline");
+			
 	//draw timeline position plot choices dropdown
-	edit_timeline_listview_activeIndex = Gui_Dropdown_ListView_Simple(&timeline_dropdown_listview_settings, (Rectangle){ 100, 420, 70, 45 }, 
+	edit_timeline_listview_activeIndex = Gui_Dropdown_ListView_Simple(&timeline_dropdown_listview_settings, (Rectangle){ 25, 480, 70, 35 }, 
 															timeline_choices.c_str(), edit_timeline_listview_itemsCount,
 															edit_timeline_listview_activeIndex
 														);
-														
+	
+	
 	//draw add button to add another timeline
-	if( GuiButton( (Rectangle){ 25, 490, 70, 30 }, GuiIconText(0, "Add") ))
+	if( GuiButton( (Rectangle){ 125, 455, 20, 20 }, "+" ))
 	{
 		addTimeline = true;
 	}
@@ -258,11 +267,16 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	}
 	
 	//draw remove button to remove current edited timeline
-	if( GuiButton( (Rectangle){ 25, 520, 70, 30 }, GuiIconText(0, "Remove") ) )
+	if( GuiButton( (Rectangle){ 150, 455, 20, 20 }, "-" ) )
 	{
 		//remove timeline position
 		size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
-		Timeline::RemovePlotPositionFromTimeline(index);
+		//if index is more than 0 or valid
+		if(index)
+		{
+			Timeline::RemovePlotPositionFromTimeline(index);
+		}
+		
 	}
 	
 	//if timeline choice edited has changed
@@ -395,8 +409,11 @@ void Timeline::DrawTimelinePointsGUI()
 
 void Timeline::DrawFramesGUI()
 {
+	//Draw frames label
+	GuiLabel((Rectangle){ 25, 540, 85, 30 }, "Frames");
+	
 	//draw new frames button
-	if( GuiButton( (Rectangle){ 25, 560, 85, 30 }, GuiIconText(0, "New Frames") ) )
+	if( GuiButton( (Rectangle){ 25, 560, 40, 20 }, "New" ) )
 	{
 		//replace current file in use for frames for plot with empty filepath
 		size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
@@ -410,7 +427,7 @@ void Timeline::DrawFramesGUI()
 	}
 	
 	//draw load frames button
-	if( GuiButton( (Rectangle){ 25, 600, 85, 30 }, GuiIconText(0, "Load Frames") ) )
+	if( GuiButton( (Rectangle){ 25, 590, 40, 20 }, "Load" ) )
 	{
 		frames_file_state = FileFrameState::LOAD_NEW;
 		fileDialogState.fileDialogActive = true; //activate file dialog
@@ -418,15 +435,18 @@ void Timeline::DrawFramesGUI()
 	}
 	
 	//draw save frames button
-	if( GuiButton( (Rectangle){ 115, 600, 85, 30 }, GuiIconText(0, "Save Frames") ) )
+	if( GuiButton( (Rectangle){ 25, 620, 40, 20 }, "Save" ) )
 	{
 		frames_file_state = FileFrameState::SAVE_NEW;
 		fileDialogState.fileDialogActive = true; //activate file dialog
 		global_dialog_in_use = true;
 	}
 	
+	//draw rate label
+	GuiLabel((Rectangle){ 80, 580, 60, 30 }, "Frame Rate");
+	
 	//draw frame rate control
-	if (GuiValueBox((Rectangle){ 115, 530, 60, 30 }, NULL, &time_frame_rate, 0, 100, frameRateBoxEditMode))
+	if (GuiValueBox((Rectangle){ 80, 600, 60, 25 }, NULL, &time_frame_rate, 0, 100, frameRateBoxEditMode) )
 	{
 		frameRateBoxEditMode = !frameRateBoxEditMode;
 		second_frame_count = 0; //reset just in case

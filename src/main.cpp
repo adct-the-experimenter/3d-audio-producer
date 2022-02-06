@@ -88,6 +88,8 @@ void InitRaylibSystem()
 	
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     
+    //disable escape key as close window key
+    SetExitKey(0);
 
 }
 
