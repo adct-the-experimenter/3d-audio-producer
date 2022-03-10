@@ -95,6 +95,8 @@ typedef struct {
     
     char fileNameTextBoxInputCopy[256];
 
+    bool saveFileMode;
+
 } GuiFileDialogState;
 
 #ifdef __cplusplus
@@ -372,7 +374,7 @@ void GuiFileDialog(GuiFileDialogState *state)
                         }
                     }
                 }
-                else
+                else if (!state->saveFileMode)
                 {
                     strcpy(state->fileNameText, state->fileNameTextCopy);
                 }
