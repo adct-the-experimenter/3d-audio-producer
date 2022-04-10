@@ -24,10 +24,12 @@ struct TimelineSaveData
 
 struct TimelinePlotPosition
 {
-	//pointer to dynamically allocated array of bools
+	//pointer to dynamically allocated array of floats for position
 	float* timeline_points_posx; 
 	float* timeline_points_posy; 
 	float* timeline_points_posz;
+	
+	//To do: Add orientation after controls established to set orientation
 	
 	//bool array for timeline setting
 	bool* timeline_settings_bool_array;
@@ -40,6 +42,20 @@ struct TimelinePlotPosition
 	
 	//current filepath to frames
 	std::string frames_filepath;
+};
+
+enum class PlaybackMarkerType: uint8_t {NONE=0,START_PLAY,PAUSE,RESUME,END_PLAY};
+
+struct TimelinePlotPlaybackMarker
+{
+	//pointer to dyanmically allocated array of playback marker types
+	PlaybackMarkerType* timeline_playback_markers;
+	
+	//bool array to indicate there is playback marker at this time
+	bool* timeline_settings_bool_array;
+	
+	//index of sound to manipulate from sound bank
+	
 };
 
 enum class ObjectType : uint8_t {NONE,LISTENER,SOUND_PRODUCER};
@@ -60,14 +76,22 @@ public:
 	//picks object to edit in timeline from outside Timeline class
 	void SetObjectPicked(int index, ObjectType type);
 	
+	//functions to add plots to timeline
 	void AddPlotPositionToTimeline(std::string name);
-	void RemovePlotPositionFromTimeline(size_t& sound_producer_picked);
+	void RemovePlotPositionFromTimeline(size_t& index);
+	
+	void AddPlotPlaybackMarkerToTimeline();
+	void RemovePlotPlaybackMarkerFromTimeline(size_t& index);
 	
 	void SetShowTimelineBool(bool state);
 	
 	//functions to tell timeline to add/remove point in current frame in timeline, if true, gets set to false after operation is finished.
 	void SetAddPointToTimelineBool(bool state);
 	void SetRemovePointFromTimelineBool(bool state);
+	
+	//functions to tell timeline to add/remove playback marker in current frame in timeline.
+	void SetAddPlaybackMarkerToTimelineBool(bool state);
+	void SetRemovePlaybackMarkerFromTimelineBool(bool state);
 	
 	//function to set time frame rate, number of time frames per second
 	void SetTimeFrameRate(size_t rate);
@@ -106,8 +130,11 @@ private:
 	//pointer to vector of sound producers to manipulate
 	std::vector <std::unique_ptr <SoundProducer> > *sound_producer_vector_ref;
 		
-	//vector of timeline identifiers
+	//vector of timeline identifiers for position
 	std::vector <TimelinePlotPosition> timeline_plots_position;
+	
+	//vector of timeline identifiers for playback markers
+	std::vector <TimelinePlotPlaybackMarker> timeline_plots_playback_markers;
 	
 	//bool to indicate to show timeline.
 	bool showTimeline;
@@ -121,6 +148,9 @@ private:
 	//bools to indicate if point needs to be added or removed from timeline
 	bool addPointToTimeline;
 	bool removePointFromTimeline;
+	
+	bool addPlaybackMarkerToTimeline;
+	bool removePlaybackMarkerFromTimeline;
 	
 	//number of time frames to increment current frame in timeline settings after 1 second.
 	int time_frame_rate;	

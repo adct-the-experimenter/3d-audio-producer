@@ -107,6 +107,12 @@ Key Right Arrow - Timeline frame incrment
 
 Key Enter - Select timeline frame.
 
+## Timeline
+
+One timeline controls only 1 object, and the object controlled can be selected. 
+
+Make a new timeline to control a different object. 
+
 ## Feedback 
 
 Please email questions or comments to this email address bringerofawesomefood @ gmail . com without spaces.

@@ -922,6 +922,7 @@ void MainGuiEditor::draw_timeline_menu()
 		timeline_window.SetShowTimelineBool(show_timeline_toggle_bool);
 	}
 	
+	//if timeline is shown
 	if(show_timeline_toggle_bool)
 	{
 		timeline_window.InitGUI();

@@ -53,7 +53,6 @@ public:
     
 private:
 	
-	
 	std::vector < std::unique_ptr <SoundProducer> > sound_producer_vector; //vector to hold sound producers
 	
 	OpenAlSoftAudioEngine audio_engine; //class abstraction to handle playing binaural 3D audio
@@ -68,8 +67,6 @@ private:
 	
 	//effects manager
 	std::unique_ptr <EffectsManager> effects_manager_ptr;
-    		
-	
 	
 //GUI draw and handling calls
 	

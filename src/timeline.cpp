@@ -15,11 +15,17 @@
 
 #include "dialog_var.h"
 
+#define MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT 200
+
 Timeline::Timeline()
 {
 	showTimeline = false;
+	
 	addPointToTimeline = false;
 	removePointFromTimeline = false;
+	
+	addPlaybackMarkerToTimeline = false;
+	removePlaybackMarkerFromTimeline = false;
 	
 	time_frame_rate = 1;
 	
@@ -45,6 +51,14 @@ Timeline::~Timeline()
 		timeline_plots_position.pop_back();
 	}
 	
+	//delete all remaining timeline plot playback markers
+	while(timeline_plots_playback_markers.size() != 0)
+	{
+		delete timeline_plots_playback_markers.back().timeline_playback_markers;
+		delete timeline_plots_playback_markers.back().timeline_settings_bool_array;
+		timeline_plots_playback_markers.pop_back();
+	}
+	
 }
 
 void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_producer_vector, Listener* listener)
@@ -54,6 +68,7 @@ void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_produc
 	
 	//add first timeline plot position for listener
 	Timeline::AddPlotPositionToTimeline("Default");
+	Timeline::AddPlotPlaybackMarkerToTimeline();
 }
 
 
@@ -61,14 +76,21 @@ void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_produc
 void Timeline::SetListenerInTimeline(Listener* listener_ptr){main_listener_ptr = listener_ptr;}
 
 void Timeline::SetAddPointToTimelineBool(bool state){addPointToTimeline = state;}
-
 void Timeline::SetRemovePointFromTimelineBool(bool state){removePointFromTimeline = state;}
+
+void Timeline::SetAddPlaybackMarkerToTimelineBool(bool state){addPlaybackMarkerToTimeline = state;}
+void Timeline::SetRemovePlaybackMarkerFromTimelineBool(bool state){removePlaybackMarkerFromTimeline = state;}
 
 void Timeline::AddPlotPositionToTimeline(std::string name)
 {
-	timeline_plots_position.emplace_back( TimelinePlotPosition{new float[200],new float[200],new float[200], new bool[200] });
+	timeline_plots_position.emplace_back( TimelinePlotPosition{ new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT],
+																new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT],
+																new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT], 
+																new bool[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT] 
+															}
+										);
 	
-	for(size_t i = 0; i < 200; i++)
+	for(size_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
 	{
 		timeline_plots_position.back().timeline_points_posx[i] = 0; 
 		timeline_plots_position.back().timeline_points_posy[i] = 0; 
@@ -86,7 +108,6 @@ void Timeline::AddPlotPositionToTimeline(std::string name)
 void Timeline::RemovePlotPositionFromTimeline(size_t& index)
 {
 	//delete points
-	//increment by 1 because of listener
 	delete timeline_plots_position[index].timeline_points_posx;
 	delete timeline_plots_position[index].timeline_points_posy;
 	delete timeline_plots_position[index].timeline_points_posz;
@@ -100,6 +121,27 @@ void Timeline::RemovePlotPositionFromTimeline(size_t& index)
 	m_save_data.plots_save_data.pop_back();
 }
 
+void Timeline::AddPlotPlaybackMarkerToTimeline()
+{
+	timeline_plots_playback_markers.emplace_back( TimelinePlotPlaybackMarker{ new PlaybackMarkerType[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT]}
+										);
+	
+	for(size_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
+	{
+		timeline_plots_playback_markers.back().timeline_playback_markers[i] = PlaybackMarkerType::NONE;
+
+		timeline_plots_position.back().timeline_settings_bool_array[i] = false;
+	}
+}
+
+void Timeline::RemovePlotPlaybackMarkerFromTimeline(size_t& index)
+{
+	delete timeline_plots_playback_markers[index].timeline_playback_markers;
+	
+	//switch out to be deleted with empty one at the end of vector, delete at end
+	std::swap(timeline_plots_playback_markers[index],timeline_plots_playback_markers.back());
+	timeline_plots_playback_markers.pop_back();
+}
 
 void Timeline::SetShowTimelineBool(bool state){showTimeline = state;}
 
@@ -205,7 +247,7 @@ void Timeline::DrawGui_Item()
 		DrawTimelinePlotEditorGUI();
 		
 		DrawFramesFileDialog();
-		
+				
 	}
 	
 }
@@ -252,6 +294,8 @@ void Timeline::DrawTimelinePlotEditorGUI()
 			
 			//add timeline position and its name
 			Timeline::AddPlotPositionToTimeline(std::string(textInput));
+			//add timeline playback marker
+			Timeline::AddPlotPlaybackMarkerToTimeline();
 			
 		}
 		//else if cancel clicked
@@ -275,6 +319,7 @@ void Timeline::DrawTimelinePlotEditorGUI()
 		if(index)
 		{
 			Timeline::RemovePlotPositionFromTimeline(index);
+			Timeline::RemovePlotPlaybackMarkerFromTimeline(index);
 		}
 		
 	}
@@ -405,7 +450,11 @@ void Timeline::DrawTimelinePointsGUI()
 		Gui_Timeline_Parameter(&positionTimelineSettings);		
 	}
 	
+	//draw playback markers
+	
+	
 }
+
 
 void Timeline::DrawFramesGUI()
 {
@@ -540,11 +589,11 @@ void Timeline::DrawFramesFileDialog()
 
 void Timeline::RunPlaybackWithTimeline()
 {
-	//set edit mode to false so that 
+	//set edit mode to false so that no editing happens during playback which can lead to errors
 	timelineSettings.editMode = false;
 	
 	
-	//increment timeline frame assuming 60 frames per second
+	//increment timeline frame assuming constant 60 frames per second
 	//increment number of frames based on time frame rate which is number of frames per second
 	second_frame_count++;
 	
@@ -552,6 +601,7 @@ void Timeline::RunPlaybackWithTimeline()
 	//example: 60 frames_per_second / 3 time_frames_per_second = 20 frames_per_time_frame_second
 	if(time_frame_rate == 0){return;}
 	
+	//for every time frame
 	if(second_frame_count == 60 / time_frame_rate)
 	{
 		
@@ -569,7 +619,7 @@ void Timeline::RunPlaybackWithTimeline()
 				continue;
 			}
 			
-			//get location in timeline
+			//get location
 		
 			float& x = timeline_plots_position[i].timeline_points_posx[timelineSettings.current_timeline_frame]; 
 			float& y = timeline_plots_position[i].timeline_points_posy[timelineSettings.current_timeline_frame]; 
@@ -590,8 +640,19 @@ void Timeline::RunPlaybackWithTimeline()
 				sound_producer_vector_ref->at(timeline_plots_position[i].indexObjectToEdit - 2)->SetPositionZ(z);
 			}
 		}
+		
+		//for every playback marker plot
+		for(size_t i = 0; i < timeline_plots_playback_markers.size(); i++)
+		{
+			//if there is not a point at current timeline_frame, 
+			//skip rest of loop code below and go to next iteration
+			if(!timeline_plots_playback_markers[i].timeline_settings_bool_array[timelineSettings.current_timeline_frame])
+			{
+				continue;
+			}
 			
-			
+			//for sound bank index
+		}
 		
 	}
 	
@@ -632,11 +693,11 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 		timeline_plots_position[i].frames_filepath = save_data.plots_save_data[i].frames_filepath;
 		
 		//initialize points of timeline frame
-		timeline_plots_position[i].timeline_points_posx = new float[200];
-		timeline_plots_position[i].timeline_points_posy = new float[200];
-		timeline_plots_position[i].timeline_points_posz = new float[200];
-		timeline_plots_position[i].timeline_settings_bool_array = new bool[200];
-		for(size_t it = 0; it < 200; it++)
+		timeline_plots_position[i].timeline_points_posx = new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		timeline_plots_position[i].timeline_points_posy = new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		timeline_plots_position[i].timeline_points_posz = new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		timeline_plots_position[i].timeline_settings_bool_array = new bool[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		for(size_t it = 0; it < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; it++)
 		{
 			timeline_plots_position[i].timeline_points_posx[it] = 0; 
 			timeline_plots_position[i].timeline_points_posy[it] = 0; 
@@ -703,7 +764,7 @@ void Timeline::SaveTimeFramesToFile(std::string& filepath)
 	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 	
 	//for current selected timeline
-	for(uint16_t i = 0; i < 200; i++)
+	for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
 	{
 		//if there is a point added, add it to file
 		if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
