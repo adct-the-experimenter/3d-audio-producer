@@ -4,6 +4,8 @@
 #include "soundproducer.h"
 #include "listener.h"
 
+#include "immediate_mode_sound_player.h"
+
 #include <memory>
 
 struct TimelinePlotPositionSaveData
@@ -107,7 +109,7 @@ public:
 	void DrawGui_Item();
 	
 	//function to set position of listener and sound producers with timeline
-	void RunPlaybackWithTimeline();
+	void RunPlaybackWithTimeline(ImmediateModeSoundPlayer* im_sound_player_ptr);
 	
 	//function to set timeline back to edit mode, 
 	//ideally use after playback stopped or paused

@@ -709,7 +709,7 @@ void Timeline::DrawFramesFileDialog()
 
 
 
-void Timeline::RunPlaybackWithTimeline()
+void Timeline::RunPlaybackWithTimeline(ImmediateModeSoundPlayer* im_sound_player_ptr)
 {
 	//set edit mode to false so that no editing happens during playback which can lead to errors
 	timelineSettings.editMode = false;
@@ -773,7 +773,21 @@ void Timeline::RunPlaybackWithTimeline()
 				continue;
 			}
 			
-			//for sound bank index
+			//if object edited is sound producer
+			if(timeline_plots_playback_markers[i].indexObjectToEdit >= 2 && timeline_plots_playback_markers[i].indexObjectToEdit - 2 < sound_producer_vector_ref->size())
+			{
+				//buffer player index is linked to sound producer in im sound player
+				int buffer_player_index = timeline_plots_position[i].indexObjectToEdit - 2;
+				
+				switch(timeline_plots_playback_markers[i].timeline_playback_markers[timelineSettings.current_timeline_frame])
+				{
+					case PlaybackMarkerType::NONE:{ break;}
+					case PlaybackMarkerType::START_PLAY:{im_sound_player_ptr->SetBufferPlayerToPlay_ComplexPlayback(buffer_player_index); break;}
+					case PlaybackMarkerType::RESUME:{im_sound_player_ptr->SetBufferPlayerToPlay_ComplexPlayback(buffer_player_index); break;}
+					case PlaybackMarkerType::PAUSE:{im_sound_player_ptr->SetBufferPlayerToPause_ComplexPlayback(buffer_player_index); break;}
+					case PlaybackMarkerType::END_PLAY:{im_sound_player_ptr->SetBufferPlayerToStop_ComplexPlayback(buffer_player_index); break;}
+				}				
+			}
 		}
 		
 	}

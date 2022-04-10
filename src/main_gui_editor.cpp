@@ -538,7 +538,8 @@ void MainGuiEditor::logic()
 	}
 	
 	//run state for immediate mode sound player
-	im_sound_player.RunStateForPlayer_SimplePlayback();
+	//im_sound_player.RunStateForPlayer_SimplePlayback();
+	im_sound_player.RunStateForPlayer_ComplexPlayback();
 	
 	sound_player_active = im_sound_player.PlayerInActiveUse();
 		
@@ -948,19 +949,22 @@ void MainGuiEditor::draw_timeline_menu()
 	//draw play button
 	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
 	{
-		im_sound_player.PlayAll_SimplePlayback();
+		//im_sound_player.PlayAll_SimplePlayback();
+		im_sound_player.StartPlayback_ComplexPlayback();
 	}
 	
 	//draw pause button
 	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
 	{
-		im_sound_player.PauseAll_SimplePlayback();
+		//im_sound_player.PauseAll_SimplePlayback();
+		im_sound_player.PausePlayback_ComplexPlayback();
 	}
 	
 	//draw stop button
 	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
 	{
-		im_sound_player.StopAll_SimplePlayback();
+		//im_sound_player.StopAll_SimplePlayback();
+		im_sound_player.StopPlayback_ComplexPlayback();
 	}
 	
 	//if need to add point or playback marker to timeline
@@ -1026,7 +1030,7 @@ void MainGuiEditor::draw_timeline_menu()
 			
 			if(im_sound_player.PlayerInActiveUse())
 			{
-				timeline_window.RunPlaybackWithTimeline();
+				timeline_window.RunPlaybackWithTimeline(&im_sound_player);
 			}
 			else
 			{

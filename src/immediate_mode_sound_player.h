@@ -29,7 +29,8 @@ public:
 	
 	enum class BufferPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, 
 												NONE_TO_PLAYING, PAUSED_TO_PLAYING, 
-												PLAYING_TO_NONE, PLAYING_TO_PAUSED};
+												PLAYING_TO_NONE, PLAYING_TO_PAUSED,
+												PAUSED_TO_NONE};
 	
 	//function to indicate that player is not in none or paused state.
 	bool PlayerInActiveUse();
@@ -65,6 +66,15 @@ public:
 	
 	//stop and restart individual buffer player linked to sound producer
 	void SetBufferPlayerToStop_ComplexPlayback(int index);
+	
+	//function to start playback in general, sounds determined 
+	void StartPlayback_ComplexPlayback();
+	
+	//function to pause playback of all sounds
+	void PausePlayback_ComplexPlayback();
+	
+	//function to stop playback of all sounds
+	void StopPlayback_ComplexPlayback();
 	
 private:
 	
