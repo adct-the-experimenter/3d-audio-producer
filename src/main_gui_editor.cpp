@@ -224,6 +224,8 @@ static bool playbackMarker_add_pause_key_pressed = false;
 static bool playbackMarker_add_resume_key_pressed = false;
 static bool playbackMarker_add_end_key_pressed = false;
 
+static bool showPropertiesBoxKeyPressed = false;
+
 //listener movement variables
 static float listener_speed = 10.0f;
 
@@ -395,6 +397,11 @@ void MainGuiEditor::HandleEvents()
 	if( IsKeyReleased(KEY_V) )
 	{
 		playbackMarker_add_end_key_pressed = true;
+	}
+	//if p key pressed
+	if( IsKeyReleased(KEY_P) )
+	{
+		showPropertiesBoxKeyPressed = true;
 	}
 	
 	timeline_window.HandleInput();
@@ -961,6 +968,7 @@ void MainGuiEditor::draw_timeline_menu()
 		else if(deleteKeyPressed)
 		{
 			timeline_window.SetRemovePointFromTimelineBool(true);
+			timeline_window.SetRemovePlaybackMarkerFromTimelineBool(true);
 			deleteKeyPressed = false;
 		}
 		else if(playbackMarker_add_start_key_pressed)
@@ -983,7 +991,11 @@ void MainGuiEditor::draw_timeline_menu()
 			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::END_PLAY);
 			playbackMarker_add_end_key_pressed = false;
 		}
-		
+		else if(showPropertiesBoxKeyPressed)
+		{
+			timeline_window.ToggleShowTimelineParameterPropertiesBoxBool();
+			showPropertiesBoxKeyPressed = false;
+		}
 		//draw enable/disable timeline button
 		std::string enable_disable_str;
 		

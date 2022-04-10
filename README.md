@@ -115,11 +115,11 @@ Key C - Add resume playback marker.
 
 Key V - Add end playback marker.
 
+Key P - Show timeline parameters properties.
 
+Key Left Arrow - Timeline frame decrement.
 
-Key Left Arrow - Timeline frame decrement
-
-Key Right Arrow - Timeline frame incrment
+Key Right Arrow - Timeline frame increment.
 
 Key Enter - Select timeline frame.
 

@@ -17,6 +17,17 @@
 
 #define MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT 200
 
+//timeline settings
+
+static size_t max_num_frames = MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT;
+
+static TimelineSettings timelineSettings = InitTimelineSettings(max_num_frames);
+
+static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
+
+static TimelineParameterSettings playbackMarkerTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
+
+
 Timeline::Timeline()
 {
 	showTimeline = false;
@@ -27,6 +38,8 @@ Timeline::Timeline()
 	addPlaybackMarkerToTimeline = false;
 	removePlaybackMarkerFromTimeline = false;
 	
+	showTimelineParameterPropertiesBox = false;
+	
 	time_frame_rate = 1;
 	
 	timeline_plots_position.reserve(25);
@@ -35,6 +48,7 @@ Timeline::Timeline()
 	m_save_data.plots_save_data.reserve(25);
 	
 	m_save_data.number_of_plots = 0;
+	
 	
 }
 
@@ -69,6 +83,11 @@ void Timeline::Init(std::vector <std::unique_ptr <SoundProducer> > *sound_produc
 	//add first timeline plot position for listener
 	Timeline::AddPlotPositionToTimeline("Default");
 	Timeline::AddPlotPlaybackMarkerToTimeline();
+	
+	//set array pointers to point to first timeline
+	positionTimelineSettings.array_points_ptr = timeline_plots_position[0].timeline_settings_bool_array;
+	playbackMarkerTimelineSettings.array_points_ptr = timeline_plots_playback_markers[0].timeline_settings_bool_array;
+	playbackMarkerTimelineSettings.draw_color = RED;
 }
 
 
@@ -123,7 +142,8 @@ void Timeline::RemovePlotPositionFromTimeline(size_t& index)
 
 void Timeline::AddPlotPlaybackMarkerToTimeline()
 {
-	timeline_plots_playback_markers.emplace_back( TimelinePlotPlaybackMarker{ new PlaybackMarkerType[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT]}
+	timeline_plots_playback_markers.emplace_back( TimelinePlotPlaybackMarker{ new PlaybackMarkerType[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT], 
+													new bool[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT] }
 										);
 	
 	for(size_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
@@ -164,14 +184,6 @@ void Timeline::SetObjectPicked(int index, ObjectType type)
 }
 
 void Timeline::SetTimeFrameRate(size_t rate){time_frame_rate = rate;}
-
-static size_t max_num_frames = MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT;
-
-static TimelineSettings timelineSettings = InitTimelineSettings(max_num_frames);
-
-static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
-
-static TimelineParameterSettings playbackMarkerTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
 
 
 //dropdown list view for timeline being edited
@@ -253,6 +265,8 @@ void Timeline::DrawGui_Item()
 	}
 	
 }
+
+
 
 void Timeline::DrawTimelinePlotEditorGUI()
 {
@@ -365,10 +379,41 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	}
 }
 
+void Timeline::ShowPropertiesBox(int x, int y, int timeline_index, int timeline_current_frame)
+{
+	Rectangle draw_rect = (Rectangle){x,y,200,60};
+	Rectangle rect_msg = (Rectangle){x,y,200,40};
+	GuiPanel(draw_rect);
+	
+	std::string playback_marker_str = "";
+	
+	PlaybackMarkerType pm_type = timeline_plots_playback_markers[timeline_index].timeline_playback_markers[timeline_current_frame];
+	
+	switch(pm_type)
+	{
+		case PlaybackMarkerType::NONE:{ playback_marker_str = "None"; break;}
+		case PlaybackMarkerType::START_PLAY:{ playback_marker_str = "Start Play"; break;}
+		case PlaybackMarkerType::PAUSE:{ playback_marker_str = "Pause"; break;}
+		case PlaybackMarkerType::RESUME:{ playback_marker_str = "Resume"; break;}
+		case PlaybackMarkerType::END_PLAY:{ playback_marker_str = "End Play"; break;}
+	}
+	
+	float pos_x = timeline_plots_position[timeline_index].timeline_points_posx[timeline_current_frame];
+	float pos_y = timeline_plots_position[timeline_index].timeline_points_posy[timeline_current_frame];
+	float pos_z = timeline_plots_position[timeline_index].timeline_points_posz[timeline_current_frame];
+	
+	std::string message = "position(x,y,z): \n" + std::to_string(pos_x) + " " + std::to_string(pos_y) + " " + std::to_string(pos_z)
+							+ "\nPlayback Marker: " + playback_marker_str;
+							
+	GuiLabel( rect_msg, message.c_str() );
+	
+}
+
 void Timeline::DrawTimelinePointsGUI()
 {
 	float leftBound = 200;
-	timelineSettings.mouseArea = {leftBound, 400 , GetScreenWidth(), GetScreenHeight()};
+	float upperBound = 400;
+	timelineSettings.mouseArea = {leftBound, upperBound , GetScreenWidth(), GetScreenHeight()};
 		
 	DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
 
@@ -464,9 +509,8 @@ void Timeline::DrawTimelinePointsGUI()
 			&& timelineSettings.frameSelected)
 		{
 			bool addMarker = false;
-			float x,y,z;
 			
-			int edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+			int edit_index = timeline_plots_playback_markers[edit_timeline_listview_activeIndex].indexObjectToEdit;
 			
 			//std::cout << "edit index: " << edit_index << std::endl;
 			
@@ -489,7 +533,7 @@ void Timeline::DrawTimelinePointsGUI()
 				//add marker to graphical timeline depending on frame selected
 				timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
 				
-				//add marker to position timeline
+				//add marker to timeline plot data
 				timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_playback_markers[timelineSettings.current_timeline_frame] = addPlaybackMarkerToTimeline_type;
 			}
 			
@@ -520,7 +564,18 @@ void Timeline::DrawTimelinePointsGUI()
 		Gui_Timeline_Parameter(&playbackMarkerTimelineSettings);
 	}
 	
+	//if current time frame is valid and selected
+	if(timelineSettings.current_timeline_frame >= 0 && timelineSettings.frameSelected 
+		&& showTimelineParameterPropertiesBox)
+	{
+		//show properties in a box
+		//show to the left of timeline marker 
+		ShowPropertiesBox(leftBound,upperBound + 100,edit_timeline_listview_activeIndex,timelineSettings.current_timeline_frame);
+	}
+	
 }
+
+
 
 
 void Timeline::DrawFramesGUI()
@@ -888,6 +943,11 @@ void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 		
 	//close file
 	infile.close();
+}
+
+void Timeline::ToggleShowTimelineParameterPropertiesBoxBool()
+{
+	showTimelineParameterPropertiesBox = !showTimelineParameterPropertiesBox;
 }
 
 void Timeline::HandleInput()

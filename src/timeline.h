@@ -88,6 +88,8 @@ public:
 	
 	void SetShowTimelineBool(bool state);
 	
+	void ToggleShowTimelineParameterPropertiesBoxBool();
+	
 	//functions to tell timeline to add/remove point in current frame in timeline, if true, gets set to false after operation is finished.
 	void SetAddPointToTimelineBool(bool state);
 	void SetRemovePointFromTimelineBool(bool state);
@@ -156,6 +158,9 @@ private:
 	PlaybackMarkerType addPlaybackMarkerToTimeline_type;
 	bool removePlaybackMarkerFromTimeline;
 	
+	//bool to indicate if property wants to be shown
+	bool showTimelineParameterPropertiesBox;
+	
 	//number of time frames to increment current frame in timeline settings after 1 second.
 	int time_frame_rate;	
 	
@@ -175,6 +180,10 @@ private:
 	
 	//draw file dialog and handling
 	void DrawFramesFileDialog();
+	
+	//function to show properties
+	void ShowPropertiesBox(int x, int y, int timeline_index, int timeline_current_frame);
+	
 };
 
 #endif

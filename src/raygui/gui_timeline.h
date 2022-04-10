@@ -72,6 +72,8 @@ typedef struct
 	int draw_start_x;
 	int draw_y;
 	
+	Color draw_color;
+	
 } TimelineParameterSettings;
 
 
@@ -88,6 +90,7 @@ TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, b
 bool Gui_Timeline(TimelineSettings* settings);
 
 bool Gui_Timeline_Parameter(TimelineParameterSettings* settings);
+
 
 #ifdef __cplusplus
 }
@@ -118,6 +121,8 @@ TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, b
 	
 	settings.draw_start_x = x;
 	settings.draw_y = y;
+	
+	settings.draw_color = BLACK;
 	
 	return settings;
 }
@@ -234,7 +239,7 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings)
 	{
 		if(*element_ptr)
 		{
-			DrawCircle(settings->draw_start_x + 2*i, settings->draw_y, 2, BLACK);
+			DrawCircle(settings->draw_start_x + 2*i, settings->draw_y, 2, settings->draw_color);
 		}
 		
 		element_ptr++;
@@ -242,7 +247,7 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings)
 	
 	//if mouse click on point in timeline and add point is false
 		//show properties box to true
-
+	
 		
 	//if show properties box bool is true
 		//draw properties box
