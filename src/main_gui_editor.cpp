@@ -214,10 +214,15 @@ static int effect_zone_picked = -1;
 //represent type of effect zone picked
 static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
 
+//shortcut keys
 static bool editKeyPressed = false;
 static bool deleteKeyPressed = false;
 
 static bool frameAddKeyPressed = false;
+static bool playbackMarker_add_start_key_pressed = false;
+static bool playbackMarker_add_pause_key_pressed = false;
+static bool playbackMarker_add_resume_key_pressed = false;
+static bool playbackMarker_add_end_key_pressed = false;
 
 //listener movement variables
 static float listener_speed = 10.0f;
@@ -366,9 +371,30 @@ void MainGuiEditor::HandleEvents()
 	}
 		
 	//if b key pressed
-	if( IsKeyReleased(KEY_B))
+	if( IsKeyReleased(KEY_B) )
 	{
 		frameAddKeyPressed = true;
+	}
+	
+	//if z key pressed
+	if( IsKeyReleased(KEY_Z) )
+	{
+		playbackMarker_add_start_key_pressed = true;
+	}
+	//if x key pressed
+	if( IsKeyReleased(KEY_X) )
+	{
+		playbackMarker_add_pause_key_pressed = true;
+	}
+	//if c key pressed
+	if( IsKeyReleased(KEY_C) )
+	{
+		playbackMarker_add_resume_key_pressed = true;
+	}
+	//if v key pressed
+	if( IsKeyReleased(KEY_V) )
+	{
+		playbackMarker_add_end_key_pressed = true;
 	}
 	
 	timeline_window.HandleInput();
@@ -936,6 +962,26 @@ void MainGuiEditor::draw_timeline_menu()
 		{
 			timeline_window.SetRemovePointFromTimelineBool(true);
 			deleteKeyPressed = false;
+		}
+		else if(playbackMarker_add_start_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::START_PLAY);
+			playbackMarker_add_start_key_pressed = false;
+		}
+		else if(playbackMarker_add_pause_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::PAUSE);
+			playbackMarker_add_pause_key_pressed = false;
+		}
+		else if(playbackMarker_add_resume_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::RESUME);
+			playbackMarker_add_resume_key_pressed = false;
+		}
+		else if(playbackMarker_add_end_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::END_PLAY);
+			playbackMarker_add_end_key_pressed = false;
 		}
 		
 		//draw enable/disable timeline button

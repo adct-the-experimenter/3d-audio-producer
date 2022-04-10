@@ -78,7 +78,7 @@ void Timeline::SetListenerInTimeline(Listener* listener_ptr){main_listener_ptr =
 void Timeline::SetAddPointToTimelineBool(bool state){addPointToTimeline = state;}
 void Timeline::SetRemovePointFromTimelineBool(bool state){removePointFromTimeline = state;}
 
-void Timeline::SetAddPlaybackMarkerToTimelineBool(bool state){addPlaybackMarkerToTimeline = state;}
+void Timeline::SetAddPlaybackMarkerToTimelineBool(bool state, PlaybackMarkerType type){addPlaybackMarkerToTimeline = state; addPlaybackMarkerToTimeline_type = type;}
 void Timeline::SetRemovePlaybackMarkerFromTimelineBool(bool state){removePlaybackMarkerFromTimeline = state;}
 
 void Timeline::AddPlotPositionToTimeline(std::string name)
@@ -165,11 +165,13 @@ void Timeline::SetObjectPicked(int index, ObjectType type)
 
 void Timeline::SetTimeFrameRate(size_t rate){time_frame_rate = rate;}
 
-static size_t max_num_frames = 200;
+static size_t max_num_frames = MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT;
 
 static TimelineSettings timelineSettings = InitTimelineSettings(max_num_frames);
 
 static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
+
+static TimelineParameterSettings playbackMarkerTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
 
 
 //dropdown list view for timeline being edited
@@ -345,6 +347,8 @@ void Timeline::DrawTimelinePlotEditorGUI()
 		
 		timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
 		
+		timeline_plots_playback_markers[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
+		
 		m_save_data.plots_save_data[edit_timeline_listview_activeIndex].edit_index = edit_obj_listview_activeIndex;
 	}
 	
@@ -352,10 +356,12 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	if(edit_timeline_listview_activeIndex >= 0)
 	{
 		positionTimelineSettings.array_points_ptr = timeline_plots_position[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
+		playbackMarkerTimelineSettings.array_points_ptr = timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_settings_bool_array;
 	}
 	else
 	{
 		positionTimelineSettings.array_points_ptr = nullptr;
+		playbackMarkerTimelineSettings.array_points_ptr = nullptr;
 	}
 }
 
@@ -451,7 +457,68 @@ void Timeline::DrawTimelinePointsGUI()
 	}
 	
 	//draw playback markers
-	
+	if(playbackMarkerTimelineSettings.array_points_ptr)
+	{
+		//if adding playback marker to timeline
+		if(addPlaybackMarkerToTimeline && addPlaybackMarkerToTimeline_type != PlaybackMarkerType::NONE 
+			&& timelineSettings.frameSelected)
+		{
+			bool addMarker = false;
+			float x,y,z;
+			
+			int edit_index = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
+			
+			//std::cout << "edit index: " << edit_index << std::endl;
+			
+			//if sound producer
+			if(edit_index >= 2)
+			{
+				//get position of sound	producer
+				
+				addMarker = true;
+				
+			}
+			else
+			{
+				//do nothing
+				addMarker = false;
+			}
+			
+			if(addMarker)
+			{
+				//add marker to graphical timeline depending on frame selected
+				timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = true;
+				
+				//add marker to position timeline
+				timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_playback_markers[timelineSettings.current_timeline_frame] = addPlaybackMarkerToTimeline_type;
+			}
+			
+			addPlaybackMarkerToTimeline = false;
+			addPlaybackMarkerToTimeline_type = PlaybackMarkerType::NONE;
+		}
+		else if(addPlaybackMarkerToTimeline)
+		{
+			addPlaybackMarkerToTimeline = false;
+		}		
+		
+		if(removePlaybackMarkerFromTimeline && timelineSettings.frameSelected)
+		{
+			
+			//remove point from graphical timeline depending on frame selected
+			timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_settings_bool_array[timelineSettings.current_timeline_frame] = false;
+			
+			//remove point from position timeline with reset
+			timeline_plots_playback_markers[edit_timeline_listview_activeIndex].timeline_playback_markers[timelineSettings.current_timeline_frame] = PlaybackMarkerType::NONE;
+			
+			removePlaybackMarkerFromTimeline = false;
+		}
+		else if(removePlaybackMarkerFromTimeline)
+		{
+			removePlaybackMarkerFromTimeline = false;
+		}
+			
+		Gui_Timeline_Parameter(&playbackMarkerTimelineSettings);
+	}
 	
 }
 

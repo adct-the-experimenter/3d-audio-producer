@@ -91,15 +91,31 @@ TODO
 
 ## Shortcut Keys
 
+### General editor keys
 Key 1 - Edit whatever was picked with mouse in 3d space.
 
 Key Delete or Key Del - Remove whatever was picked with mouse in 3d space. Also remove current selected timeline point.
+
+### Project editor file operation keys
 
 Control S - Save project data to file.
 
 Control O - Load project data from file.
 
-Key B - Add point to timeline.
+### Timeline keys
+
+Key B - Add position point to timeline.
+
+
+Key Z - Add start / restart playback marker.
+
+Key X - Add pause playback marker.
+
+Key C - Add resume playback marker.
+
+Key V - Add end playback marker.
+
+
 
 Key Left Arrow - Timeline frame decrement
 
@@ -111,7 +127,7 @@ Key Enter - Select timeline frame.
 
 One timeline controls only 1 object, and the object controlled can be selected. 
 
-Make a new timeline to control a different object. 
+Make a new timeline to control a different object.
 
 ## Feedback 
 

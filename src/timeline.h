@@ -54,6 +54,9 @@ struct TimelinePlotPlaybackMarker
 	//bool array to indicate there is playback marker at this time
 	bool* timeline_settings_bool_array;
 	
+	//index of the object to edit
+	int indexObjectToEdit;
+	
 	//index of sound to manipulate from sound bank
 	
 };
@@ -90,7 +93,7 @@ public:
 	void SetRemovePointFromTimelineBool(bool state);
 	
 	//functions to tell timeline to add/remove playback marker in current frame in timeline.
-	void SetAddPlaybackMarkerToTimelineBool(bool state);
+	void SetAddPlaybackMarkerToTimelineBool(bool state, PlaybackMarkerType playback_type);
 	void SetRemovePlaybackMarkerFromTimelineBool(bool state);
 	
 	//function to set time frame rate, number of time frames per second
@@ -150,6 +153,7 @@ private:
 	bool removePointFromTimeline;
 	
 	bool addPlaybackMarkerToTimeline;
+	PlaybackMarkerType addPlaybackMarkerToTimeline_type;
 	bool removePlaybackMarkerFromTimeline;
 	
 	//number of time frames to increment current frame in timeline settings after 1 second.

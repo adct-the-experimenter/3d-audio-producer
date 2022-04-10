@@ -37,6 +37,7 @@
 #ifndef GUI_3D_OBJECT_TIMELINE_H
 #define GUI_3D_OBJECT_TIMELINE_H
 
+//for drawing general timeline ticks and frame line
 typedef struct 
 {
 	bool editMode;
@@ -58,6 +59,7 @@ typedef struct
 	
 } TimelineSettings;
 
+//for drawing timeline points
 typedef struct 
 {	
 	size_t max_num_frames;

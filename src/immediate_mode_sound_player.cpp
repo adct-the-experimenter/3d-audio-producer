@@ -43,8 +43,6 @@ bool ImmediateModeSoundPlayer::PlayerInActiveUse(){return player_active_use;}
 
 void ImmediateModeSoundPlayer::RunStateForPlayer()
 {
-	
-	
 	switch(m_state)
 	{
 		case IMSoundPlayerState::NONE:
