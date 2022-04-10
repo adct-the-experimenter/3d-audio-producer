@@ -69,6 +69,7 @@ public:
 	friend class LoadSystem;
 	
 	void RemoveEffectFromAllSources();
+	void RemoveEffectFromSoundProducer(int index);
 	
 private:
 	

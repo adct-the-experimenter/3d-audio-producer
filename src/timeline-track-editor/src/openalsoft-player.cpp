@@ -26,6 +26,9 @@
  * THE SOFTWARE.
  */
 
+//macro for debug
+//#define DEBUG_PLAYER
+
 OpenALSoftPlayer::OpenALSoftPlayer()
 {
     infile = nullptr;
@@ -136,8 +139,10 @@ int OpenALSoftPlayer::OpenPlayerFile(const char *filename)
 		return 0;
 	 }
 	 
+	 #ifdef DEBUG_PLAYER
 	 std::cout << "File opened successfully for streaming.\n";
-
+	 #endif
+	 
     /* Get the stream format, and figure out the OpenAL format */
     
     if (sfinfo.channels > MAX_CHANNELS)
@@ -189,8 +194,10 @@ int OpenALSoftPlayer::OpenPlayerFile(const char *filename)
 	
     sample_rate = sfinfo.samplerate;
 	
+	#ifdef DEBUG_PLAYER
 	//bit size is the size of a double because that is format for stream.wav
 	std::cout << "bit type: " << (sfinfo.format & SF_FORMAT_SUBMASK) << std::endl;
+	#endif
 	
 	//get audio bit size 
 	switch(sfinfo.format & SF_FORMAT_SUBMASK)
@@ -207,7 +214,10 @@ int OpenALSoftPlayer::OpenPlayerFile(const char *filename)
 
     /* Set the buffer size, given the desired millisecond length. */
     buffer_size = (uint64_t)sample_rate * (double(BUFFER_TIME_MS))/1000 * frame_size;
+    
+    #ifdef DEBUG_PLAYER
     std::cout << "buffer size:" << buffer_size << std::endl;
+    #endif
     
     return 1;
 }
@@ -244,7 +254,9 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
     /* Fill the buffer queue */
     for(buffer_index = 0; buffer_index < NUM_BUFFERS;buffer_index++)
     {
+		#ifdef DEBUG_PLAYER
 		std::cout << "buffer index:" << buffer_index << std::endl;
+		#endif
 		
 		//read data differently depending on bit size set in OpenPlayerFile
 		
@@ -260,12 +272,17 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
 			}
 
 			int slen = data.size() * sizeof(int); //get size of data in bytes
-
+			
+			#ifdef DEBUG_PLAYER
 			std::cout << "Number of samples in data buffer : " << slen << "\n";
+			#endif
+			
 			//if sample buffer is null or size of buffer data is zero, notify of error
 			if(slen == 0)
 			{
+				#ifdef DEBUG_PLAYER
 				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
+				#endif
 				break;
 			}
 
@@ -287,12 +304,17 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
 			}
 
 			int slen = data.size() * sizeof(uint16_t); //get size of data in bytes
-
+			
+			#ifdef DEBUG_PLAYER
 			std::cout << "Number of samples in data buffer : " << slen << "\n";
+			#endif
+			
 			//if sample buffer is null or size of buffer data is zero, notify of error
 			if(slen == 0)
 			{
+				#ifdef DEBUG_PLAYER
 				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
+				#endif
 				break;
 			}
 
@@ -339,12 +361,16 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
 			}
 
 			int slen = data.size() * sizeof(double); //get size of data in bytes
-
+			
+			#ifdef DEBUG_PLAYER
 			std::cout << "Number of samples in data buffer : " << slen << "\n";
+			#endif
 			//if sample buffer is null or size of buffer data is zero, notify of error
 			if(slen == 0)
 			{
+				#ifdef DEBUG_PLAYER
 				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
+				#endif
 				break;
 			}
 
@@ -430,17 +456,27 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				}
 
 				slen = data.size() * sizeof(int); //get size of data in bytes
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Size of data in bytes: " << slen << "\n";
+				#endif
+				
 				//if sample buffer is null or size of buffer data is zero, notify of error
 				if(slen == 0)
 				{
+					#ifdef DEBUG_PLAYER
 					std::cout << "Failed to read anymore audio from file.\n";
+					#endif
+					
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
 				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Duration of sound:" << seconds << "s. \n";
-
+				#endif
+				
 				if(slen > 0)
 				{
 					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
@@ -467,17 +503,27 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				}
 
 				slen = data.size() * sizeof(uint16_t); //get size of data in bytes
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Size of data in bytes: " << slen << "\n";
+				#endif
+				
 				//if sample buffer is null or size of buffer data is zero, notify of error
 				if(slen == 0)
 				{
+					#ifdef DEBUG_PLAYER
 					std::cout << "Failed to read anymore audio from file.\n";
+					#endif
+					
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
 				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Duration of sound:" << seconds << "s. \n";
-
+				#endif
+				
 				if(slen > 0)
 				{
 					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
@@ -504,17 +550,27 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				}
 
 				slen = data.size() * sizeof(float); //get size of data in bytes
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Size of data in bytes: " << slen << "\n";
+				#endif
+				
 				//if sample buffer is null or size of buffer data is zero, notify of error
 				if(slen == 0)
 				{
+					#ifdef DEBUG_PLAYER
 					std::cout << "Failed to read audio from file.\n";
+					#endif
+					
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
 				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Duration of sound:" << seconds << "s. \n";
-
+				#endif
+				
 				if(slen > 0)
 				{
 					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
@@ -541,7 +597,11 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				}
 
 				slen = data.size() * sizeof(double); //get size of data in bytes
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Size of data in bytes: " << slen << "\n";
+				#endif
+				
 				//if sample buffer is null or size of buffer data is zero, notify of error
 				if(slen == 0)
 				{
@@ -550,8 +610,11 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				}
 
 				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
+				
+				#ifdef DEBUG_PLAYER
 				std::cout << "Duration of sound:" << seconds << "s. \n";
-
+				#endif
+				
 				if(slen > 0)
 				{
 					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);

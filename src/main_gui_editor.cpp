@@ -538,7 +538,7 @@ void MainGuiEditor::logic()
 	}
 	
 	//run state for immediate mode sound player
-	im_sound_player.RunStateForPlayer();
+	im_sound_player.RunStateForPlayer_SimplePlayback();
 	
 	sound_player_active = im_sound_player.PlayerInActiveUse();
 		
@@ -942,7 +942,28 @@ static bool enable_timeline_playback_toggle_bool = false;
 
 void MainGuiEditor::draw_timeline_menu()
 {
-	//if need to add point to timeline
+	//draw timeline playback controls
+	float center_x = GetScreenWidth() / 2;
+	
+	//draw play button
+	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
+	{
+		im_sound_player.PlayAll_SimplePlayback();
+	}
+	
+	//draw pause button
+	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
+	{
+		im_sound_player.PauseAll_SimplePlayback();
+	}
+	
+	//draw stop button
+	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
+	{
+		im_sound_player.StopAll_SimplePlayback();
+	}
+	
+	//if need to add point or playback marker to timeline
 	
 	//draw on bottom third of screen	
 	timeline_window.DrawGui_Item();
