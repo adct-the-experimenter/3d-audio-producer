@@ -413,9 +413,7 @@ void ImmediateModeSoundPlayer::PausePlayback_ComplexPlayback()
 		}
 		
 	}
-	
-	m_current_time += time_res_seconds;
-	
+		
 	player_active_use = false;
 	m_effects_manager_ptr->RemoveEffectFromAllSources();
 }
@@ -443,6 +441,8 @@ void ImmediateModeSoundPlayer::StopPlayback_ComplexPlayback()
 	}
 	
 	m_effects_manager_ptr->RemoveEffectFromAllSources();
+	
+	m_current_time = 0;
 }
 
 void ImmediateModeSoundPlayer::Stop_IndividualBufferPlayer_ComplexPlayback(int index)
@@ -459,7 +459,33 @@ void ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(int i
 {		
 	//buffer audio for all sound producer sources with buffer audio players
 	ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[index];
-	ImmediateModeSoundPlayer::LoadBufferStreaming(sourceToManipulatePtr,buffering_audio_players_vec[index]);
+	
+	switch(buffering_audio_players_vec[index].UpdatePlayerBuffer(sourceToManipulatePtr,m_current_time))
+	{
+		case OpenALSoftPlayer::PlayerStatus::PLAYBACK_FINISHED:
+		{
+			std::cout << "Playback finished! \n";
+			
+			//stop
+			buffer_players_states[index] = BufferPlayerState::PLAYING_TO_NONE;
+			break;
+		}
+		case OpenALSoftPlayer::PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE:
+		{
+			std::cout << "No more audio to read! \n";
+			
+			//stop
+			buffer_players_states[index] = BufferPlayerState::PLAYING_TO_NONE;
+			
+			break;
+		}
+		case OpenALSoftPlayer::PlayerStatus::GOOD_UPDATE_BUFFER_STATUS:
+		{						
+			break;
+		}
+	}
+	
+	al_nssleep(10000000);
 
 }
 
@@ -498,6 +524,8 @@ void ImmediateModeSoundPlayer::TransitionPausedToPlay_IndividualBufferPlayer_Com
 		ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[index];
 		buffering_audio_players_vec[index].ClearQueue(sourceToManipulatePtr);
 		buffering_audio_players_vec[index].StartPlayerBuffering(sourceToManipulatePtr,m_current_time);
+		
+		al_nssleep(10000000);
 	}
 }
 
