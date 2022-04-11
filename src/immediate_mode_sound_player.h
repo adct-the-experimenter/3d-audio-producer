@@ -7,6 +7,17 @@
 
 #include "effects-manager.h"
 
+enum class BufferPlayerStateType : std::uint8_t {NONE=0,PLAYING, PAUSED, 
+												NONE_TO_PLAYING, PAUSED_TO_PLAYING, 
+												PLAYING_TO_NONE, PLAYING_TO_PAUSED,
+												PAUSED_TO_NONE};
+												
+struct BufferPlayerState
+{
+	BufferPlayerStateType state_type;
+	double current_time;
+};
+
 class ImmediateModeSoundPlayer
 {
 public:
@@ -27,13 +38,13 @@ public:
 	
 	enum class IMSoundPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, REWINDING, FAST_FORWARDING };
 	
-	enum class BufferPlayerState : std::uint8_t {NONE=0,PLAYING, PAUSED, 
-												NONE_TO_PLAYING, PAUSED_TO_PLAYING, 
-												PLAYING_TO_NONE, PLAYING_TO_PAUSED,
-												PAUSED_TO_NONE};
+	
 	
 	//function to indicate that player is not in none or paused state.
 	bool PlayerInActiveUse();
+	
+	//function to set current time in sound player
+	void SetCurrentTimeInSoundPlayer(double& time);
 	
 //playback functions
 

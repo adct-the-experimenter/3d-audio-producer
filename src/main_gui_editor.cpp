@@ -939,7 +939,7 @@ void MainGuiEditor::draw_sound_bank()
 }
 
 static bool show_timeline_toggle_bool = false;
-static bool enable_timeline_playback_toggle_bool = false;
+
 
 void MainGuiEditor::draw_timeline_menu()
 {
@@ -949,8 +949,17 @@ void MainGuiEditor::draw_timeline_menu()
 	//draw play button
 	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
 	{
+		//calculate current time from current timeline frame
+		//assuming 1 second per timeline frame, and ignore timeline frame rate for now		
+		double time = timeline_window.GetCurrentTimelineFrame();
+				
+		//set time in sound player.
+		im_sound_player.SetCurrentTimeInSoundPlayer(time);
+		
 		//im_sound_player.PlayAll_SimplePlayback();
 		im_sound_player.StartPlayback_ComplexPlayback();
+		
+		
 	}
 	
 	//draw pause button
@@ -1021,32 +1030,14 @@ void MainGuiEditor::draw_timeline_menu()
 			timeline_window.ToggleShowTimelineParameterPropertiesBoxBool();
 			showPropertiesBoxKeyPressed = false;
 		}
-		//draw enable/disable timeline button
-		std::string enable_disable_str;
 		
-		if(enable_timeline_playback_toggle_bool)
+		if(im_sound_player.PlayerInActiveUse())
 		{
-			enable_disable_str = "Enabled";
-			
-			if(im_sound_player.PlayerInActiveUse())
-			{
-				timeline_window.RunPlaybackWithTimeline(&im_sound_player);
-			}
-			else
-			{
-				timeline_window.ResumeEditModeInTimeline();
-			}
-			
+			timeline_window.RunPlaybackWithTimeline(&im_sound_player);
 		}
 		else
 		{
-			enable_disable_str = "Disabled";
 			timeline_window.ResumeEditModeInTimeline();
-		}
-		
-		if( GuiButton( (Rectangle){ 100, 420, 70, 30 }, enable_disable_str.c_str() ) )
-		{
-			enable_timeline_playback_toggle_bool = !enable_timeline_playback_toggle_bool;
 		}
 	}
 	

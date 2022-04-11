@@ -993,3 +993,5 @@ void Timeline::HandleInput()
 		timelineSettings.frameSelected = !timelineSettings.frameSelected;
 	}
 }
+
+size_t Timeline::GetCurrentTimelineFrame(){return timelineSettings.current_timeline_frame;}

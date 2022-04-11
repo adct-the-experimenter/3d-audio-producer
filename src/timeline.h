@@ -116,6 +116,8 @@ public:
 	void ResumeEditModeInTimeline();
 	
 	void HandleInput();
+	
+	size_t GetCurrentTimelineFrame();
 
 //Save / Load functions
 	
@@ -127,6 +129,8 @@ public:
 	
 	//loads timeline points from file
 	void LoadTimeFramesFromFile(std::string& filepath);
+	
+	
 	
 	
 private:

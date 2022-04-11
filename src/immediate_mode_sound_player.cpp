@@ -39,6 +39,8 @@ void ImmediateModeSoundPlayer::SetPointerToEffectsManager(EffectsManager* effect
 	local_effect_manager_ptr = effects_manager;
 }
 
+void ImmediateModeSoundPlayer::SetCurrentTimeInSoundPlayer(double& time){m_current_time = time;}
+
 bool ImmediateModeSoundPlayer::PlayerInActiveUse(){return player_active_use;}
 
 void ImmediateModeSoundPlayer::RunStateForPlayer_SimplePlayback()
@@ -300,41 +302,43 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 	//for all buffer player, depending on state
 	for(int it = 0; it < buffer_players_states.size(); it++)
 	{
-		switch(buffer_players_states[it])
+		switch(buffer_players_states[it].state_type)
 		{
-			case BufferPlayerState::PLAYING_TO_NONE:
+			case BufferPlayerStateType::PLAYING_TO_NONE:
 			{
 				ImmediateModeSoundPlayer::TransitionPlayToNone_IndividualBufferPlayer_ComplexPlayback(it);
-				buffer_players_states[it] = BufferPlayerState::NONE;
+				buffer_players_states[it].state_type = BufferPlayerStateType::NONE;
+				buffer_players_states[it].current_time = 0;
 				break;
 			}
-			case BufferPlayerState::NONE:
+			case BufferPlayerStateType::NONE:
 			{
-				continue; //skip to next iteration
+				
 				break;
 			}
-			case BufferPlayerState::NONE_TO_PLAYING:
+			case BufferPlayerStateType::NONE_TO_PLAYING:
 			{
+				std::cout << "Transition none to playing! \n";
 				ImmediateModeSoundPlayer::TransitionNoneToPlay_IndividualBufferPlayer_ComplexPlayback(it);
 				
 				ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
 				sources_to_start_playing_vec.push_back(sourceToManipulatePtr);
 				
-				buffer_players_states[it] = BufferPlayerState::PLAYING;
+				buffer_players_states[it].state_type = BufferPlayerStateType::PLAYING;
 				
 				break;
 			}
-			case BufferPlayerState::PAUSED_TO_PLAYING:
+			case BufferPlayerStateType::PAUSED_TO_PLAYING:
 			{
 				ImmediateModeSoundPlayer::TransitionPausedToPlay_IndividualBufferPlayer_ComplexPlayback(it);
 				
 				ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
 				sources_to_continue_playing_vec.push_back(sourceToManipulatePtr);
 				
-				buffer_players_states[it] = BufferPlayerState::PLAYING;
+				buffer_players_states[it].state_type = BufferPlayerStateType::PLAYING;
 				break;
 			}
-			case BufferPlayerState::PLAYING:
+			case BufferPlayerStateType::PLAYING:
 			{
 				ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(it);
 				
@@ -342,18 +346,18 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 				sources_to_start_playing_vec.push_back(sourceToManipulatePtr);
 				break;
 			}
-			case BufferPlayerState::PLAYING_TO_PAUSED:
+			case BufferPlayerStateType::PLAYING_TO_PAUSED:
 			{
 				ImmediateModeSoundPlayer::TransitionPlayToPaused_IndividualBufferPlayer_ComplexPlayback(it);
 				
-				buffer_players_states[it] = BufferPlayerState::PAUSED;
+				buffer_players_states[it].state_type = BufferPlayerStateType::PAUSED;
 				
 				break;
 			}
 			
-			case BufferPlayerState::PAUSED:
+			case BufferPlayerStateType::PAUSED:
 			{
-				continue; //skip
+				
 				break;
 			}
 			
@@ -372,7 +376,7 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 	}
 	
 	//play updated buffers of sources
-	if(sources_to_continue_playing_vec.size())
+	if(sources_to_continue_playing_vec.size() > 0)
 	{
 		mainAudioPlayer.PlayMultipleUpdatedPlayerBuffers(&sources_to_continue_playing_vec);
 	}
@@ -385,20 +389,60 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 	//buffering time is 500 milliseconds
 	duration time_inc = end_time - start_time;
 	time_res_seconds = static_cast <double> (time_inc.count() / 1000); 
-	m_current_time += time_res_seconds;
+	
+	for(size_t b_it = 0; b_it < buffer_players_states.size(); b_it++)
+	{
+		if( buffer_players_states[b_it].state_type == BufferPlayerStateType::PLAYING)
+		{
+			buffer_players_states[b_it].current_time += time_res_seconds;
+			//std::cout << "buffer player index: " << b_it << " , time: " << buffer_players_states[b_it].current_time 
+			//<< std::endl;
+		}
+	}
+	
+	//std::cout << "current time: " << m_current_time << std::endl;
 }
+
+static bool player_started = false;
 
 void ImmediateModeSoundPlayer::StartPlayback_ComplexPlayback()
 {
+	
+	if(!player_started)
+	{
+		//initialize audio players for each sound producer
+		size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
+	
+		ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(num_producers);
+		ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(num_producers);
+	
+		//open streaming file linked to sound bank account of sound producers
+		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
+		{
+			std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+			std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
+			
+			if(stream_filepath != "")
+			{
+				buffering_audio_players_vec[it].OpenPlayerFile(stream_filepath.c_str());
+				ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[it];
+				buffering_audio_players_vec[it].StartPlayerBuffering(sourceToManipulatePtr,m_current_time); //start player
+			}
+			
+		}
+		
+		player_started = true;
+	}
+	
+	
 	player_active_use = true;
 	
-	size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
-	ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(num_producers);
 }
 	
 void ImmediateModeSoundPlayer::PausePlayback_ComplexPlayback()
 {
 	player_active_use = false;
+	player_started = false;
 	
 	for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 	{
@@ -414,13 +458,13 @@ void ImmediateModeSoundPlayer::PausePlayback_ComplexPlayback()
 		
 	}
 		
-	player_active_use = false;
 	m_effects_manager_ptr->RemoveEffectFromAllSources();
 }
 	
 void ImmediateModeSoundPlayer::StopPlayback_ComplexPlayback()
 {
 	player_active_use = false;
+	player_started = false;
 	
 	for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 	{
@@ -442,7 +486,11 @@ void ImmediateModeSoundPlayer::StopPlayback_ComplexPlayback()
 	
 	m_effects_manager_ptr->RemoveEffectFromAllSources();
 	
-	m_current_time = 0;
+	for(size_t b_it = 0; b_it < buffer_players_states.size(); b_it++)
+	{
+		buffer_players_states[b_it].state_type = BufferPlayerStateType::NONE;
+		buffer_players_states[b_it].current_time = 0;
+	}
 }
 
 void ImmediateModeSoundPlayer::Stop_IndividualBufferPlayer_ComplexPlayback(int index)
@@ -460,14 +508,16 @@ void ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(int i
 	//buffer audio for all sound producer sources with buffer audio players
 	ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[index];
 	
-	switch(buffering_audio_players_vec[index].UpdatePlayerBuffer(sourceToManipulatePtr,m_current_time))
+	double& current_time = buffer_players_states[index].current_time;
+	
+	switch(buffering_audio_players_vec[index].UpdatePlayerBuffer(sourceToManipulatePtr,current_time))
 	{
 		case OpenALSoftPlayer::PlayerStatus::PLAYBACK_FINISHED:
 		{
 			std::cout << "Playback finished! \n";
 			
 			//stop
-			buffer_players_states[index] = BufferPlayerState::PLAYING_TO_NONE;
+			buffer_players_states[index].state_type = BufferPlayerStateType::PLAYING_TO_NONE;
 			break;
 		}
 		case OpenALSoftPlayer::PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE:
@@ -475,7 +525,7 @@ void ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(int i
 			std::cout << "No more audio to read! \n";
 			
 			//stop
-			buffer_players_states[index] = BufferPlayerState::PLAYING_TO_NONE;
+			buffer_players_states[index].state_type = BufferPlayerStateType::PLAYING_TO_NONE;
 			
 			break;
 		}
@@ -493,9 +543,6 @@ void ImmediateModeSoundPlayer::TransitionNoneToPlay_IndividualBufferPlayer_Compl
 {
 	if(m_sound_producer_reg_ptr && m_sound_bank_ptr)
 	{
-		//initialize audio players for each sound producer
-		size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
-		ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(num_producers);
 		
 		//open streaming file linked to sound bank account of sound producers
 		std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(index)->GetAccountNumber();
@@ -503,11 +550,14 @@ void ImmediateModeSoundPlayer::TransitionNoneToPlay_IndividualBufferPlayer_Compl
 		
 		if(stream_filepath != "")
 		{
-			buffering_audio_players_vec[index].OpenPlayerFile(stream_filepath.c_str());
+			
 			ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[index];
 			
 			//start player since transitioning from none to playing
-			buffering_audio_players_vec[index].StartPlayerBuffering(sourceToManipulatePtr,m_current_time); 
+			double& current_time = buffer_players_states[index].current_time;
+			
+			buffering_audio_players_vec[index].StartPlayerBuffering(sourceToManipulatePtr,current_time); 
+			al_nssleep(10000000);
 		}
 		
 	}
@@ -523,10 +573,14 @@ void ImmediateModeSoundPlayer::TransitionPausedToPlay_IndividualBufferPlayer_Com
 	{
 		ALuint* sourceToManipulatePtr =  m_sound_producer_reg_ptr->sound_producer_sources_vec[index];
 		buffering_audio_players_vec[index].ClearQueue(sourceToManipulatePtr);
-		buffering_audio_players_vec[index].StartPlayerBuffering(sourceToManipulatePtr,m_current_time);
 		
-		al_nssleep(10000000);
+		double& current_time = buffer_players_states[index].current_time;
+		
+		buffering_audio_players_vec[index].StartPlayerBuffering(sourceToManipulatePtr,current_time);
+		
 	}
+	
+	al_nssleep(10000000);
 }
 
 void ImmediateModeSoundPlayer::TransitionPlayToNone_IndividualBufferPlayer_ComplexPlayback(int index)
@@ -543,6 +597,7 @@ void ImmediateModeSoundPlayer::TransitionPlayToNone_IndividualBufferPlayer_Compl
 	}
 	
 	m_effects_manager_ptr->RemoveEffectFromSoundProducer(index);
+	al_nssleep(10000000);
 }
 
 void ImmediateModeSoundPlayer::TransitionPlayToPaused_IndividualBufferPlayer_ComplexPlayback(int index)
@@ -558,38 +613,39 @@ void ImmediateModeSoundPlayer::TransitionPlayToPaused_IndividualBufferPlayer_Com
 	}
 	
 	m_effects_manager_ptr->RemoveEffectFromSoundProducer(index);
+	al_nssleep(10000000);
 }
 
 void ImmediateModeSoundPlayer::SetBufferPlayerToPlay_ComplexPlayback(int index)
 {
-	auto* buffer_player_state_ptr = &buffer_players_states[index];
+	auto* buffer_player_state_ptr = &buffer_players_states[index].state_type;
 	
 	switch(*buffer_player_state_ptr)
 	{
-		case BufferPlayerState::NONE:{ *buffer_player_state_ptr = BufferPlayerState::NONE_TO_PLAYING; break;}
-		case BufferPlayerState::PAUSED:{ *buffer_player_state_ptr = BufferPlayerState::PAUSED_TO_PLAYING; break;}
+		case BufferPlayerStateType::NONE:{ *buffer_player_state_ptr = BufferPlayerStateType::NONE_TO_PLAYING; break;}
+		case BufferPlayerStateType::PAUSED:{ *buffer_player_state_ptr = BufferPlayerStateType::PAUSED_TO_PLAYING; break;}
 		default:{break;}
 	}
 }
 	
 void ImmediateModeSoundPlayer::SetBufferPlayerToPause_ComplexPlayback(int index)
 {
-	auto* buffer_player_state_ptr = &buffer_players_states[index];
+	auto* buffer_player_state_ptr = &buffer_players_states[index].state_type;
 	
 	switch(*buffer_player_state_ptr)
 	{
-		case BufferPlayerState::PLAYING:{ *buffer_player_state_ptr = BufferPlayerState::PLAYING_TO_PAUSED; break;}
+		case BufferPlayerStateType::PLAYING:{ *buffer_player_state_ptr = BufferPlayerStateType::PLAYING_TO_PAUSED; break;}
 		default:{break;}
 	}
 }
 	
 void ImmediateModeSoundPlayer::SetBufferPlayerToStop_ComplexPlayback(int index)
 {
-	auto* buffer_player_state_ptr = &buffer_players_states[index];
+	auto* buffer_player_state_ptr = &buffer_players_states[index].state_type;
 	
 	switch(*buffer_player_state_ptr)
 	{
-		case BufferPlayerState::PAUSED:{ *buffer_player_state_ptr = BufferPlayerState::PAUSED_TO_NONE; break;}
+		case BufferPlayerStateType::PAUSED:{ *buffer_player_state_ptr = BufferPlayerStateType::PAUSED_TO_NONE; break;}
 		default:{break;}
 	}
 }
@@ -705,7 +761,8 @@ void ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(size_t num_pr
 		//set all to none state a.k.a. stopped
 		for(size_t it = 0; it < buffer_players_states.size(); it++)
 		{
-			buffer_players_states[it] = BufferPlayerState::NONE;
+			buffer_players_states[it].state_type = BufferPlayerStateType::NONE;
+			buffer_players_states[it].current_time = 0;
 		}
 	}
 	
