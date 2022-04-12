@@ -125,9 +125,17 @@ Key Enter - Select timeline frame.
 
 ## Timeline
 
-One timeline controls only 1 object, and the object controlled can be selected. 
+One timeline controls only 1 object(soundproducer, listener), and the object controlled can be selected. 
 
 Make a new timeline to control a different object.
+
+### To initiate playback of audio linked to sound producer.
+1. Open timeline by clicking on timeline button.
+2. Select sound producer from object dropdown box.
+3. Select a timeline frame for start of playback of audio linked to sound producer. Line should be highlighted yellow.
+4. Add start playback marker by pressing the 'z' key.
+5. Click on "Play" button and wait for timeline to pass the selected timeline frame.
+
 
 ## Feedback 
 
