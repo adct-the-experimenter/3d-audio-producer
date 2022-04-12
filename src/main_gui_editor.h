@@ -5,7 +5,6 @@
 
 #include "openalsoftaudioengine.h"
 
-//#include "soundproducer-track-manager.h"
 #include "soundproducer.h"
 #include "listener.h"
 //#include "listener-external.h"
@@ -17,10 +16,6 @@
 
 
 #include "sound_bank.h"
-
-//#include "timeline-frame.h"
-//#include "soundproducer-track.h"
-//#include "listener-track.h"
 
 #include "effects-manager.h"
 
@@ -58,7 +53,6 @@ public:
     
 private:
 	
-	
 	std::vector < std::unique_ptr <SoundProducer> > sound_producer_vector; //vector to hold sound producers
 	
 	OpenAlSoftAudioEngine audio_engine; //class abstraction to handle playing binaural 3D audio
@@ -73,8 +67,6 @@ private:
 	
 	//effects manager
 	std::unique_ptr <EffectsManager> effects_manager_ptr;
-    		
-	
 	
 //GUI draw and handling calls
 	
@@ -82,6 +74,7 @@ private:
 	void draw_sound_bank();
 	void draw_hrtf_menu();
 	void draw_project_file_dialog();
+	void draw_timeline_menu();
 	
 	//sound bank
 	SoundBank m_sound_bank;
@@ -90,6 +83,7 @@ private:
 	SoundProducerRegistry soundproducer_registry;
 	
 	void CreateSoundProducer(std::string& name, float& x, float& y, float& z, bool freeRoam, std::uint8_t account_num);
+	void RemoveSoundProducer(int index);
 	
 //Save and Load system functions
 	

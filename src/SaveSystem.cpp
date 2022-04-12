@@ -10,39 +10,33 @@ SaveSystem::~SaveSystem()
 	
 }
 
-void SaveSystem::SaveProjectToSetFile(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector_ptr,
-									  EffectsManager* effectsManagerPtr,
-									  Listener* listener_ptr,
-									  SoundBank* sound_bank_ptr )
+void SaveSystem::SaveProjectToSetFile(SaveSystemDataHelper& save_system_data_helper )
 {
-	SaveSystem::SaveProject(sound_producer_vector_ptr,effectsManagerPtr,listener_ptr,sound_bank_ptr,m_saveFilePath);
+	SaveSystem::SaveProject(save_system_data_helper,m_saveFilePath);
 }
 	
-void SaveSystem::SaveAsNewProject(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector_ptr,
-									EffectsManager* effectsManagerPtr,
-									Listener* listener_ptr,
-									SoundBank* sound_bank_ptr,
+void SaveSystem::SaveAsNewProject(SaveSystemDataHelper& save_system_data_helper,
 									std::string path)
 {
 	m_saveFilePath = path;
-	SaveSystem::SaveProject(sound_producer_vector_ptr,effectsManagerPtr,listener_ptr,sound_bank_ptr,m_saveFilePath);
+	SaveSystem::SaveProject(save_system_data_helper,m_saveFilePath);
 }
 	
-void SaveSystem::SaveProject(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector_ptr,
-							 EffectsManager* effectsManagerPtr,
-							 Listener* listener_ptr,
-							 SoundBank* sound_bank_ptr,  
+void SaveSystem::SaveProject(SaveSystemDataHelper& save_system_data_helper,  
 							 std::string path)
 {
 	
+	SaveDataHelper save_data_helper;
+	save_data_helper.sound_producer_vector_ptr = save_system_data_helper.sound_producer_vector_ptr;
+	save_data_helper.echoZones = &save_system_data_helper.effectsManagerPtr->echo_zones_vector;
+	save_data_helper.standardRevZones = &save_system_data_helper.effectsManagerPtr->standard_reverb_zones_vector;
+	save_data_helper.eaxRevZones = &save_system_data_helper.effectsManagerPtr->eax_reverb_zones_vector;
+	save_data_helper.listener_ptr = save_system_data_helper.listener_ptr;
+	save_data_helper.sound_bank_ptr = save_system_data_helper.sound_bank_ptr;
+	save_data_helper.timeline_ptr = save_system_data_helper.timeline_ptr;
+	
 	//for each specific effect zone type
-	xml_creator.SaveDataToXMLFile(sound_producer_vector_ptr,
-								&effectsManagerPtr->echo_zones_vector,
-								&effectsManagerPtr->standard_reverb_zones_vector,
-								&effectsManagerPtr->eax_reverb_zones_vector,
-								listener_ptr,
-								sound_bank_ptr,
-								path);
+	xml_creator.SaveDataToXMLFile(save_data_helper,path);
 }
 
 

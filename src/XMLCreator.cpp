@@ -12,12 +12,7 @@ XMLCreator::~XMLCreator()
 	
 }
 
-void XMLCreator::SaveDataToXMLFile(std::vector < std::unique_ptr <SoundProducer> > *sound_producer_vector_ptr,
-						   std::vector <EchoZone> *echoZones,
-						   std::vector <ReverbZone> *standardRevZones,
-						   std::vector <ReverbZone> *eaxRevZones,
-						   Listener* listener_ptr,
-						   SoundBank* sound_bank_ptr,  
+void XMLCreator::SaveDataToXMLFile(SaveDataHelper& save_data_helper,  
 						   std::string path)
 {
 	
@@ -35,18 +30,19 @@ void XMLCreator::SaveDataToXMLFile(std::vector < std::unique_ptr <SoundProducer>
     
         
 	XMLCreator::SaveDataXML_EffectZones(root,
-								echoZones,
-							    standardRevZones,
-							    eaxRevZones);
+								save_data_helper.echoZones,
+							    save_data_helper.standardRevZones,
+							    save_data_helper.eaxRevZones);
 	
-	XMLCreator::SaveDataXML_SoundProducers(root,
-											sound_producer_vector_ptr);				
-	
+	XMLCreator::SaveDataXML_SoundProducers(root,save_data_helper.sound_producer_vector_ptr);				
 	
 	
-	XMLCreator::SaveDataXML_Listener(root,listener_ptr);
 	
-	XMLCreator::SaveDataXML_SoundBank(root,sound_bank_ptr);
+	XMLCreator::SaveDataXML_Listener(root,save_data_helper.listener_ptr);
+	
+	XMLCreator::SaveDataXML_SoundBank(root,save_data_helper.sound_bank_ptr);
+	
+	XMLCreator::SaveDataXML_Timeline(root, save_data_helper.timeline_ptr);
 	
 	//write to file
 	
@@ -270,7 +266,7 @@ void XMLCreator::SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_ba
 	{
 		pugi::xml_node soundBankNode = root.append_child("SoundBank");
 		
-		//create sound producers node
+		//create sound accounts node
 		pugi::xml_node accountsNode = soundBankNode.append_child("Accounts");
 
 		for(size_t i = 0; i < sound_bank_ptr->GetSaveData().sound_account_data.size(); i++)
@@ -283,5 +279,29 @@ void XMLCreator::SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_ba
 			
 		}
 				
+	}
+}
+
+void XMLCreator::SaveDataXML_Timeline(pugi::xml_node& root, Timeline* timeline_ptr)
+{
+	if(timeline_ptr)
+	{
+		//create timeline node
+		pugi::xml_node timelineNode = root.append_child("Timeline");
+		
+		//create Position plots child
+		pugi::xml_node posPlotsNode = timelineNode.append_child("PositionPlots");
+		
+		TimelineSaveData& save_data = timeline_ptr->GetSaveData();
+		
+		for(size_t i = 0; i < save_data.number_of_plots; i++)
+		{
+			pugi::xml_node posPlotNodeChild = posPlotsNode.append_child("Plot");
+			
+			posPlotNodeChild.append_attribute("editIndex") = std::to_string(save_data.plots_save_data[i].edit_index).c_str();
+			posPlotNodeChild.append_attribute("name") = save_data.plots_save_data[i].name.c_str();
+			posPlotNodeChild.append_attribute("frames_filepath") = save_data.plots_save_data[i].frames_filepath.c_str();
+			
+		}
 	}
 }

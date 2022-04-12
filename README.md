@@ -91,13 +91,51 @@ TODO
 
 ## Shortcut Keys
 
+### General editor keys
 Key 1 - Edit whatever was picked with mouse in 3d space.
 
-Key Delete or Key Del - Remove whatever was picked with mouse in 3d space.
+Key Delete or Key Del - Remove whatever was picked with mouse in 3d space. Also remove current selected timeline point.
+
+### Project editor file operation keys
 
 Control S - Save project data to file.
 
 Control O - Load project data from file.
+
+### Timeline keys
+
+Key B - Add position point to timeline.
+
+
+Key Z - Add start / restart playback marker.
+
+Key X - Add pause playback marker.
+
+Key C - Add resume playback marker.
+
+Key V - Add end playback marker.
+
+Key P - Show timeline parameters properties.
+
+Key Left Arrow - Timeline frame decrement.
+
+Key Right Arrow - Timeline frame increment.
+
+Key Enter - Select timeline frame.
+
+## Timeline
+
+One timeline controls only 1 object(soundproducer, listener), and the object controlled can be selected. 
+
+Make a new timeline to control a different object.
+
+### To initiate playback of audio linked to sound producer.
+1. Open timeline by clicking on timeline button.
+2. Select sound producer from object dropdown box.
+3. Select a timeline frame for start of playback of audio linked to sound producer. Line should be highlighted yellow.
+4. Add start playback marker by pressing the 'z' key.
+5. Click on "Play" button and wait for timeline to pass the selected timeline frame.
+
 
 ## Feedback 
 

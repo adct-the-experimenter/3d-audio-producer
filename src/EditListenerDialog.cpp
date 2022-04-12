@@ -3,7 +3,7 @@
 #include "raygui/raygui.h"
 
 #define GUI_VALIDFLOATBOX
-#include "raygui/raygui_extras.h"
+#include "raygui/gui_valid_float.h"
 
 #include <string>
 

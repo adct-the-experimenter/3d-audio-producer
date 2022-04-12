@@ -457,3 +457,13 @@ void EffectsManager::RemoveEffectFromAllSources()
 		thisSoundProducer->SetEffectAppliedBool(false);
 	}
 }
+
+void EffectsManager::RemoveEffectFromSoundProducer(int index)
+{
+	SoundProducer* thisSoundProducer = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(index).get();
+		
+	ALuint* source_ptr = thisSoundProducer->getSource(); 		
+	
+	EffectsManager::RemoveEffectFromThisSource(source_ptr);
+	thisSoundProducer->SetEffectAppliedBool(false);
+}

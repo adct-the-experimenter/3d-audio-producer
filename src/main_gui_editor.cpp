@@ -20,6 +20,7 @@
 #include "CreateEAXReverbZoneDialog.h"
 #include "EditMultipleEAXReverbZonesDialog.h"
 
+#include "timeline.h"
 
 #include "immediate_mode_sound_player.h"
 
@@ -35,33 +36,40 @@ bool init_listener_once = false;
 
 //Gui items to initialize
 
-CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
-EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
-EditListenerDialog edit_lt_dialog("Edit Listener");
-ImmediateModeSoundPlayer im_sound_player;
+static CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+static EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
+static EditListenerDialog edit_lt_dialog("Edit Listener");
+static ImmediateModeSoundPlayer im_sound_player;
 
-HRTFTestDialog hrtf_test_dialog;
-ChangeHRTFDialog change_hrtf_dialog;
+static HRTFTestDialog hrtf_test_dialog;
+static ChangeHRTFDialog change_hrtf_dialog;
 
 //dialogs for manipulating effect zones
-CreateEchoZoneDialog create_echo_zone_dialog;
-EditMultipleEchoZonesDialog edit_echo_zone_dialog;
+static CreateEchoZoneDialog create_echo_zone_dialog;
+static EditMultipleEchoZonesDialog edit_echo_zone_dialog;
 
-CreateStandardReverbZoneDialog create_sr_zone_dialog;
-EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
+static CreateStandardReverbZoneDialog create_sr_zone_dialog;
+static EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
-CreateEAXReverbZoneDialog create_er_zone_dialog;
-EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
+static CreateEAXReverbZoneDialog create_er_zone_dialog;
+static EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
 
 //dialog for saving and loading project file
 static GuiFileDialogState fileDialogState;
 enum class ProjectFileState : std::uint8_t{NONE=0, SAVE,LOAD};
 static ProjectFileState proj_file_state;
 
+//timeline
+static Timeline timeline_window;
+
+//bool to indicate if dialog is in use.
+bool global_dialog_in_use = false;
+
 
 MainGuiEditor::MainGuiEditor()
 {
 	edit_sp_dialog.Init(&sound_producer_vector);
+	
 	
 }
 
@@ -107,6 +115,8 @@ bool MainGuiEditor::OnInit()
 	{
 
 		MainGuiEditor::initListener();
+		
+		timeline_window.Init(&sound_producer_vector,listener.get());
 		
 		//initialize effects manager
 		effects_manager_ptr = std::unique_ptr <EffectsManager>( new EffectsManager() );
@@ -204,8 +214,17 @@ static int effect_zone_picked = -1;
 //represent type of effect zone picked
 static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
 
+//shortcut keys
 static bool editKeyPressed = false;
 static bool deleteKeyPressed = false;
+
+static bool frameAddKeyPressed = false;
+static bool playbackMarker_add_start_key_pressed = false;
+static bool playbackMarker_add_pause_key_pressed = false;
+static bool playbackMarker_add_resume_key_pressed = false;
+static bool playbackMarker_add_end_key_pressed = false;
+
+static bool showPropertiesBoxKeyPressed = false;
 
 //listener movement variables
 static float listener_speed = 10.0f;
@@ -234,7 +253,8 @@ void MainGuiEditor::HandleEvents()
 	if(GetMouseX() > GetScreenWidth() - 200){disableHotkeys = true;}
 	else{disableHotkeys = false;}
 	
-	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive){return;}
+	//if any of these are true, do not continue to key input
+	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive || global_dialog_in_use){return;}
 	
 	
 	//if w key pressed
@@ -352,7 +372,39 @@ void MainGuiEditor::HandleEvents()
 		}
 	}
 		
-
+	//if b key pressed
+	if( IsKeyReleased(KEY_B) )
+	{
+		frameAddKeyPressed = true;
+	}
+	
+	//if z key pressed
+	if( IsKeyReleased(KEY_Z) )
+	{
+		playbackMarker_add_start_key_pressed = true;
+	}
+	//if x key pressed
+	if( IsKeyReleased(KEY_X) )
+	{
+		playbackMarker_add_pause_key_pressed = true;
+	}
+	//if c key pressed
+	if( IsKeyReleased(KEY_C) )
+	{
+		playbackMarker_add_resume_key_pressed = true;
+	}
+	//if v key pressed
+	if( IsKeyReleased(KEY_V) )
+	{
+		playbackMarker_add_end_key_pressed = true;
+	}
+	//if p key pressed
+	if( IsKeyReleased(KEY_P) )
+	{
+		showPropertiesBoxKeyPressed = true;
+	}
+	
+	timeline_window.HandleInput();
 }
 
 static float new_listener_position_x = 0;
@@ -465,10 +517,7 @@ void MainGuiEditor::logic()
 		{
 			//std::cout << "delete sound producer " << soundproducer_picked << std::endl;
 			
-			std::swap( sound_producer_vector[soundproducer_picked],sound_producer_vector.back());
-			sound_producer_vector.pop_back();
-			
-			soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(soundproducer_picked);
+			MainGuiEditor::RemoveSoundProducer(soundproducer_picked);
 			
 			soundproducer_picked = -1;
 		}
@@ -489,7 +538,8 @@ void MainGuiEditor::logic()
 	}
 	
 	//run state for immediate mode sound player
-	im_sound_player.RunStateForPlayer();
+	//im_sound_player.RunStateForPlayer_SimplePlayback();
+	im_sound_player.RunStateForPlayer_ComplexPlayback();
 	
 	sound_player_active = im_sound_player.PlayerInActiveUse();
 		
@@ -504,16 +554,17 @@ void MainGuiEditor::DrawGUI_Items()
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
 	
-	
 	//draw HRTF edit menu
 	MainGuiEditor::draw_hrtf_menu();
 	
 	//draw object creation/edit menu
 	MainGuiEditor::draw_object_creation_menu();
 	
-	
 	//draw project file buttons
 	MainGuiEditor::draw_project_file_dialog();
+	
+	//draw timeline 
+	MainGuiEditor::draw_timeline_menu();
 }
 
 bool dropDownObjectTypeMode = false;
@@ -545,9 +596,9 @@ void MainGuiEditor::draw_object_creation_menu()
 	GuiDrawText("Object Creation / Edit", (Rectangle){20,120,125,20}, 1, BLACK);
 	
 	//draw button create
-	bool createObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Create") );
+	bool createObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, "Create" );
 	//draw button edit
-	bool editObjectClicked = GuiButton( (Rectangle){ 25, 220, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Edit") );
+	bool editObjectClicked = GuiButton( (Rectangle){ 25, 220, 70, 30 }, "Edit" );
 	
 	//draw GuiDropdownBox for choosing type to manipulate
 	
@@ -874,15 +925,123 @@ void MainGuiEditor::draw_object_creation_menu()
 
 void MainGuiEditor::draw_sound_bank()
 {
+	//draw on right side of screen
 	
 	float leftX = GetScreenWidth() - 200;
 	
-	GuiDrawRectangle((Rectangle){leftX,50,200,500}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawRectangle((Rectangle){leftX,50,200,350}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
 	GuiDrawText("Sound Bank", (Rectangle){leftX,50,125,20}, 1, BLACK);
 	GuiDrawText("Sound Name", (Rectangle){leftX,70,125,20}, 1, BLACK);
 	GuiDrawText("File", (Rectangle){leftX + 75,70,125,20}, 1, BLACK);
 	
 	m_sound_bank.DrawGui_Item();
+	
+}
+
+static bool show_timeline_toggle_bool = false;
+
+
+void MainGuiEditor::draw_timeline_menu()
+{
+	//draw timeline playback controls
+	float center_x = GetScreenWidth() / 2;
+	
+	//draw play button
+	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
+	{
+		//calculate current time from current timeline frame
+		//assuming 1 second per timeline frame, and ignore timeline frame rate for now		
+		double time = timeline_window.GetCurrentTimelineFrame();
+				
+		//set time in sound player.
+		im_sound_player.SetCurrentTimeInSoundPlayer(time);
+		
+		//im_sound_player.PlayAll_SimplePlayback();
+		im_sound_player.StartPlayback_ComplexPlayback();
+		
+		
+	}
+	
+	//draw pause button
+	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
+	{
+		//im_sound_player.PauseAll_SimplePlayback();
+		im_sound_player.PausePlayback_ComplexPlayback();
+	}
+	
+	//draw stop button
+	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
+	{
+		//im_sound_player.StopAll_SimplePlayback();
+		im_sound_player.StopPlayback_ComplexPlayback();
+	}
+	
+	//if need to add point or playback marker to timeline
+	
+	//draw on bottom third of screen	
+	timeline_window.DrawGui_Item();
+	
+	//draw show timeline button
+	if( GuiButton( (Rectangle){ 25, 420, 70, 30 }, "Timeline" ) )
+	{
+		show_timeline_toggle_bool = !show_timeline_toggle_bool;
+		
+		timeline_window.SetShowTimelineBool(show_timeline_toggle_bool);
+	}
+	
+	//if timeline is shown
+	if(show_timeline_toggle_bool)
+	{
+		timeline_window.InitGUI();
+		
+		if(frameAddKeyPressed)
+		{
+			timeline_window.SetAddPointToTimelineBool(true);
+			frameAddKeyPressed = false;
+		}
+		else if(deleteKeyPressed)
+		{
+			timeline_window.SetRemovePointFromTimelineBool(true);
+			timeline_window.SetRemovePlaybackMarkerFromTimelineBool(true);
+			deleteKeyPressed = false;
+		}
+		else if(playbackMarker_add_start_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::START_PLAY);
+			playbackMarker_add_start_key_pressed = false;
+		}
+		else if(playbackMarker_add_pause_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::PAUSE);
+			playbackMarker_add_pause_key_pressed = false;
+		}
+		else if(playbackMarker_add_resume_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::RESUME);
+			playbackMarker_add_resume_key_pressed = false;
+		}
+		else if(playbackMarker_add_end_key_pressed)
+		{
+			timeline_window.SetAddPlaybackMarkerToTimelineBool(true,PlaybackMarkerType::END_PLAY);
+			playbackMarker_add_end_key_pressed = false;
+		}
+		else if(showPropertiesBoxKeyPressed)
+		{
+			timeline_window.ToggleShowTimelineParameterPropertiesBoxBool();
+			showPropertiesBoxKeyPressed = false;
+		}
+		
+		if(im_sound_player.PlayerInActiveUse())
+		{
+			timeline_window.RunPlaybackWithTimeline(&im_sound_player);
+		}
+		else
+		{
+			timeline_window.ResumeEditModeInTimeline();
+		}
+	}
+	
+	
 	
 }
 
@@ -892,9 +1051,9 @@ void MainGuiEditor::draw_hrtf_menu()
 	GuiDrawText("HRTF", (Rectangle){20,300,125,20}, 1, BLACK);
 	
 	//draw button Test
-	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 25, 320, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Test") );
+	bool testHRTFButtonClicked = GuiButton( (Rectangle){ 25, 320, 70, 30 }, "Test" );
 	//draw button Change
-	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 360, 70, 30 }, GuiIconText(RICON_FILE_SAVE, "Change") );
+	bool changeHRTFButtonClicked = GuiButton( (Rectangle){ 25, 360, 70, 30 }, "Change" );
 	
 	if(testHRTFButtonClicked)
 	{
@@ -1065,7 +1224,7 @@ void MainGuiEditor::CreateNewProject()
 {
 	//free everything
 	MainGuiEditor::UnloadAll();
-	
+		
 }
 
 void MainGuiEditor::SaveProject(std::string& filepath)
@@ -1082,7 +1241,15 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	std::cout << "Save project file path:" << saveFilePath << std::endl;
 	
 	save_system_ptr->SetSaveFilePath(saveFilePath);
-	save_system_ptr->SaveProjectToSetFile(&sound_producer_vector,effects_manager_ptr.get(),listener.get(),&m_sound_bank);
+	
+	SaveSystemDataHelper save_system_data_helper; 
+	save_system_data_helper.sound_producer_vector_ptr = &sound_producer_vector;
+	save_system_data_helper.effectsManagerPtr = effects_manager_ptr.get();
+	save_system_data_helper.listener_ptr = listener.get();
+	save_system_data_helper.sound_bank_ptr = &m_sound_bank;
+	save_system_data_helper.timeline_ptr = &timeline_window;
+	
+	save_system_ptr->SaveProjectToSetFile(save_system_data_helper);
 	
 }
 
@@ -1107,13 +1274,19 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 
 	ListenerSaveData listener_data;
 	
-	load_system_ptr->LoadProject(&sound_producer_save_data,
-						   &echoZonesSaveData,
-						   &standardRevZonesSaveData,
-						   &eaxRevZonesSaveData,
-						   listener_data,
-						   sound_bank_save_data,
-						   filepath);
+	TimelineSaveData timeline_save_data;
+	
+	LoadDataHelper load_data_helper;
+	load_data_helper.sound_producer_save_data = &sound_producer_save_data;
+	load_data_helper.echoZonesSaveData = &echoZonesSaveData;
+	load_data_helper.standardRevZonesSaveData = &standardRevZonesSaveData;
+	load_data_helper.eaxRevZonesSaveData = &eaxRevZonesSaveData;
+	load_data_helper.listener_data_ptr = &listener_data;
+	load_data_helper.sound_bank_save_data_ptr = &sound_bank_save_data;
+	
+	load_data_helper.timeline_save_data_ptr = &timeline_save_data;
+	
+	load_system_ptr->LoadProject(load_data_helper,filepath);
 						   
 	
 	//initialize sound producers from save data
@@ -1182,6 +1355,8 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	//initialize sound bank from save data
 	m_sound_bank.LoadSaveData(sound_bank_save_data);
 	
+	//initialize timeline from save data
+	timeline_window.LoadSaveData(timeline_save_data);
 	
 }
 
@@ -1198,8 +1373,22 @@ void MainGuiEditor::CreateSoundProducer(std::string& name,float& x, float& y, fl
 	soundproducer_registry.AddRecentSoundProducerMadeToRegistry();
 	
 	soundproducer_registry.AddSourceOfLastSoundProducerToSoundProducerRegistry();
-
+	
 }
+
+void MainGuiEditor::RemoveSoundProducer(int index)
+{
+	if(index >= 0)
+	{
+		std::swap( sound_producer_vector[index],sound_producer_vector.back());
+		sound_producer_vector.pop_back();
+
+		soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(index);
+		
+	}
+	
+}
+
 
 /*
 

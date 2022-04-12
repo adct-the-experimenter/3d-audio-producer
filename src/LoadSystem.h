@@ -15,13 +15,7 @@ public:
 	~LoadSystem();
 	
 	//function used to load project
-	void LoadProject(std::vector <SoundProducerSaveData> *sound_producer_save_data,
-							   std::vector <EchoZoneSaveData> *echoZonesSaveData,
-							   std::vector <StandardReverbZoneSaveData> *standardRevZonesSaveData,
-							   std::vector <EAXReverbZoneSaveData> *eaxRevZonesSaveData,
-							   ListenerSaveData& listener_save_data,
-							   SoundBankSaveData& sound_bank_save_data,
-							   std::string path);
+	void LoadProject(LoadDataHelper& load_data_helper,std::string path);
 	
 private:
 	

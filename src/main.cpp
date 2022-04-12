@@ -7,7 +7,7 @@ MainGuiEditor editor;
 
 
 const std::int16_t screenWidth = 850;
-const std::int16_t screenHeight = 600;
+const std::int16_t screenHeight = 640;
 
 void InitRaylibSystem();
 void CloseRaylibSystem();
@@ -88,6 +88,8 @@ void InitRaylibSystem()
 	
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     
+    //disable escape key as close window key
+    SetExitKey(0);
 
 }
 
