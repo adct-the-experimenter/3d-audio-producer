@@ -150,7 +150,7 @@ void Timeline::AddPlotPlaybackMarkerToTimeline()
 	{
 		timeline_plots_playback_markers.back().timeline_playback_markers[i] = PlaybackMarkerType::NONE;
 
-		timeline_plots_position.back().timeline_settings_bool_array[i] = false;
+		timeline_plots_playback_markers.back().timeline_settings_bool_array[i] = false;
 	}
 }
 

@@ -27,7 +27,7 @@
  */
 
 //macro for debug
-#define DEBUG_PLAYER
+//#define DEBUG_PLAYER
 
 OpenALSoftPlayer::OpenALSoftPlayer()
 {
