@@ -15,17 +15,23 @@
 
 #include "dialog_var.h"
 
-#define MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT 200
+#define MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT 600
 
 //timeline settings
 
 static size_t max_num_frames = MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT;
 
-static TimelineSettings timelineSettings = InitTimelineSettings(max_num_frames);
+static int max_num_frames_to_display = 200;
+static int timeline_leftmost_frame = 0;
+static int timeline_rightmost_frame = max_num_frames_to_display;
 
-static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
+static TimelineSettings timelineSettings = InitTimelineSettings(max_num_frames,&timeline_leftmost_frame,&timeline_rightmost_frame,max_num_frames_to_display);
 
-static TimelineParameterSettings playbackMarkerTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440);
+static TimelineParameterSettings positionTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440,
+																							&timeline_leftmost_frame,&timeline_rightmost_frame,max_num_frames_to_display);
+
+static TimelineParameterSettings playbackMarkerTimelineSettings = InitTimelineParameterSettings(max_num_frames,nullptr,200,440,
+																								&timeline_leftmost_frame,&timeline_rightmost_frame,max_num_frames_to_display);
 
 
 Timeline::Timeline()
@@ -381,29 +387,46 @@ void Timeline::DrawTimelinePlotEditorGUI()
 
 void Timeline::ShowPropertiesBox(int x, int y, int timeline_index, int timeline_current_frame)
 {
-	Rectangle draw_rect = (Rectangle){x,y,200,60};
+	//skip if timeline current frame is more than max number of points in timeline plot
+	if(timeline_current_frame >= MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT){return;}
+	
+	Rectangle draw_rect = (Rectangle){x,y,200,100};
 	Rectangle rect_msg = (Rectangle){x,y,200,40};
 	GuiPanel(draw_rect);
 	
 	std::string playback_marker_str = "";
 	
-	PlaybackMarkerType pm_type = timeline_plots_playback_markers[timeline_index].timeline_playback_markers[timeline_current_frame];
-	
-	switch(pm_type)
+	//if there is playback marker info
+	if(timeline_plots_playback_markers[timeline_index].timeline_settings_bool_array[timeline_current_frame])
 	{
-		case PlaybackMarkerType::NONE:{ playback_marker_str = "None"; break;}
-		case PlaybackMarkerType::START_PLAY:{ playback_marker_str = "Start Play"; break;}
-		case PlaybackMarkerType::PAUSE:{ playback_marker_str = "Pause"; break;}
-		case PlaybackMarkerType::RESUME:{ playback_marker_str = "Resume"; break;}
-		case PlaybackMarkerType::END_PLAY:{ playback_marker_str = "End Play"; break;}
+		playback_marker_str = "Playback Marker: ";
+		PlaybackMarkerType pm_type = timeline_plots_playback_markers[timeline_index].timeline_playback_markers[timeline_current_frame];
+	
+		switch(pm_type)
+		{
+			case PlaybackMarkerType::NONE:{ playback_marker_str += "None"; break;}
+			case PlaybackMarkerType::START_PLAY:{ playback_marker_str += "Start Play"; break;}
+			case PlaybackMarkerType::PAUSE:{ playback_marker_str += "Pause"; break;}
+			case PlaybackMarkerType::RESUME:{ playback_marker_str += "Resume"; break;}
+			case PlaybackMarkerType::END_PLAY:{ playback_marker_str += "End Play"; break;}
+		}
 	}
 	
-	float pos_x = timeline_plots_position[timeline_index].timeline_points_posx[timeline_current_frame];
-	float pos_y = timeline_plots_position[timeline_index].timeline_points_posy[timeline_current_frame];
-	float pos_z = timeline_plots_position[timeline_index].timeline_points_posz[timeline_current_frame];
+	std::string position_str = "";
 	
-	std::string message = "position(x,y,z): \n" + std::to_string(pos_x) + " " + std::to_string(pos_y) + " " + std::to_string(pos_z)
-							+ "\nPlayback Marker: " + playback_marker_str;
+	//if there is timeline plot position info
+	if(timeline_plots_position[timeline_index].timeline_settings_bool_array[timeline_current_frame])
+	{
+		float pos_x = timeline_plots_position[timeline_index].timeline_points_posx[timeline_current_frame];
+		float pos_y = timeline_plots_position[timeline_index].timeline_points_posy[timeline_current_frame];
+		float pos_z = timeline_plots_position[timeline_index].timeline_points_posz[timeline_current_frame];
+		
+		position_str = "position(x,y,z): \n" + std::to_string(pos_x) + " " + std::to_string(pos_y) + " " + std::to_string(pos_z);
+	}
+	
+	std::string timeframe_str = "Timeline Frame: " + std::to_string(timeline_current_frame);
+	
+	std::string message = timeframe_str + "\n" + position_str + "\n" + playback_marker_str;
 							
 	GuiLabel( rect_msg, message.c_str() );
 	
@@ -591,7 +614,7 @@ void Timeline::DrawFramesGUI()
 		timeline_plots_position[edit_index].frames_filepath = "";
 		
 		//reset all points to false which erases it from GUI.
-		for(uint16_t i = 0; i < 200; i++)
+		for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
 		{
 			timeline_plots_position[edit_index].timeline_settings_bool_array[i] = false;
 		}

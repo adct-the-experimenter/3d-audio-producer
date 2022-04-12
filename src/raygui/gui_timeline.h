@@ -46,6 +46,14 @@ typedef struct
 	bool addPoint;
 	bool showPropertiesBox;
 	
+	int scroll_value; //sets leftmost and rightmost frame
+	int max_scroll_value; //max value for scrolling
+	int* leftmost_frame_ptr; //frame that is on the left, use with gui scroll panel
+	int* rightmost_frame_ptr; //frame that is on the right, use with gui scroll panel
+	int max_num_frames_displayed; //max number of frames to be displayed on screen
+	int frame_scroll_value; //value of frame that scroll adds
+	int frame_scroll_rate; //rate at which 1 scroll value increases frame_scroll_value
+	
 	//frame selection variables, 
 	size_t current_timeline_frame;
 	bool frameSelected;
@@ -57,12 +65,18 @@ typedef struct
 	
 	size_t max_num_frames;
 	
+	
 } TimelineSettings;
 
 //for drawing timeline points
 typedef struct 
-{	
+{
+		
 	size_t max_num_frames;
+	
+	int* leftmost_frame_ptr; //frame that is on the left, use with gui scroll panel
+	int* rightmost_frame_ptr; //frame that is on the right, use with gui scroll panel
+	int max_num_frames_displayed; //max number of frames to be displayed on screen
 	
 	bool* array_points_ptr; //array of points to render
 	
@@ -83,7 +97,8 @@ extern "C" {            // Prevents name mangling of functions
 #endif
 
 TimelineSettings InitTimelineSettings(size_t max_num_frames);
-TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y);
+TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y,
+														int* left_frame_ptr, int* right_frame_ptr, int max_num_frames_to_display);
 
 //Draws timeline 
 //returns if timeline was clicked on
@@ -100,7 +115,7 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings);
 
 #if defined(GUI_3D_OBJECT_TIMELINE)
 
-TimelineSettings InitTimelineSettings(size_t max_num_frames)
+TimelineSettings InitTimelineSettings(size_t max_num_frames, int* left_frame_ptr, int* right_frame_ptr,int max_num_frames_to_display)
 {
 	TimelineSettings settings = {0};
 	
@@ -109,10 +124,20 @@ TimelineSettings InitTimelineSettings(size_t max_num_frames)
 	settings.max_num_frames = max_num_frames;
 	settings.mouse_control = true;
 	
+	settings.max_num_frames_displayed = max_num_frames_to_display;
+	
+	settings.leftmost_frame_ptr = left_frame_ptr;
+	settings.rightmost_frame_ptr = right_frame_ptr;
+	settings.scroll_value = 0;
+	settings.frame_scroll_value = 0;
+	settings.frame_scroll_rate = 20;
+	settings.max_scroll_value = (max_num_frames / settings.frame_scroll_rate) - 1;
+	
 	return settings;
 }
 
-TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y)
+TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, bool* points_ptr, int x, int y,
+														int* left_frame_ptr, int* right_frame_ptr, int max_num_frames_to_display)
 {
 	TimelineParameterSettings settings = { 0 };
 	
@@ -124,8 +149,16 @@ TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, b
 	
 	settings.draw_color = BLACK;
 	
+	settings.leftmost_frame_ptr = left_frame_ptr;
+	settings.rightmost_frame_ptr = right_frame_ptr;
+	
+	settings.max_num_frames_displayed = max_num_frames_to_display;
+	
 	return settings;
 }
+
+//only show every 20th frame
+static int show_frame_modulo_factor = 20;
 
 bool Gui_Timeline(TimelineSettings* settings)
 {
@@ -135,16 +168,30 @@ bool Gui_Timeline(TimelineSettings* settings)
 
 	float screen_height = GetScreenHeight();
 	
+	settings->scroll_value = GuiScrollBar((Rectangle){settings->mouseArea.x,settings->mouseArea.y - 30,settings->mouseArea.width,30}, settings->scroll_value, 0, settings->max_scroll_value);
+	settings->frame_scroll_value = settings->scroll_value * settings->frame_scroll_rate;
+	
+	if(settings->frame_scroll_value > settings->max_num_frames - settings->max_num_frames_displayed)
+	{
+		settings->frame_scroll_value = settings->max_num_frames - settings->max_num_frames_displayed;
+	}
+	
+	*settings->leftmost_frame_ptr = settings->frame_scroll_value;
+	*settings->rightmost_frame_ptr = settings->frame_scroll_value + settings->max_num_frames_displayed;
+	
 	//draw frame marks and frame number
-	for(size_t i = 0; i < settings->max_num_frames; i += 10)
+	for(int i = *settings->leftmost_frame_ptr; i < *settings->rightmost_frame_ptr; i += 10)
 	{
 		//tick mark
-		DrawRectangle(settings->mouseArea.x + 2*i, settings->mouseArea.y, 2,10, BLACK);
+		DrawRectangle(settings->mouseArea.x + 2*(i - *settings->leftmost_frame_ptr), settings->mouseArea.y, 2,10, BLACK);
 		
 		//frame number
-		char c_buffer[4];
-		sprintf(c_buffer,"%ld",i);
-		DrawText(c_buffer,settings->mouseArea.x + 2*i + 4,settings->mouseArea.y + 10,12,BLACK);
+		if(i % show_frame_modulo_factor == 0)
+		{
+			char c_buffer[4];
+			sprintf(c_buffer,"%ld",i);
+			DrawText(c_buffer,settings->mouseArea.x + 2*(i - *settings->leftmost_frame_ptr) + 4,settings->mouseArea.y + 10,12,BLACK);
+		}
 		
 	}
 	
@@ -181,7 +228,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 				
 				if(settings->frameDrawX >= 200)
 				{
-					settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
+					settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2) + settings->frame_scroll_value;
 				}
 			}
 			
@@ -196,7 +243,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 				
 				if(settings->frameDrawX >= 200)
 				{
-					settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2);
+					settings->current_timeline_frame = static_cast <size_t> ( (settings->frameDrawX - 200) / 2) + settings->frame_scroll_value;
 				}
 				
 			}
@@ -213,7 +260,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 			cursor_color = YELLOW;
 		}
 		
-		float cursor_x = (settings->current_timeline_frame * 2) + 200;
+		float cursor_x = ((settings->current_timeline_frame - settings->frame_scroll_value) * 2) + 200;
 		
 		DrawRectangle(cursor_x,400,2,screen_height,cursor_color);
 	}
@@ -221,7 +268,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 	else
 	{
 		//draw cursor at current timeline frame
-		float cursor_x = (settings->current_timeline_frame * 2) + 200;
+		float cursor_x = ((settings->current_timeline_frame - settings->frame_scroll_value) * 2) + 200;
 		
 		DrawRectangle(cursor_x,400,2,screen_height,BLACK);
 	}
@@ -233,9 +280,9 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings)
 	//draw points
 	
 	bool* element_ptr = settings->array_points_ptr;
-	size_t i = 0;
+	int i = 0;
 	
-	for(i = 0; i < settings->max_num_frames; i++)
+	for(i = *settings->leftmost_frame_ptr; i < *settings->rightmost_frame_ptr; i++)
 	{
 		if(*element_ptr)
 		{
