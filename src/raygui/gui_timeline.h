@@ -278,27 +278,23 @@ bool Gui_Timeline_Parameter(TimelineParameterSettings* settings)
 {
 
 	//draw points
-	
-	bool* element_ptr = settings->array_points_ptr;
-	int i = 0;
-	
-	for(i = *settings->leftmost_frame_ptr; i < *settings->rightmost_frame_ptr; i++)
+	if(settings->max_num_frames >= *settings->rightmost_frame_ptr &&
+		settings->max_num_frames > *settings->leftmost_frame_ptr)
 	{
-		if(*element_ptr)
+		bool* element_ptr = settings->array_points_ptr + *settings->leftmost_frame_ptr;
+		int i = 0;
+		
+		for(i = *settings->leftmost_frame_ptr; i < *settings->rightmost_frame_ptr; i++)
 		{
-			DrawCircle(settings->draw_start_x + 2*i, settings->draw_y, 2, settings->draw_color);
+			if(*element_ptr)
+			{
+				DrawCircle(settings->draw_start_x + 2*i, settings->draw_y, 2, settings->draw_color);
+			}
+			
+			element_ptr++;
 		}
-		
-		element_ptr++;
 	}
-	
-	//if mouse click on point in timeline and add point is false
-		//show properties box to true
-	
-		
-	//if show properties box bool is true
-		//draw properties box
-		//show the contents of the point in timeline such as position and rotation.
+
 	
 }
 
