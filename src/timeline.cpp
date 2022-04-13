@@ -617,6 +617,7 @@ void Timeline::DrawFramesGUI()
 		for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
 		{
 			timeline_plots_position[edit_index].timeline_settings_bool_array[i] = false;
+			timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = false;
 		}
 	}
 	
@@ -824,11 +825,14 @@ void Timeline::ResumeEditModeInTimeline()
 }
 
 //struct
-struct TimeFramePositionData{
+struct TimeFramePositionPlaybackData{
 	uint16_t index;
+	int position_exist;
 	float x;
 	float y;
 	float z;
+	int playback_marker_exist;
+	int playback_marker_type;
 };
 
 void Timeline::LoadSaveData(TimelineSaveData& save_data)
@@ -856,6 +860,11 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 		timeline_plots_position[i].timeline_points_posy = new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
 		timeline_plots_position[i].timeline_points_posz = new float[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
 		timeline_plots_position[i].timeline_settings_bool_array = new bool[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		
+		//initialize playback markers of timeline frame
+		timeline_plots_playback_markers[i].timeline_playback_markers = new PlaybackMarkerType[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		timeline_plots_playback_markers[i].timeline_settings_bool_array = new bool[MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT];
+		
 		for(size_t it = 0; it < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; it++)
 		{
 			timeline_plots_position[i].timeline_points_posx[it] = 0; 
@@ -863,6 +872,10 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 			timeline_plots_position[i].timeline_points_posz[it] = 0;
 
 			timeline_plots_position[i].timeline_settings_bool_array[it] = false;
+			
+			timeline_plots_playback_markers[i].timeline_playback_markers[it] = PlaybackMarkerType::NONE;
+			
+			timeline_plots_playback_markers[i].timeline_settings_bool_array[it] = false;
 		}
 		
 		if(timeline_plots_position[i].frames_filepath != "")
@@ -881,18 +894,29 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 			//while have not reached end of file
 			while( !infile.eof())
 			{
-				TimeFramePositionData data;
+				
+				TimeFramePositionPlaybackData data;
 				
 				//read point from file. index, x value, y value, z value
 				infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
 				
 				//add point to timeline
 				uint16_t arr_index = data.index;
+				
+				bool pos_exists = false;
+				if(data.position_exist == 1){pos_exists = true;}
+				timeline_plots_position[i].timeline_settings_bool_array[arr_index] = pos_exists;				
+				
 				timeline_plots_position[i].timeline_points_posx[arr_index] = data.x;
 				timeline_plots_position[i].timeline_points_posy[arr_index] = data.y;
 				timeline_plots_position[i].timeline_points_posz[arr_index] = data.z;
-				timeline_plots_position[i].timeline_settings_bool_array[arr_index] = true;
 				
+				//add marker to timeline
+				bool playback_marker_exists = false;
+				if(data.playback_marker_exist == 1){playback_marker_exists = true;}
+				timeline_plots_playback_markers[i].timeline_settings_bool_array[arr_index] = playback_marker_exists;
+				
+				timeline_plots_playback_markers[i].timeline_playback_markers[arr_index] = (PlaybackMarkerType)(data.playback_marker_type);
 			}
 				
 			//close file
@@ -923,24 +947,59 @@ void Timeline::SaveTimeFramesToFile(std::string& filepath)
 	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 	
 	//for current selected timeline
+	
+	//write timeline points to file
 	for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
 	{
-		//if there is a point added, add it to file
+		
+		//if there is no timeline position point nor playback marker added
+		if(!timeline_plots_position[edit_index].timeline_settings_bool_array[i] &&
+			!timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+		{
+			continue; //skip to next iteration
+		}
+		
+		TimeFramePositionPlaybackData data;
+		data.index = i;
+		
+		//if there is a position point added, add it to the file
 		if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
 		{
-			TimeFramePositionData data;
+			data.position_exist = 1;
 			
-			data.index = i;
 			data.x = timeline_plots_position[edit_index].timeline_points_posx[i];
 			data.y = timeline_plots_position[edit_index].timeline_points_posy[i];
 			data.z = timeline_plots_position[edit_index].timeline_points_posz[i];
 			
-			//write data
-			outfile.write( reinterpret_cast <const char*>( &data) ,sizeof(data));
-			
 		}
-	}
+		else
+		{
+			data.position_exist = 0;
+			
+			data.x = 0;
+			data.y = 0;
+			data.z = 0;
+		}
 		
+		//if there is a playback marker added, add it to the file
+		if(timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+		{
+			data.playback_marker_exist = 1;
+			
+			data.playback_marker_type = static_cast<int>(timeline_plots_playback_markers[edit_index].timeline_playback_markers[i]);
+		}
+		else
+		{
+			data.playback_marker_exist = 0;
+			
+			data.playback_marker_type = static_cast<int>(PlaybackMarkerType::NONE);
+		}
+		
+		//write data
+		outfile.write( reinterpret_cast <const char*>( &data) ,sizeof(data));
+		
+	}
+			
 	//close file
 	outfile.close();
 	
@@ -964,17 +1023,27 @@ void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 	//while have not reached end of file
 	while( !infile.eof())
 	{
-		TimeFramePositionData data;
+		TimeFramePositionPlaybackData data;
 		
 		//read point from file. index, x value, y value, z value
 		infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
 		
 		//add point to timeline
 		uint16_t i = data.index;
+		
+		bool pos_exists = false;
+		if(data.position_exist){pos_exists = true;}
+		timeline_plots_position[edit_index].timeline_settings_bool_array[i] = pos_exists;
+		
 		timeline_plots_position[edit_index].timeline_points_posx[i] = data.x;
 		timeline_plots_position[edit_index].timeline_points_posy[i] = data.y;
 		timeline_plots_position[edit_index].timeline_points_posz[i] = data.z;
-		timeline_plots_position[edit_index].timeline_settings_bool_array[i] = true;
+		
+		bool pm_exists = false;
+		if(data.playback_marker_exist){pm_exists = true;}
+		
+		timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = pm_exists;
+		timeline_plots_playback_markers[edit_index].timeline_playback_markers[i] = (PlaybackMarkerType)(data.playback_marker_type);
 		
 	}
 		

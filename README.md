@@ -136,6 +136,11 @@ Make a new timeline to control a different object.
 4. Add start playback marker by pressing the 'z' key.
 5. Click on "Play" button and wait for timeline to pass the selected timeline frame.
 
+### Save Time Frames
+1. Click on "Save" button in timeline.
+2. For creating a new file, put .bin at the end of the filename.
+3. For overwriting an existing file, select exiting file.
+4. Click "Select" button.
 
 ## Feedback 
 

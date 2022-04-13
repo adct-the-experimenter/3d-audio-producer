@@ -59,7 +59,6 @@ struct TimelinePlotPlaybackMarker
 	//index of the object to edit
 	int indexObjectToEdit;
 	
-	//index of sound to manipulate from sound bank
 	
 };
 
