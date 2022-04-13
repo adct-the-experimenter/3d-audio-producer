@@ -23,7 +23,6 @@ SoundProducer::SoundProducer()
 
 SoundProducer::~SoundProducer()
 {
-	std::cout << "Sound Producer destructor called! \n";
 	if(m_source != 0)
 	{
 		alDeleteSources(1, &m_source);

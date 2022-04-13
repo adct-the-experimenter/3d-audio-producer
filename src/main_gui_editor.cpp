@@ -1217,7 +1217,7 @@ void MainGuiEditor::UnloadAll()
 	soundproducer_registry.ClearAll();
 	
 	//remove all sound producers in vector
-	sound_producer_vector.clear();
+	RemoveAllSoundProducersSafely();
 }
 
 void MainGuiEditor::CreateNewProject()
@@ -1389,6 +1389,15 @@ void MainGuiEditor::RemoveSoundProducer(int index)
 	
 }
 
+void MainGuiEditor::RemoveAllSoundProducersSafely()
+{
+	for(int index = 0; index < sound_producer_vector.size(); index++)
+	{
+		soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(index);
+	}
+	
+	sound_producer_vector.clear();
+}
 
 /*
 

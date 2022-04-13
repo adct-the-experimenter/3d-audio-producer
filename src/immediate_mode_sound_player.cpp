@@ -314,7 +314,6 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 			}
 			case BufferPlayerStateType::NONE:
 			{
-				
 				//start player buffering
 				break;
 			}
@@ -753,6 +752,7 @@ void ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(size_t num_pr
 {
 	if(num_producers != buffer_players_states.size())
 	{
+		buffer_players_states.clear();
 		buffer_players_states.resize(num_producers);
 	
 		//set all to none state a.k.a. stopped

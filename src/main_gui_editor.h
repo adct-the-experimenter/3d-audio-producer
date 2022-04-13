@@ -84,6 +84,7 @@ private:
 	
 	void CreateSoundProducer(std::string& name, float& x, float& y, float& z, bool freeRoam, std::uint8_t account_num);
 	void RemoveSoundProducer(int index);
+	void RemoveAllSoundProducersSafely();
 	
 //Save and Load system functions
 	

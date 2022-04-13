@@ -142,6 +142,14 @@ Make a new timeline to control a different object.
 3. For overwriting an existing file, select exiting file.
 4. Click "Select" button.
 
+## Project Management
+
+### Save project
+1. Click on "Save Project" button.
+2. For creating a new file, put .xml at the end of the filename.
+3. For overwriting an existing file, select existing file.
+4. Click "Select" button.
+
 ## Feedback 
 
 Please email questions or comments to this email address bringerofawesomefood @ gmail . com without spaces.

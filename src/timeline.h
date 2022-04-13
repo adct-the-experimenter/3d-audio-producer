@@ -43,7 +43,7 @@ struct TimelinePlotPosition
 	int indexObjectToEdit;
 	
 	//current filepath to frames
-	std::string frames_filepath;
+	std::string frames_filepath; ///overall frames file path
 };
 
 enum class PlaybackMarkerType: uint8_t {NONE=0,START_PLAY,PAUSE,RESUME,END_PLAY};

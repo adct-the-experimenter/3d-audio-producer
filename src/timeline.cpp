@@ -841,7 +841,10 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 	
 	//assuming m_save_data has been modified from loading from xml file
 	timeline_plots_position.clear();
+	timeline_plots_playback_markers.clear();
+	
 	timeline_plots_position.resize(save_data.number_of_plots);
+	timeline_plots_playback_markers.resize(save_data.number_of_plots);
 	
 	//for every timeline plot
 	for(size_t i = 0; i < timeline_plots_position.size();i++)
