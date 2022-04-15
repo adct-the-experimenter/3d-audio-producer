@@ -538,7 +538,6 @@ void MainGuiEditor::logic()
 	}
 	
 	//run state for immediate mode sound player
-	//im_sound_player.RunStateForPlayer_SimplePlayback();
 	im_sound_player.RunStateForPlayer_ComplexPlayback();
 	
 	sound_player_active = im_sound_player.PlayerInActiveUse();
@@ -548,8 +547,6 @@ void MainGuiEditor::logic()
 void MainGuiEditor::DrawGUI_Items()
 {
 	
-	//draw immediate mode sound player
-	im_sound_player.DrawGui_Item();
 	
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
@@ -956,7 +953,6 @@ void MainGuiEditor::draw_timeline_menu()
 		//set time in sound player.
 		im_sound_player.SetCurrentTimeInSoundPlayer(time);
 		
-		//im_sound_player.PlayAll_SimplePlayback();
 		im_sound_player.StartPlayback_ComplexPlayback();
 		
 		
@@ -965,14 +961,12 @@ void MainGuiEditor::draw_timeline_menu()
 	//draw pause button
 	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
 	{
-		//im_sound_player.PauseAll_SimplePlayback();
 		im_sound_player.PausePlayback_ComplexPlayback();
 	}
 	
 	//draw stop button
 	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
 	{
-		//im_sound_player.StopAll_SimplePlayback();
 		im_sound_player.StopPlayback_ComplexPlayback();
 	}
 	
@@ -1218,6 +1212,9 @@ void MainGuiEditor::UnloadAll()
 	
 	//remove all sound producers in vector
 	RemoveAllSoundProducersSafely();
+	
+	//reset sound player 
+	im_sound_player.ResetPlayers_ComplexPlayback();
 }
 
 void MainGuiEditor::CreateNewProject()
@@ -1391,10 +1388,7 @@ void MainGuiEditor::RemoveSoundProducer(int index)
 
 void MainGuiEditor::RemoveAllSoundProducersSafely()
 {
-	for(int index = 0; index < sound_producer_vector.size(); index++)
-	{
-		soundproducer_registry.RemoveThisSourceFromSoundProducerRegistry(index);
-	}
+	soundproducer_registry.RemoveAllSourcesFromSoundProducerRegistry();
 	
 	sound_producer_vector.clear();
 }

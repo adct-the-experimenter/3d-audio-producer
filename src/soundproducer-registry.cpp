@@ -29,13 +29,11 @@ void SoundProducerRegistry::AddRecentSoundProducerMadeToRegistry()
 
 
 		SoundProducer* thisSoundProducer = nullptr;
-		//std::vector <std::unique_ptr <SoundProducer> >::iterator it;
 		size_t index = 0;
 
 		if(sound_producer_vector_ref->size() >= 1)
 		{
 			thisSoundProducer = sound_producer_vector_ref->at(sound_producer_vector_ref->size() - 1).get();
-			//it = sound_producer_vector_ref->end() - 1;
 			index = sound_producer_vector_ref->size() - 1;
 
 			if(thisSoundProducer != nullptr)
@@ -125,6 +123,7 @@ void SoundProducerRegistry::AddSourceOfLastSoundProducerToSoundProducerRegistry(
 	}
 	
 }
+
 void SoundProducerRegistry::RemoveSourceOfLastTrackFromSoundProducerTrackManager()
 {
 	sound_producer_sources_vec.pop_back();
@@ -138,4 +137,12 @@ void SoundProducerRegistry::RemoveThisSourceFromSoundProducerRegistry(int& index
 		sound_producer_sources_vec.pop_back();
 	}
 	
+}
+
+void SoundProducerRegistry::RemoveAllSourcesFromSoundProducerRegistry()
+{
+	while(sound_producer_sources_vec.size() != 0)
+	{
+		sound_producer_sources_vec.pop_back();
+	}
 }

@@ -87,10 +87,15 @@ public:
 	//function to stop playback of all sounds
 	void StopPlayback_ComplexPlayback();
 	
+	void ResetPlayers_ComplexPlayback();
+	
 private:
 	
 	//state of immmediate mode player
 	IMSoundPlayerState m_state;
+	
+	void SetSoundPlayerState(IMSoundPlayerState state);
+	IMSoundPlayerState GetSoundPlayerState();
 	
 	//thread for effect
 	

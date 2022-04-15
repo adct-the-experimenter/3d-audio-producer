@@ -49,6 +49,8 @@ public:
 	
 	void RemoveThisSourceFromSoundProducerRegistry(int& index);
 	
+	void RemoveAllSourcesFromSoundProducerRegistry();
+	
 	friend class ImmediateModeSoundPlayer;
 	friend class EffectsManager;
 	
