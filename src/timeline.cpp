@@ -593,7 +593,7 @@ void Timeline::DrawTimelinePointsGUI()
 	{
 		//show properties in a box
 		//show to the left of timeline marker 
-		ShowPropertiesBox(leftBound,upperBound + 100,edit_timeline_listview_activeIndex,timelineSettings.current_timeline_frame);
+		Timeline::ShowPropertiesBox(leftBound,upperBound + 100,edit_timeline_listview_activeIndex,timelineSettings.current_timeline_frame);
 	}
 	
 }
@@ -854,6 +854,7 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 		
 		//load edit object index
 		timeline_plots_position[i].indexObjectToEdit = save_data.plots_save_data[i].edit_index;
+		timeline_plots_playback_markers[i].indexObjectToEdit = save_data.plots_save_data[i].edit_index;
 		
 		//load frame filepath
 		timeline_plots_position[i].frames_filepath = save_data.plots_save_data[i].frames_filepath;
@@ -1090,3 +1091,17 @@ void Timeline::HandleInput()
 }
 
 size_t Timeline::GetCurrentTimelineFrame(){return timelineSettings.current_timeline_frame;}
+
+void Timeline::SetCurrentTimelineFrameAtPause()
+{
+	timelineSettings.mouse_control = false;
+	timelineSettings.frameSelected = false;	
+}
+
+void Timeline::ResetCurrentTimelineFrameToZero()
+{
+	timelineSettings.mouse_control = false;
+	timelineSettings.frameSelected = false;
+	
+	timelineSettings.current_timeline_frame = 0;
+}

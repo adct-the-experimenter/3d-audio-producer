@@ -962,12 +962,14 @@ void MainGuiEditor::draw_timeline_menu()
 	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
 	{
 		im_sound_player.PausePlayback_ComplexPlayback();
+		timeline_window.SetCurrentTimelineFrameAtPause();
 	}
 	
 	//draw stop button
 	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
 	{
 		im_sound_player.StopPlayback_ComplexPlayback();
+		timeline_window.ResetCurrentTimelineFrameToZero();
 	}
 	
 	//if need to add point or playback marker to timeline

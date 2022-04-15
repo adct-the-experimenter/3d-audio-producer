@@ -141,8 +141,5 @@ void SoundProducerRegistry::RemoveThisSourceFromSoundProducerRegistry(int& index
 
 void SoundProducerRegistry::RemoveAllSourcesFromSoundProducerRegistry()
 {
-	while(sound_producer_sources_vec.size() != 0)
-	{
-		sound_producer_sources_vec.pop_back();
-	}
+	sound_producer_sources_vec.clear();
 }

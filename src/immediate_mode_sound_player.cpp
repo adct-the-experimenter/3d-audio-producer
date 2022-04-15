@@ -336,12 +336,12 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 				
 				break;
 			}
-			
 			case BufferPlayerStateType::PAUSED:
 			{
 				
 				break;
 			}
+			default:{break;}
 			
 		}
 	}
@@ -382,7 +382,8 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_ComplexPlayback()
 void ImmediateModeSoundPlayer::StartPlayback_ComplexPlayback()
 {
 	//if starting from stopped / null state or paused state
-	if(m_state == IMSoundPlayerState::NONE || m_state == IMSoundPlayerState::PAUSED)
+	if(ImmediateModeSoundPlayer::GetSoundPlayerState() == IMSoundPlayerState::NONE || 
+		ImmediateModeSoundPlayer::GetSoundPlayerState() == IMSoundPlayerState::PAUSED)
 	{
 		//initialize audio players for each sound producer
 		size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
@@ -436,7 +437,27 @@ void ImmediateModeSoundPlayer::PausePlayback_ComplexPlayback()
 		}
 		
 		m_effects_manager_ptr->RemoveEffectFromAllSources();
+		
+		for(size_t b_it = 0; b_it < buffer_players_states.size(); b_it++)
+		{
+			BufferPlayerStateType new_state_type = buffer_players_states[b_it].state_type;
+				
+			//set up for later playback when in play mode
+			switch(buffer_players_states[b_it].state_type)
+			{
+				//play later
+				case BufferPlayerStateType::PLAYING:{ new_state_type = BufferPlayerStateType::PAUSED_TO_PLAYING; break;}
+				//keep paused for later
+				case BufferPlayerStateType::PAUSED:{ new_state_type = BufferPlayerStateType::PAUSED; break;}
+				//do nothing
+				default:{break;}
+			}
+			
+			buffer_players_states[b_it].state_type = new_state_type;
+		}
 	}
+	
+	ImmediateModeSoundPlayer::SetSoundPlayerState(IMSoundPlayerState::PAUSED);
 	
 }
 	
@@ -639,10 +660,16 @@ void ImmediateModeSoundPlayer::SetBufferPlayerToStop_ComplexPlayback(int index)
 
 void ImmediateModeSoundPlayer::ResetPlayers_ComplexPlayback()
 {
+	ImmediateModeSoundPlayer::SetSoundPlayerState(IMSoundPlayerState::NONE);
+	m_current_time = 0;
+		
+	time_res_seconds = double(TIME_RESOLUTION) / 1000;
+	
+	player_active_use = false;
+	player_started = false;
+	
 	buffering_audio_players_vec.clear();
 	buffer_players_states.clear();
-	
-	ImmediateModeSoundPlayer::SetSoundPlayerState(IMSoundPlayerState::NONE);
 }
 
 void ImmediateModeSoundPlayer::al_nssleep(unsigned long nsec)

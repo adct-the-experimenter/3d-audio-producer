@@ -117,6 +117,10 @@ public:
 	void HandleInput();
 	
 	size_t GetCurrentTimelineFrame();
+	
+	void SetCurrentTimelineFrameAtPause();
+	
+	void ResetCurrentTimelineFrameToZero();
 
 //Save / Load functions
 	
