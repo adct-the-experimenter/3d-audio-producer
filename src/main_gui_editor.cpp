@@ -1149,8 +1149,8 @@ void MainGuiEditor::draw_project_file_dialog()
 			
 			// save project file (if supported extension)
 			
-			//if file name was put in text box
-			if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".xml") )
+			//if file was not chosen from list
+			if (fileDialogState.itemFocused == -1)
 			{
 				char projectFile[512] = { 0 };
 				
@@ -1162,7 +1162,7 @@ void MainGuiEditor::draw_project_file_dialog()
 				//save project
 				MainGuiEditor::SaveProject(filepath);
 			}
-			//else if file name was selected
+			//else if file name was selected fropm list
 			else if(IsFileExtension(fileDialogState.fileNameText, ".xml"))
 			{
 				char projectFile[512] = { 0 };
@@ -1234,7 +1234,6 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	if(saveFilePath.substr(saveFilePath.length() - 4,saveFilePath.length() - 1) != ".xml")
 	{
 		saveFilePath.append(".xml");
-		
 	}
 	
 	std::cout << "Save project file path:" << saveFilePath << std::endl;

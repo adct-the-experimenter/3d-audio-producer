@@ -686,13 +686,19 @@ void Timeline::DrawFramesFileDialog()
 			
 			// save project file (if supported extension)
 			
-			//if file name was put in text box
-			if (IsFileExtension(fileDialogState.fileNameTextBoxInputCopy, ".bin") )
+			//if file was not chosen from list
+			if (fileDialogState.itemFocused == -1 )
 			{
 				char projectFile[512] = { 0 };
 				
 				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
 				std::string filepath = std::string(projectFile);
+				
+				//if .bin is not in ending of file name
+				if(filepath.substr(filepath.length() - 4,filepath.length() - 1) != ".bin")
+				{
+					filepath.append(".bin");
+				}
 				
 				std::cout << "save filepath for frames: " << filepath << std::endl;
 				
