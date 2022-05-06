@@ -946,6 +946,12 @@ void MainGuiEditor::draw_timeline_menu()
 	//draw play button
 	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
 	{
+		//initialize audio player
+		im_sound_player.InitPlayer_ComplexPlayback();
+		
+		//solve audio playback in timeline according to timeline playback marker plot
+		timeline_window.SolveAudioPlaybackInTimeline(&im_sound_player);
+		
 		//calculate current time from current timeline frame
 		//assuming 1 second per timeline frame, and ignore timeline frame rate for now		
 		double time = timeline_window.GetCurrentTimelineFrame();

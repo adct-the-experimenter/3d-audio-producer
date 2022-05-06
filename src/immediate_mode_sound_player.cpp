@@ -386,10 +386,7 @@ void ImmediateModeSoundPlayer::StartPlayback_ComplexPlayback()
 		ImmediateModeSoundPlayer::GetSoundPlayerState() == IMSoundPlayerState::PAUSED)
 	{
 		//initialize audio players for each sound producer
-		size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
-	
-		ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(num_producers);
-		ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(num_producers);
+		ImmediateModeSoundPlayer::InitPlayer_ComplexPlayback();
 	
 		//open streaming file linked to sound bank account of sound producers
 		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
@@ -793,3 +790,16 @@ void ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(size_t num_pr
 
 void ImmediateModeSoundPlayer::SetSoundPlayerState(IMSoundPlayerState state){m_state = state;}
 ImmediateModeSoundPlayer::IMSoundPlayerState ImmediateModeSoundPlayer::GetSoundPlayerState(){return m_state;}
+
+void ImmediateModeSoundPlayer::SetCurrentTimeInBuffer_ComplexPlayback(int index, double& current_time)
+{
+	buffer_players_states[index].current_time = current_time;
+}
+
+void ImmediateModeSoundPlayer::InitPlayer_ComplexPlayback()
+{
+	size_t num_producers = m_sound_producer_reg_ptr->sound_producer_vector_ref->size();
+	
+	ImmediateModeSoundPlayer::InitAudioPlayersForEachSoundProducer(num_producers);
+	ImmediateModeSoundPlayer::InitStateForPlayers_ComplexPlayback(num_producers);
+}

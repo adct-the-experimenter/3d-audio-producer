@@ -89,6 +89,12 @@ public:
 	
 	void ResetPlayers_ComplexPlayback();
 	
+	//function to set time for buffer state in complex playback
+	void SetCurrentTimeInBuffer_ComplexPlayback(int index, double& current_time);
+	
+	//function to initialize player buffer states and audio players
+	void InitPlayer_ComplexPlayback();
+	
 private:
 	
 	//state of immmediate mode player

@@ -737,6 +737,82 @@ void Timeline::DrawFramesFileDialog()
 	GuiFileDialog(&fileDialogState);
 }
 
+static PlaybackMarkerTraveler playback_marker_traveler;
+
+void Timeline::SolveAudioPlaybackInTimeline(ImmediateModeSoundPlayer* im_sound_player_ptr)
+{
+	
+	float progressValue = 0.0f;
+	
+	float progressValueIncrement = 1 / timeline_plots_playback_markers.size();
+	
+	//for every audio playback marker plot
+	for(size_t i = 0; i < timeline_plots_playback_markers.size(); i++)
+	{
+		//if object edited by playback marker plot is not a sound producer , skip
+		bool is_sound_producer = false;
+		
+		//skip playback marker plot if not sound producer
+		if(timeline_plots_playback_markers[i].indexObjectToEdit >= 2 && timeline_plots_playback_markers[i].indexObjectToEdit - 2 < sound_producer_vector_ref->size())
+		{
+			is_sound_producer = true;
+			if(!is_sound_producer){continue;}
+		}
+		
+		//check from zero to current timeline frame
+		for(size_t it_frame = 0; it_frame < timelineSettings.current_timeline_frame; it_frame++)
+		{
+			//skip frame if there is no playback marker
+			if(!timeline_plots_playback_markers[i].timeline_settings_bool_array[it_frame])
+			{
+				continue;
+			}
+			
+			//determine current playback time for sound producer
+			PlaybackMarkerType& pm_type = timeline_plots_playback_markers[i].timeline_playback_markers[it_frame];
+			playback_marker_traveler.RunTravelerBasedOnPlaybackMarkerType(pm_type);
+		}
+		
+		//if time recorded in playback marker is not zero
+		if(playback_marker_traveler.GetCurrentTime() > 0.0f)
+		{
+			int buffer_player_index = timeline_plots_playback_markers[i].indexObjectToEdit - 2;
+			double& current_time = playback_marker_traveler.GetCurrentTime();
+			
+			//forward audio playback of sound producer
+			im_sound_player_ptr->SetCurrentTimeInBuffer_ComplexPlayback(buffer_player_index,current_time);
+			
+			//set play state depending on playback marker traveler state
+			switch(playback_marker_traveler.GetCurrentState())
+			{
+				case PlaybackMarkerTraveler::TravelerState::FORWARD_TIME:
+				{
+					im_sound_player_ptr->SetBufferPlayerToPlay_ComplexPlayback(buffer_player_index); 
+					break;
+				}
+				case PlaybackMarkerTraveler::TravelerState::PAUSED:
+				{
+					im_sound_player_ptr->SetBufferPlayerToPause_ComplexPlayback(buffer_player_index);
+					break;
+				}
+				case PlaybackMarkerTraveler::TravelerState::NONE:
+				{
+					break;
+				}
+			}
+			
+		}
+		
+		//show progress bar indicating status of solving of audio playback
+		GuiProgressBar((Rectangle){ 320, 460, 200, 20 }, NULL, NULL, progressValue, 0, 1);
+		
+		//update progress bar after finishing checking one playback marker plot
+		progressValue += progressValueIncrement;
+		
+		//reset playback marker traveler
+		playback_marker_traveler.ResetTraveler();
+	}
+}
 
 
 void Timeline::RunPlaybackWithTimeline(ImmediateModeSoundPlayer* im_sound_player_ptr)

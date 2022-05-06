@@ -64,6 +64,48 @@ struct TimelinePlotPlaybackMarker
 
 enum class ObjectType : uint8_t {NONE,LISTENER,SOUND_PRODUCER};
 
+enum class AudioPlaybackSolverStatus : uint8_t {SOLVED=0,ERROR_NO_MARKERS};
+
+class PlaybackMarkerTraveler
+{
+public:
+	enum class TravelerState : uint8_t {NONE=0, FORWARD_TIME, PAUSED};
+	
+	PlaybackMarkerTraveler(){current_state = TravelerState::NONE; current_time = 0.0f;};
+	
+	
+	void RunTravelerBasedOnPlaybackMarkerType(PlaybackMarkerType& type)
+	{
+		switch(type)
+		{
+			case PlaybackMarkerType::NONE:{ break;}
+			case PlaybackMarkerType::PAUSE:{ current_state = TravelerState::PAUSED; break;}
+			case PlaybackMarkerType::RESUME:{ current_state = TravelerState::FORWARD_TIME; break;}
+			case PlaybackMarkerType::START_PLAY:{ current_state = TravelerState::FORWARD_TIME; break;}
+			case PlaybackMarkerType::END_PLAY:{ current_state = TravelerState::NONE; current_time = 0.0f; break;}
+		}
+		
+		switch(current_state)
+		{
+			case TravelerState::NONE:{ break;}
+			case TravelerState::PAUSED:{ break;}
+			//assuming 1 time frame is 1 second default
+			case TravelerState::FORWARD_TIME:{ current_time += 1.0f; break;}
+		}
+	}
+	
+	double& GetCurrentTime(){return current_time;}
+	
+	TravelerState& GetCurrentState(){return current_state;}
+	
+	void ResetTraveler(){current_time = 0; current_state = TravelerState::NONE;}
+	
+private:
+
+	TravelerState current_state;
+	double current_time;
+};
+
 class Timeline
 {
 public:
@@ -106,6 +148,9 @@ public:
 	
 	//render timeline and its parameters
 	void DrawGui_Item();
+	
+	//function to solve audio playback within timeline
+	void SolveAudioPlaybackInTimeline(ImmediateModeSoundPlayer* im_sound_player_ptr);
 	
 	//function to set position of listener and sound producers with timeline
 	void RunPlaybackWithTimeline(ImmediateModeSoundPlayer* im_sound_player_ptr);
