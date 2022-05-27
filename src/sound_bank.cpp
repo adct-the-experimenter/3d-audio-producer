@@ -254,22 +254,8 @@ void SoundBank::InitDataDirectory(std::string filepath)
 	for(size_t i = 0; i < m_sound_accounts.size(); i++)
 	{
 		m_sound_accounts[i].account_number = i;
-		
-		std::string datadir; 
-	
-		//datadir = DATADIR_NAME;
-		//if(datadir == "")
-		//{
-		//	datadir = "../data/resources/";
-		//}
-		
-		//#ifdef WIN32
-		//datadir = "../data/resources/";
-		//#endif
-		
-		datadir = m_data_dir_path;
-		
-		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
+				
+		std::string filepath_stream = m_data_dir_path + "/" + "stream-file" + std::to_string(i) + ".wav";
 		
 		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
 		m_sound_accounts[i].stream_file_path = filepath_stream;
