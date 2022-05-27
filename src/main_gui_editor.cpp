@@ -65,6 +65,10 @@ static Timeline timeline_window;
 //bool to indicate if dialog is in use.
 bool global_dialog_in_use = false;
 
+//bool to indicate if project is initialized, 
+//used to disable functionality that requires project to be initialized
+static bool project_init = false;
+
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -1229,6 +1233,10 @@ void MainGuiEditor::CreateNewProject()
 {
 	//free everything
 	MainGuiEditor::UnloadAll();
+	
+	project_init = false;
+	
+	//
 		
 }
 
@@ -1257,16 +1265,49 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	
 }
 
+//function to extract directory from project file path
+static bool ExtractDirectoryFromProjectFilepath(std::string& filepath, std::string& dir_filepath)
+{
+	
+	//for non-windows, assuming unix and unix like, find last occurence of / in filepath
+	//for windows, find last occurence of '\\' 
+	std::size_t pos_found = 0;
+	
+	pos_found = filepath.find_last_of("/\\");
+	
+	if( pos_found == 0)
+	{
+		std::cout << "Unable to find any slashes in filepath!\n";
+		return false;
+	}
+	
+	//erase anything after the last occurence of a slash
+	dir_filepath = filepath.substr(0,pos_found + 1 );
+	
+	return true;
+}
+
 void MainGuiEditor::LoadProject(std::string& filepath)
 {
 	
 	//Start new project
-	MainGuiEditor::CreateNewProject();
+	
+	//free everything
+	MainGuiEditor::UnloadAll();
+	
+	project_init = false;
 	
 	//set objects in new projects based on saved data read
-	
 			
 	std::cout << "Input project load file path:" << filepath << std::endl;
+	
+	std::string dir_path = "";
+	if(!ExtractDirectoryFromProjectFilepath(filepath,dir_path))
+	{
+		std::cout << "\n\nFailed to extract directory from project file path!\n";
+	}
+	
+	std::cout << "\nDirectory file path: " << dir_path << std::endl;
 	
 	std::vector <SoundProducerSaveData> sound_producer_save_data;
 

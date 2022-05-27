@@ -28,28 +28,7 @@ static GuiFileDialogState fileDialogState;
 
 SoundBank::SoundBank()
 {
-	//for all sound accounts, initialize account number and stream file path
-	for(size_t i = 0; i < m_sound_accounts.size(); i++)
-	{
-		m_sound_accounts[i].account_number = i;
-		
-		std::string datadir; 
-	
-		datadir = DATADIR_NAME;
-		if(datadir == "")
-		{
-			datadir = "../data/resources/";
-		}
-		
-		#ifdef WIN32
-		datadir = "../data/resources/";
-		#endif
-		
-		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
-		
-		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
-		m_sound_accounts[i].stream_file_path = filepath_stream;
-	}
+	SoundBank::InitDataDirectory("");
 	
 	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
 	fileDialogState.position = {200,200};
@@ -67,7 +46,6 @@ std::array <TextBoxParam,10> name_textboxes;
 std::array <std::string,10> filepath_textboxes;
 char fileNameToLoad[512] = { 0 };
 std::uint8_t current_file_button_edit = 0;
-
 
 
 void SoundBank::DrawGui_Item()
@@ -267,3 +245,33 @@ void SoundBank::LoadSaveData(SoundBankSaveData& data)
 }
 
 SoundBankSaveData& SoundBank::GetSaveData(){return m_sound_bank_save_data;}
+
+void SoundBank::InitDataDirectory(std::string filepath)
+{
+	m_data_dir_path = filepath;
+	
+	//for all sound accounts, initialize account number and stream file path
+	for(size_t i = 0; i < m_sound_accounts.size(); i++)
+	{
+		m_sound_accounts[i].account_number = i;
+		
+		std::string datadir; 
+	
+		//datadir = DATADIR_NAME;
+		//if(datadir == "")
+		//{
+		//	datadir = "../data/resources/";
+		//}
+		
+		//#ifdef WIN32
+		//datadir = "../data/resources/";
+		//#endif
+		
+		datadir = m_data_dir_path;
+		
+		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
+		
+		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
+		m_sound_accounts[i].stream_file_path = filepath_stream;
+	}
+}
