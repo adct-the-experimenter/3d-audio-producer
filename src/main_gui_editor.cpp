@@ -74,8 +74,11 @@ static bool project_init = false;
 
 //string used for storing project directory path
 std::string project_dir_path = "";
-std::string project_data_dir_path = "";
 std::string project_file_path = "";
+std::string project_data_dir_path = "";
+std::string project_audio_data_dir_path = "";
+std::string project_timeline_data_dir_path = "";
+
 
 MainGuiEditor::MainGuiEditor()
 {
@@ -1308,6 +1311,40 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	}
 	#endif
 	
+	//make new audio data directory in project data directory
+	#if defined(WIN32)
+	project_audio_data_dir_path = project_dir_path + "\\" + "data\\" + "audio\\";
+	if( _mkdir( project_audio_data_dir_path.c_str() ) != 0 )
+	{
+		std::cout << "Failed to create project audio data directory!\n";
+		return;
+	}
+	#else
+	project_audio_data_dir_path = project_dir_path + "/" + "data/" + "audio/";
+	if(mkdir(project_audio_data_dir_path.c_str(),0777) != 0)
+	{
+		std::cout << "Failed to create project audio data directory!\n";
+		return;
+	}
+	#endif
+	
+	//make new timeline data directory in project data directory
+	#if defined(WIN32)
+	project_timeline_data_dir_path = project_dir_path + "\\" + "data\\" + "timeline\\";
+	if( _mkdir( project_timeline_data_dir_path.c_str() ) != 0 )
+	{
+		std::cout << "Failed to create project timeline data directory!\n";
+		return;
+	}
+	#else
+	project_timeline_data_dir_path = project_dir_path + "/" + "data/" + "timeline/";
+	if(mkdir(project_timeline_data_dir_path.c_str(),0777) != 0)
+	{
+		std::cout << "Failed to create project timeline data directory!\n";
+		return;
+	}
+	#endif
+	
 	//save new project file
 	
 	#if defined(WIN32)
@@ -1320,7 +1357,7 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	MainGuiEditor::SaveProject(project_file_path);
 	
 	//initialize sound bank with new project directory
-	m_sound_bank.InitDataDirectory(project_data_dir_path);
+	m_sound_bank.InitDataDirectory(project_audio_data_dir_path);
 	
 	project_init = true;
 }
@@ -1398,8 +1435,12 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	
 	#if defined(WIN32)
 	project_data_dir_path = project_dir_path + "data\\";
+	project_audio_data_dir_path = project_data_dir_path + "audio\\";
+	project_timeline_data_dir_path = project_data_dir_path + "timeline\\";
 	#else
 	project_data_dir_path = project_dir_path + "data/";
+	project_audio_data_dir_path = project_data_dir_path + "audio/";
+	project_timeline_data_dir_path = project_data_dir_path + "timeline/";
 	#endif
 	
 	std::vector <SoundProducerSaveData> sound_producer_save_data;
@@ -1491,7 +1532,7 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 	}
 	
 	//initialize sound bank from save data
-	m_sound_bank.InitDataDirectory(project_data_dir_path);
+	m_sound_bank.InitDataDirectory(project_audio_data_dir_path);
 	m_sound_bank.LoadSaveData(sound_bank_save_data);
 	
 	//initialize timeline from save data
