@@ -275,7 +275,18 @@ void XMLCreator::SaveDataXML_SoundBank(pugi::xml_node& root, SoundBank* sound_ba
 			
 			accountNodeChild.append_attribute("name") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).name.c_str();
 			accountNodeChild.append_attribute("account_num") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).account_number;
-			accountNodeChild.append_attribute("filepath") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).stream_file_path.c_str();
+			//accountNodeChild.append_attribute("filepath") = sound_bank_ptr->GetSaveData().sound_account_data.at(i).stream_file_path.c_str();
+			
+			bool active = sound_bank_ptr->GetSaveData().sound_account_data.at(i).active;
+			if(active)
+			{
+				accountNodeChild.append_attribute("active") = "true";
+			}
+			else
+			{
+				accountNodeChild.append_attribute("active") = "false";
+			}
+			
 			
 		}
 				

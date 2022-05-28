@@ -16,6 +16,7 @@ struct SoundAccount
 	std::string name; //name of sound
 	std::uint8_t account_number; //index in sound accounts array
 	std::string stream_file_path; //path to audio file
+	bool active; //indicates if account is initialize and active
 };
 
 struct SoundBankSaveData

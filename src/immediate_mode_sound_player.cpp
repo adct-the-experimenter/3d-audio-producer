@@ -61,6 +61,9 @@ void ImmediateModeSoundPlayer::RunStateForPlayer_SimplePlayback()
 				{
 					std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
 					std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
+					bool active = m_sound_bank_ptr->m_sound_accounts[account_num].active;
+					
+					if(!active){return;}
 					
 					if(stream_filepath != "")
 					{
@@ -129,6 +132,9 @@ void ImmediateModeSoundPlayer::PlayAll_SimplePlayback()
 				std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
 				std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
 				
+				bool active = m_sound_bank_ptr->m_sound_accounts[account_num].active;
+				if(!active){continue;}
+				
 				if(stream_filepath != "")
 				{
 					buffering_audio_players_vec[it].OpenPlayerFile(stream_filepath.c_str());
@@ -155,6 +161,10 @@ void ImmediateModeSoundPlayer::PlayAll_SimplePlayback()
 		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 		{
 			std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+			
+			bool active = m_sound_bank_ptr->m_sound_accounts[account_num].active;
+			if(!active){continue;}
+			
 			std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
 			
 			if(stream_filepath != "")
@@ -214,6 +224,10 @@ void ImmediateModeSoundPlayer::PauseAll_SimplePlayback()
 		for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 		{
 			std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+			
+			bool active = m_sound_bank_ptr->m_sound_accounts[account_num].active;
+			if(!active){continue;}
+			
 			std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
 			
 			if(stream_filepath != "")
@@ -239,6 +253,10 @@ void ImmediateModeSoundPlayer::StopAll_SimplePlayback()
 	for(size_t it = 0; it < buffering_audio_players_vec.size(); it++)
 	{
 		std::uint8_t account_num = m_sound_producer_reg_ptr->sound_producer_vector_ref->at(it)->GetAccountNumber();
+		
+		bool active = m_sound_bank_ptr->m_sound_accounts[account_num].active;
+		if(!active){continue;}
+		
 		std::string stream_filepath = m_sound_bank_ptr->m_sound_accounts[account_num].stream_file_path;
 		
 		if(stream_filepath != "")
