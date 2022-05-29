@@ -1356,8 +1356,11 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	
 	MainGuiEditor::SaveProject(project_file_path);
 	
-	//initialize sound bank with new project directory
+	//initialize sound bank with new data directory
 	m_sound_bank.InitDataDirectory(project_audio_data_dir_path);
+	
+	//initialize timeline window with new data directory
+	timeline_window.InitDataDirectory(project_timeline_data_dir_path);
 	
 	project_init = true;
 }
@@ -1531,11 +1534,12 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 		listener->LoadListenerSaveData(listener_data);
 	}
 	
-	//initialize sound bank from save data
+	//initialize sound bank from save data and data directory
 	m_sound_bank.InitDataDirectory(project_audio_data_dir_path);
 	m_sound_bank.LoadSaveData(sound_bank_save_data);
 	
-	//initialize timeline from save data
+	//initialize timeline from save data and data directory
+	timeline_window.InitDataDirectory(project_timeline_data_dir_path);
 	timeline_window.LoadSaveData(timeline_save_data);
 	
 	project_init = true;
