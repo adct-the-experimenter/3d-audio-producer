@@ -139,6 +139,27 @@ Make a new timeline to control a different object.
 
 ## Project Management
 
+### File management
+Projects save and load audio and timeline data from specific directories within the project directory.
+The project directory path is automatically extracted by the program.
+
+This allows for sharing of projects by putting the project directory and its files into a compressed
+archive(.e.g .zip, .gz, etc.) 
+
+### Creating a new project
+1. Click on 'New Project' button.
+2. Choose where to put the project directory.
+3. Put in a name for project in the text box.
+4. Press 'Select' button when finished with name. The project directory and project .xml file will be created.
+
+### Loading a project
+1. Click on 'Load Project' button.
+2. Choose the project directory/folder. 
+3. Open the project .xml file.
+4. Press 'Select' button. 
+
+### Saving a project
+1. Click on 'Save Project' button.
 
 ## Feedback 
 
