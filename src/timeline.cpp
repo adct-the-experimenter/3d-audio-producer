@@ -665,12 +665,9 @@ void Timeline::DrawFramesFileDialog()
 			// Load frames file (if supported extension)
 			if (IsFileExtension(fileDialogState.fileNameText, ".bin") )
 			{
-				//char projectFile[512] = { 0 };
-				
-				//strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
 				std::string filepath = std::string(fileDialogState.fileNameText);
 				
-				std::cout << "load filepath for frames: " << filepath << std::endl;
+				//std::cout << "load filepath for frames: " << filepath << std::endl;
 				
 				//load frames from file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
@@ -693,17 +690,18 @@ void Timeline::DrawFramesFileDialog()
 		strcpy(fileDialogState.dirPathText,m_data_dir_path.c_str());
 		fileDialogState.dirPathEditMode = false;
 		
+		std::cout << "item focused: " << fileDialogState.itemFocused << std::endl;
+		
 		if (fileDialogState.SelectFilePressed)
 		{
 			
 			// save project file (if supported extension)
+			std::string filename = std::string(fileDialogState.fileNameText);
 			
 			//if file was not chosen from list
-			if (fileDialogState.itemFocused == -1 )
+			if (filename.empty())
 			{
-				//char projectFile[512] = { 0 };
 				
-				//strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
 				std::string filepath = std::string(fileDialogState.fileNameTextBoxInputCopy);
 				
 				//if .bin is not in ending of file name
@@ -712,7 +710,7 @@ void Timeline::DrawFramesFileDialog()
 					filepath.append(".bin");
 				}
 				
-				std::cout << "save filename for frames: " << filepath << std::endl;
+				//std::cout << "save filename for frames: " << filepath << std::endl;
 				
 				//save frames to file
 				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
@@ -723,24 +721,29 @@ void Timeline::DrawFramesFileDialog()
 				std::string full_filepath = m_data_dir_path + filepath;
 				Timeline::SaveTimeFramesToFile(full_filepath);
 			}
-			//else if file name was selected
-			else if(IsFileExtension(fileDialogState.fileNameText, ".bin"))
+			//else if file name was selected and has file extension .bin
+			else
 			{
-				//char projectFile[512] = { 0 };
+				if(!IsFileExtension(fileDialogState.fileNameText, ".bin"))
+				{
+					//do nothing
+				}
+				else
+				{
+					std::string filepath = std::string(fileDialogState.fileNameText);
 				
-				//strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-				std::string filepath = std::string(fileDialogState.fileNameText);
+					//std::cout << "save filename for frames: " << filepath << std::endl;
+					
+					//save frames to file
+					size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+					//only save filename
+					timeline_plots_position[index].frames_filepath = filepath;
+					m_save_data.plots_save_data[index].frames_filepath = filepath;
+					
+					std::string full_filepath = m_data_dir_path + filepath;
+					Timeline::SaveTimeFramesToFile(full_filepath);
+				}
 				
-				std::cout << "save filename for frames: " << filepath << std::endl;
-				
-				//save frames to file
-				size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
-				//only save filename
-				timeline_plots_position[index].frames_filepath = filepath;
-				m_save_data.plots_save_data[index].frames_filepath = filepath;
-				
-				std::string full_filepath = m_data_dir_path + filepath;
-				Timeline::SaveTimeFramesToFile(full_filepath);
 			}
 			
 			frames_file_state = FileFrameState::NONE;

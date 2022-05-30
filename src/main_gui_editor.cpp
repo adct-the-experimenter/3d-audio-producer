@@ -1146,7 +1146,6 @@ void MainGuiEditor::draw_project_file_dialog()
 	}
 	
 	
-	
 	if (fileDialogState.fileDialogActive){ GuiLock();}
 	
 	if(proj_file_state == ProjectFileState::NEW)
@@ -1191,44 +1190,7 @@ void MainGuiEditor::draw_project_file_dialog()
 	}
 	else if(proj_file_state == ProjectFileState::SAVE)
 	{
-		
-		
-		/*
-		if (fileDialogState.SelectFilePressed)
-		{
-			
-			// save project file (if supported extension)
-			
-			//if file was not chosen from list
-			if (fileDialogState.itemFocused == -1)
-			{
-				char projectFile[512] = { 0 };
-				
-				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
-				std::string filepath = std::string(projectFile);
-				
-				std::cout << "save filepath in main gui editor: " << filepath << std::endl;
-				
-				//save project
-				MainGuiEditor::SaveProject(filepath);
-			}
-			//else if file name was selected from list
-			else if(IsFileExtension(fileDialogState.fileNameText, ".xml"))
-			{
-				char projectFile[512] = { 0 };
-				
-				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-				std::string filepath = std::string(projectFile);
-				
-				std::cout << "save filepath in main gui editor: " << filepath << std::endl;
-				
-				//save project
-				MainGuiEditor::SaveProject(filepath);
-			}
-
-			fileDialogState.SelectFilePressed = false;
-		}
-		*/
+		//do nothing, no file dialog operation needed
 	}
 	
 	GuiUnlock();
