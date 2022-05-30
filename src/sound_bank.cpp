@@ -24,32 +24,13 @@
 
 #include <cstring>
 
+#include "dialog_var.h"
+
 static GuiFileDialogState fileDialogState;
 
 SoundBank::SoundBank()
 {
-	//for all sound accounts, initialize account number and stream file path
-	for(size_t i = 0; i < m_sound_accounts.size(); i++)
-	{
-		m_sound_accounts[i].account_number = i;
-		
-		std::string datadir; 
-	
-		datadir = DATADIR_NAME;
-		if(datadir == "")
-		{
-			datadir = "../data/resources/";
-		}
-		
-		#ifdef WIN32
-		datadir = "../data/resources/";
-		#endif
-		
-		std::string filepath_stream = datadir + "/" + "stream-file" + std::to_string(i) + ".wav";
-		
-		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
-		m_sound_accounts[i].stream_file_path = filepath_stream;
-	}
+	SoundBank::InitDataDirectory("");
 	
 	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
 	fileDialogState.position = {200,200};
@@ -67,7 +48,6 @@ std::array <TextBoxParam,10> name_textboxes;
 std::array <std::string,10> filepath_textboxes;
 char fileNameToLoad[512] = { 0 };
 std::uint8_t current_file_button_edit = 0;
-
 
 
 void SoundBank::DrawGui_Item()
@@ -102,8 +82,8 @@ void SoundBank::DrawGui_Item()
 		{
 			strcpy(fileNameToLoad, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
 			std::string filepath = std::string(fileNameToLoad);
-			filepath_textboxes[current_file_button_edit] = filepath;
-			m_sound_bank_save_data.sound_account_data[current_file_button_edit].stream_file_path = filepath;
+			//filepath_textboxes[current_file_button_edit] = filepath;
+			//m_sound_bank_save_data.sound_account_data[current_file_button_edit].stream_file_path = filepath;
 			
 			//std::cout << "filepath in main gui editor: " << filepath << std::endl;
 			//load audio data
@@ -111,9 +91,10 @@ void SoundBank::DrawGui_Item()
 		}
 
 		fileDialogState.SelectFilePressed = false;
+		global_dialog_in_use = false;
 	}
 	
-	if (fileDialogState.fileDialogActive){ GuiLock();}
+	if (fileDialogState.fileDialogActive){ GuiLock(); global_dialog_in_use = true;}
 	
 	for(std::uint8_t i = 0; i < 10; i++)
 	{
@@ -148,7 +129,7 @@ std::array <std::string,10> &SoundBank::GetAccountLookupTable(){return account_l
 #define	BUFFER_LEN	1024
 #define	MAX_CHANNELS	2
 
-static void ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr,std::string inputSoundFilePath,SF_INFO& input_sfinfo)
+static bool ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr,std::string inputSoundFilePath,SF_INFO& input_sfinfo)
 {
 	SNDFILE *inputFile;
 	
@@ -159,14 +140,15 @@ static void ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_c
 		std::cout << "Not able to open input file " <<  inputSoundFilePath << std::endl;
 		/* Print the error message from libsndfile. */
 		puts (sf_strerror (NULL)) ;
-		return;
+		return false;
 	} 
 		
 	if (input_sfinfo.channels > MAX_CHANNELS)
 	{
 		std::cout << "Not able to process more than" <<  MAX_CHANNELS << "channels.\n";
-		return;
+		return false;
 	}
+	
 	std::cout << "Successfully loaded " << inputSoundFilePath << " saving data..." << std::endl;
 	
 	//read input data
@@ -181,9 +163,11 @@ static void ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_c
 	
 	/* Close input and stream files. */
 	sf_close(inputFile);
+	
+	return true;
 }
 
-static void CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy_ptr, AudioStreamContainer* audio_data_stream_ptr,std::string streamSoundFilePath,SF_INFO& input_sfinfo)
+static bool CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy_ptr, AudioStreamContainer* audio_data_stream_ptr,std::string streamSoundFilePath,SF_INFO& input_sfinfo)
 {
 	
 	//copy input audio data references to audio data stream
@@ -203,13 +187,15 @@ static void CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_inp
 	{
 		std::string messageString;
 		messageString.append("Failed to read audio from file.\n");
-		return;
+		return false;
 	}
 	
 	double seconds = (1.0 * input_sfinfo.frames) / input_sfinfo.samplerate ;
 	std::cout << "Duration of sound:" << seconds << "s. \n";
 	
 	audio_data_stream_ptr->WriteStreamContentsToFile(streamSoundFilePath, input_sfinfo.format, input_sfinfo.channels, input_sfinfo.samplerate,int(BUFFER_LEN));
+	
+	return true;
 }
 
 void SoundBank::LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t account_num)
@@ -227,11 +213,16 @@ void SoundBank::LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t
 	
 	std::cout << "Stream sound file path: " << m_sound_accounts[account_num].stream_file_path << std::endl;
 	
-	ReadAndCopyDataFromInputFile(&audio_data_input_copy,filepath,input_sfinfo);
-	CopyInputDataIntoAudioDataStream(&audio_data_input_copy,&audio_data_stream, 
+	bool readDone = true;
+	bool copyDone = true;
+	
+	readDone = ReadAndCopyDataFromInputFile(&audio_data_input_copy,filepath,input_sfinfo);
+	
+	copyDone = CopyInputDataIntoAudioDataStream(&audio_data_input_copy,&audio_data_stream, 
 									m_sound_accounts[account_num].stream_file_path,
 									input_sfinfo);
-	
+									
+	m_sound_accounts[account_num].active = readDone && copyDone;
 	
 	//clear data stored
 	audio_data_stream.ClearStreamDataStored();
@@ -248,22 +239,51 @@ void SoundBank::LoadSaveData(SoundBankSaveData& data)
 	{
 		m_sound_accounts[i] = data.sound_account_data[i];
 		
+		#if defined(WIN32)
+		m_sound_accounts[i].stream_file_path = m_data_dir_path  + "stream-file" + std::to_string(i) + ".wav";
+		#else
+		m_sound_accounts[i].stream_file_path = m_data_dir_path + "stream-file" + std::to_string(i) + ".wav";
+		#endif
+		
 		account_look_up[i] = data.sound_account_data[i].name;
 		
 		SoundBank::ChangeSoundNameForAccount( i ,  data.sound_account_data[i].name);
 		
-		strncpy(name_textboxes[i].char_name,data.sound_account_data[i].name.c_str(),20);
+		strncpy(name_textboxes[i].char_name,m_sound_accounts[i].name.c_str(),20);
 		name_textboxes[i].char_name[19] = '\0';
 		
-		filepath_textboxes[i] = data.sound_account_data[i].stream_file_path;
 		
-		if(!data.sound_account_data[i].stream_file_path.empty())
+		//filepath_textboxes[i] = data.sound_account_data[i].stream_file_path;
+		
+		if(data.sound_account_data[i].active)
 		{
-			SoundBank::LoadAudioDataFromFileToAccount(data.sound_account_data[i].stream_file_path, i);
+			if(!data.sound_account_data[i].stream_file_path.empty())
+			{
+				SoundBank::LoadAudioDataFromFileToAccount(m_sound_accounts[i].stream_file_path, i);
+			}
 		}
+		
+		
 		
 	}
 	
 }
 
 SoundBankSaveData& SoundBank::GetSaveData(){return m_sound_bank_save_data;}
+
+void SoundBank::InitDataDirectory(std::string filepath)
+{
+	m_data_dir_path = filepath;
+	
+	//for all sound accounts, initialize account number and stream file path
+	for(size_t i = 0; i < m_sound_accounts.size(); i++)
+	{
+		m_sound_accounts[i].account_number = i;
+				
+		std::string filepath_stream = m_data_dir_path + "stream-file" + std::to_string(i) + ".wav";
+		
+		m_sound_bank_save_data.sound_account_data[i] = m_sound_accounts[i];
+		m_sound_accounts[i].stream_file_path = filepath_stream;
+		m_sound_accounts[i].active = false;
+	}
+}

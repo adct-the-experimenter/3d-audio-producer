@@ -98,7 +98,7 @@ private:
 	void UnloadAll();
 	
 	//function to create new project
-	void CreateNewProject();
+	void CreateNewProject(std::string& project_name, std::string& proj_top_dir);
 	
 	//function to save objects and info to project file
 	void SaveProject(std::string& filepath);

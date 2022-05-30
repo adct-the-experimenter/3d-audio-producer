@@ -339,8 +339,14 @@ void XMLReader::LoadData_SoundBank(pugi::xml_node& root, SoundBankSaveData& soun
 		valString = account_node.attribute("account_num").value(); 
 		sound_bank_save_data.sound_account_data[iterator].account_number = atoi(valString.c_str());
 		
-		valString = account_node.attribute("filepath").value(); 
-		sound_bank_save_data.sound_account_data[iterator].stream_file_path = valString;
+		//valString = account_node.attribute("filepath").value(); 
+		//sound_bank_save_data.sound_account_data[iterator].stream_file_path = valString;
+		
+		valString = account_node.attribute("active").value();
+		
+		bool active = false;
+		if(valString == "true"){active = true;}
+		sound_bank_save_data.sound_account_data[iterator].active = active;
 		
 		iterator++;
 	}

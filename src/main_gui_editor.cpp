@@ -56,7 +56,7 @@ static EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
 
 //dialog for saving and loading project file
 static GuiFileDialogState fileDialogState;
-enum class ProjectFileState : std::uint8_t{NONE=0, SAVE,LOAD};
+enum class ProjectFileState : std::uint8_t{NONE=0, NEW, SAVE, LOAD};
 static ProjectFileState proj_file_state;
 
 //timeline
@@ -64,6 +64,20 @@ static Timeline timeline_window;
 
 //bool to indicate if dialog is in use.
 bool global_dialog_in_use = false;
+
+//******************************************************//
+// Project file path
+//******************************************************//
+//bool to indicate if project is initialized, 
+//used to disable functionality that requires project to be initialized
+static bool project_init = false;
+
+//string used for storing project directory path
+std::string project_dir_path = "";
+std::string project_file_path = "";
+std::string project_data_dir_path = "";
+std::string project_audio_data_dir_path = "";
+std::string project_timeline_data_dir_path = "";
 
 
 MainGuiEditor::MainGuiEditor()
@@ -546,7 +560,10 @@ void MainGuiEditor::logic()
 
 void MainGuiEditor::DrawGUI_Items()
 {
+	//draw project file buttons
+	MainGuiEditor::draw_project_file_dialog();
 	
+	if(!project_init){return;} //skip if project is not initialized
 	
 	//draw sound bank
 	MainGuiEditor::draw_sound_bank();
@@ -556,9 +573,6 @@ void MainGuiEditor::DrawGUI_Items()
 	
 	//draw object creation/edit menu
 	MainGuiEditor::draw_object_creation_menu();
-	
-	//draw project file buttons
-	MainGuiEditor::draw_project_file_dialog();
 	
 	//draw timeline 
 	MainGuiEditor::draw_timeline_menu();
@@ -1105,28 +1119,54 @@ void MainGuiEditor::draw_hrtf_menu()
 
 void MainGuiEditor::draw_project_file_dialog()
 {
-	GuiDrawRectangle((Rectangle){20,10,150,100}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
+	GuiDrawRectangle((Rectangle){20,0,150,100}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
 	GuiDrawText("Project", (Rectangle){20,10,125,20}, 1, BLACK);
 	
-	//draw load button
-	if( GuiButton( (Rectangle){ 25, 30, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "Load Project") ) )
+	//draw new project button
+	if( GuiButton( (Rectangle){ 25, 0, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "New Project") ) )
+	{
+		proj_file_state = ProjectFileState::NEW;
+		fileDialogState.fileDialogActive = true; //activate file dialog
+	}
+	
+	//draw load project button
+	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "Load Project") ) )
 	{
 		proj_file_state = ProjectFileState::LOAD;
 		fileDialogState.fileDialogActive = true; //activate file dialog
 	}
 	
-	//draw save button
-	if( GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(RICON_FILE_SAVE, "Save Project") ) )
+	//draw save project button if project initialized
+	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(RICON_FILE_SAVE, "Save Project") ) )
 	{
 		proj_file_state = ProjectFileState::SAVE;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.fileDialogActive = false; //do not activate file dialog
+		MainGuiEditor::SaveProject(project_file_path);
+		proj_file_state = ProjectFileState::NONE;
 	}
-	
 	
 	
 	if (fileDialogState.fileDialogActive){ GuiLock();}
 	
-	if(proj_file_state == ProjectFileState::LOAD)
+	if(proj_file_state == ProjectFileState::NEW)
+	{
+		if (fileDialogState.SelectFilePressed && fileDialogState.itemFocused == -1)
+		{
+			char projectName[512] = { 0 };
+			char projectDirPath[512] = { 0 };
+			
+			std::string name = std::string(fileDialogState.fileNameTextBoxInputCopy);
+			std::string top_dir = std::string(fileDialogState.dirPathText);
+						
+			//make new project
+			MainGuiEditor::CreateNewProject(name,top_dir);
+			
+			
+		}
+		
+		fileDialogState.SelectFilePressed = false;
+	}
+	else if(proj_file_state == ProjectFileState::LOAD)
 	{
 		if (fileDialogState.SelectFilePressed)
 		{			
@@ -1150,40 +1190,7 @@ void MainGuiEditor::draw_project_file_dialog()
 	}
 	else if(proj_file_state == ProjectFileState::SAVE)
 	{
-		if (fileDialogState.SelectFilePressed)
-		{
-			
-			// save project file (if supported extension)
-			
-			//if file was not chosen from list
-			if (fileDialogState.itemFocused == -1)
-			{
-				char projectFile[512] = { 0 };
-				
-				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameTextBoxInputCopy));
-				std::string filepath = std::string(projectFile);
-				
-				std::cout << "save filepath in main gui editor: " << filepath << std::endl;
-				
-				//save project
-				MainGuiEditor::SaveProject(filepath);
-			}
-			//else if file name was selected fropm list
-			else if(IsFileExtension(fileDialogState.fileNameText, ".xml"))
-			{
-				char projectFile[512] = { 0 };
-				
-				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-				std::string filepath = std::string(projectFile);
-				
-				std::cout << "save filepath in main gui editor: " << filepath << std::endl;
-				
-				//save project
-				MainGuiEditor::SaveProject(filepath);
-			}
-
-			fileDialogState.SelectFilePressed = false;
-		}
+		//do nothing, no file dialog operation needed
 	}
 	
 	GuiUnlock();
@@ -1225,11 +1232,99 @@ void MainGuiEditor::UnloadAll()
 	im_sound_player.ResetPlayers_ComplexPlayback();
 }
 
-void MainGuiEditor::CreateNewProject()
+void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& proj_top_dir)
 {
+	project_init = false;
+	
 	//free everything
 	MainGuiEditor::UnloadAll();
-		
+	
+	//make new project directory
+	#if defined(WIN32)
+	project_dir_path = proj_top_dir + "\\" + project_name;
+	if( _mkdir( project_dir_path.c_str() ) != 0 )
+	{
+		std::cout << "Failed to create project directory!\n";
+		return;
+	}
+	#else
+	project_dir_path = proj_top_dir + "/" + project_name;
+	if(mkdir(project_dir_path.c_str(),0777) != 0)
+	{
+		std::cout << "Failed to create project directory!\n";
+		return;
+	}
+	#endif
+	
+	//make new data directory in project directory
+	#if defined(WIN32)
+	project_data_dir_path = project_dir_path + "\\" + "data\\";
+	if( _mkdir( project_data_dir_path.c_str() ) != 0 )
+	{
+		std::cout << "Failed to create project data directory!\n";
+		return;
+	}
+	#else
+	project_data_dir_path = project_dir_path + "/" + "data/";
+	if(mkdir(project_data_dir_path.c_str(),0777) != 0)
+	{
+		std::cout << "Failed to create project data directory!\n";
+		return;
+	}
+	#endif
+	
+	//make new audio data directory in project data directory
+	#if defined(WIN32)
+	project_audio_data_dir_path = project_dir_path + "\\" + "data\\" + "audio\\";
+	if( _mkdir( project_audio_data_dir_path.c_str() ) != 0 )
+	{
+		std::cout << "Failed to create project audio data directory!\n";
+		return;
+	}
+	#else
+	project_audio_data_dir_path = project_dir_path + "/" + "data/" + "audio/";
+	if(mkdir(project_audio_data_dir_path.c_str(),0777) != 0)
+	{
+		std::cout << "Failed to create project audio data directory!\n";
+		return;
+	}
+	#endif
+	
+	//make new timeline data directory in project data directory
+	#if defined(WIN32)
+	project_timeline_data_dir_path = project_dir_path + "\\" + "data\\" + "timeline\\";
+	if( _mkdir( project_timeline_data_dir_path.c_str() ) != 0 )
+	{
+		std::cout << "Failed to create project timeline data directory!\n";
+		return;
+	}
+	#else
+	project_timeline_data_dir_path = project_dir_path + "/" + "data/" + "timeline/";
+	if(mkdir(project_timeline_data_dir_path.c_str(),0777) != 0)
+	{
+		std::cout << "Failed to create project timeline data directory!\n";
+		return;
+	}
+	#endif
+	
+	//save new project file
+	
+	#if defined(WIN32)
+	project_file_path = project_dir_path + "\\" + project_name + ".xml";
+	#else
+	project_file_path = project_dir_path + "/" + project_name + ".xml";
+	#endif
+	
+	
+	MainGuiEditor::SaveProject(project_file_path);
+	
+	//initialize sound bank with new data directory
+	m_sound_bank.InitDataDirectory(project_audio_data_dir_path);
+	
+	//initialize timeline window with new data directory
+	timeline_window.InitDataDirectory(project_timeline_data_dir_path);
+	
+	project_init = true;
 }
 
 void MainGuiEditor::SaveProject(std::string& filepath)
@@ -1257,16 +1352,61 @@ void MainGuiEditor::SaveProject(std::string& filepath)
 	
 }
 
+//function to extract directory from project file path
+static bool ExtractDirectoryFromProjectFilepath(std::string& filepath, std::string& dir_filepath)
+{
+	
+	//for non-windows, assuming unix and unix like, find last occurence of / in filepath
+	//for windows, find last occurence of '\\' 
+	std::size_t pos_found = 0;
+	
+	pos_found = filepath.find_last_of("/\\");
+	
+	if( pos_found == 0)
+	{
+		std::cout << "Unable to find any slashes in filepath!\n";
+		return false;
+	}
+	
+	//erase anything after the last occurence of a slash
+	dir_filepath = filepath.substr(0,pos_found + 1 );
+	
+	return true;
+}
+
 void MainGuiEditor::LoadProject(std::string& filepath)
 {
 	
 	//Start new project
-	MainGuiEditor::CreateNewProject();
+	
+	//free everything
+	MainGuiEditor::UnloadAll();
+	
+	project_init = false;
 	
 	//set objects in new projects based on saved data read
-	
 			
 	std::cout << "Input project load file path:" << filepath << std::endl;
+	
+	
+	if(!ExtractDirectoryFromProjectFilepath(filepath,project_dir_path))
+	{
+		std::cout << "\n\nFailed to extract directory from project file path!\n";
+	}
+	
+	std::cout << "\nDirectory file path: " << project_dir_path << std::endl;
+	
+	project_file_path = filepath;
+	
+	#if defined(WIN32)
+	project_data_dir_path = project_dir_path + "data\\";
+	project_audio_data_dir_path = project_data_dir_path + "audio\\";
+	project_timeline_data_dir_path = project_data_dir_path + "timeline\\";
+	#else
+	project_data_dir_path = project_dir_path + "data/";
+	project_audio_data_dir_path = project_data_dir_path + "audio/";
+	project_timeline_data_dir_path = project_data_dir_path + "timeline/";
+	#endif
 	
 	std::vector <SoundProducerSaveData> sound_producer_save_data;
 
@@ -1356,11 +1496,15 @@ void MainGuiEditor::LoadProject(std::string& filepath)
 		listener->LoadListenerSaveData(listener_data);
 	}
 	
-	//initialize sound bank from save data
+	//initialize sound bank from save data and data directory
+	m_sound_bank.InitDataDirectory(project_audio_data_dir_path);
 	m_sound_bank.LoadSaveData(sound_bank_save_data);
 	
-	//initialize timeline from save data
+	//initialize timeline from save data and data directory
+	timeline_window.InitDataDirectory(project_timeline_data_dir_path);
 	timeline_window.LoadSaveData(timeline_save_data);
+	
+	project_init = true;
 	
 }
 
