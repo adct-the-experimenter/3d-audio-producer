@@ -1047,16 +1047,17 @@ void MainGuiEditor::draw_timeline_menu()
 			showPropertiesBoxKeyPressed = false;
 		}
 		
-		if(im_sound_player.PlayerInActiveUse())
-		{
-			timeline_window.RunPlaybackWithTimeline(&im_sound_player);
-		}
-		else
-		{
-			timeline_window.ResumeEditModeInTimeline();
-		}
 	}
 	
+	//if sound player is in active use
+	if(im_sound_player.PlayerInActiveUse())
+	{
+		timeline_window.RunPlaybackWithTimeline(&im_sound_player);
+	}
+	else
+	{
+		timeline_window.ResumeEditModeInTimeline();
+	}
 	
 	
 }
