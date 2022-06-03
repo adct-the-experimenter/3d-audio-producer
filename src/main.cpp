@@ -4,8 +4,6 @@
 
 MainGuiEditor editor;
 
-
-
 const std::int16_t screenWidth = 850;
 const std::int16_t screenHeight = 640;
 
@@ -13,6 +11,9 @@ void InitRaylibSystem();
 void CloseRaylibSystem();
 
 void ApplicationLoop();
+
+static std::string release_ver = "3.0.0";
+static std::string release_title = "3D Audio Producer v " + release_ver; 
 
 int main(int argc, char* args[])
 {
@@ -84,7 +85,7 @@ void InitRaylibSystem()
 	//set to high DPI for very high resolutions
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_HIGHDPI); 
 	
-    InitWindow(screenWidth, screenHeight, "3d Audio Producer");
+    InitWindow(screenWidth, screenHeight, release_title.c_str());
 	
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     
