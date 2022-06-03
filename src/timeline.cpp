@@ -930,13 +930,45 @@ void Timeline::ResumeEditModeInTimeline()
 //struct
 struct TimeFramePositionPlaybackData{
 	uint16_t index;
-	int position_exist;
+	uint8_t position_exist;
 	float x;
 	float y;
 	float z;
-	int playback_marker_exist;
-	int playback_marker_type;
+	uint8_t playback_marker_exist;
+	uint8_t playback_marker_type;
 };
+
+// IMPORTANT NOTE
+// 3d audio producer saves and loads binary data in little endian 
+// if system is big endian, then, binary data is converted to big endian
+// otherwise if system is little endian, binary data is not converted
+
+static float ReverseFloat( const float inFloat )
+{
+   float retVal;
+   char *floatToConvert = ( char* ) & inFloat;
+   char *returnFloat = ( char* ) & retVal;
+
+   // swap the bytes into a temporary buffer
+   returnFloat[0] = floatToConvert[3];
+   returnFloat[1] = floatToConvert[2];
+   returnFloat[2] = floatToConvert[1];
+   returnFloat[3] = floatToConvert[0];
+
+   return retVal;
+}
+
+static uint16_t ReverseInt_16bit(const uint16_t val)
+{
+	return (val << 8) | (val >> 8 );
+}
+
+static bool IsSystemBigEndian()
+{
+    uint16_t word = 1; // 0x0001
+    uint8_t *first_byte = (uint8_t*) &word; // points to the first byte of word
+    return !(*first_byte); // true if the first byte is zero
+}
 
 void Timeline::LoadSaveData(TimelineSaveData& save_data)
 {
@@ -948,6 +980,9 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 	
 	timeline_plots_position.resize(save_data.number_of_plots);
 	timeline_plots_playback_markers.resize(save_data.number_of_plots);
+	
+	//check if system is big endian
+	bool systemIsBigEndian = IsSystemBigEndian();
 	
 	//for every timeline plot
 	for(size_t i = 0; i < timeline_plots_position.size();i++)
@@ -998,33 +1033,68 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 			}
 			
 			
-				
-			//while have not reached end of file
-			while( !infile.eof())
+			
+			//if system is not big endian, assuming this is little endian
+			if(!systemIsBigEndian)
 			{
-				
-				TimeFramePositionPlaybackData data;
-				
-				//read point from file. index, x value, y value, z value
-				infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
-				
-				//add point to timeline
-				uint16_t arr_index = data.index;
-				
-				bool pos_exists = false;
-				if(data.position_exist == 1){pos_exists = true;}
-				timeline_plots_position[i].timeline_settings_bool_array[arr_index] = pos_exists;				
-				
-				timeline_plots_position[i].timeline_points_posx[arr_index] = data.x;
-				timeline_plots_position[i].timeline_points_posy[arr_index] = data.y;
-				timeline_plots_position[i].timeline_points_posz[arr_index] = data.z;
-				
-				//add marker to timeline
-				bool playback_marker_exists = false;
-				if(data.playback_marker_exist == 1){playback_marker_exists = true;}
-				timeline_plots_playback_markers[i].timeline_settings_bool_array[arr_index] = playback_marker_exists;
-				
-				timeline_plots_playback_markers[i].timeline_playback_markers[arr_index] = (PlaybackMarkerType)(data.playback_marker_type);
+				//while have not reached end of file
+				while( !infile.eof())
+				{
+					
+					TimeFramePositionPlaybackData data;
+					
+					//read point from file. index, x value, y value, z value
+					infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
+					
+					//add point to timeline
+					uint16_t arr_index = data.index;
+					
+					bool pos_exists = false;
+					if(data.position_exist == 1){pos_exists = true;}
+					timeline_plots_position[i].timeline_settings_bool_array[arr_index] = pos_exists;				
+					
+					timeline_plots_position[i].timeline_points_posx[arr_index] = data.x;
+					timeline_plots_position[i].timeline_points_posy[arr_index] = data.y;
+					timeline_plots_position[i].timeline_points_posz[arr_index] = data.z;
+					
+					//add marker to timeline
+					bool playback_marker_exists = false;
+					if(data.playback_marker_exist == 1){playback_marker_exists = true;}
+					timeline_plots_playback_markers[i].timeline_settings_bool_array[arr_index] = playback_marker_exists;
+					
+					timeline_plots_playback_markers[i].timeline_playback_markers[arr_index] = (PlaybackMarkerType)(data.playback_marker_type);
+				}
+			}
+			//if system is big endian, convert little endian binary data to big endian
+			else
+			{
+				//while have not reached end of file
+				while( !infile.eof())
+				{
+					
+					TimeFramePositionPlaybackData data;
+					
+					//read point from file. index, x value, y value, z value
+					infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
+					
+					//add point to timeline
+					uint16_t arr_index = ReverseInt_16bit(data.index);
+					
+					bool pos_exists = false;
+					if(data.position_exist == 1){pos_exists = true;}
+					timeline_plots_position[i].timeline_settings_bool_array[arr_index] = pos_exists;				
+					
+					timeline_plots_position[i].timeline_points_posx[arr_index] = ReverseFloat(data.x);
+					timeline_plots_position[i].timeline_points_posy[arr_index] = ReverseFloat(data.y);
+					timeline_plots_position[i].timeline_points_posz[arr_index] = ReverseFloat(data.z);
+					
+					//add marker to timeline
+					bool playback_marker_exists = false;
+					if(data.playback_marker_exist == 1){playback_marker_exists = true;}
+					timeline_plots_playback_markers[i].timeline_settings_bool_array[arr_index] = playback_marker_exists;
+					
+					timeline_plots_playback_markers[i].timeline_playback_markers[arr_index] = (PlaybackMarkerType)(data.playback_marker_type);
+				}
 			}
 				
 			//close file
@@ -1054,59 +1124,122 @@ void Timeline::SaveTimeFramesToFile(std::string& filepath)
 	
 	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
 	
+	//check if system is big endian
+	bool systemIsBigEndian = IsSystemBigEndian();
+	
 	//for current selected timeline
 	
-	//write timeline points to file
-	for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
+	//if system is not big endian
+	if(!systemIsBigEndian)
 	{
-		
-		//if there is no timeline position point nor playback marker added
-		if(!timeline_plots_position[edit_index].timeline_settings_bool_array[i] &&
-			!timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+		//write timeline points to file
+		for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
 		{
-			continue; //skip to next iteration
-		}
-		
-		TimeFramePositionPlaybackData data;
-		data.index = i;
-		
-		//if there is a position point added, add it to the file
-		if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
-		{
-			data.position_exist = 1;
 			
-			data.x = timeline_plots_position[edit_index].timeline_points_posx[i];
-			data.y = timeline_plots_position[edit_index].timeline_points_posy[i];
-			data.z = timeline_plots_position[edit_index].timeline_points_posz[i];
+			//if there is no timeline position point nor playback marker added
+			if(!timeline_plots_position[edit_index].timeline_settings_bool_array[i] &&
+				!timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+			{
+				continue; //skip to next iteration
+			}
+			
+			TimeFramePositionPlaybackData data;
+			data.index = i;
+			
+			//if there is a position point added, add it to the file
+			if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
+			{
+				data.position_exist = 1;
+				
+				data.x = timeline_plots_position[edit_index].timeline_points_posx[i];
+				data.y = timeline_plots_position[edit_index].timeline_points_posy[i];
+				data.z = timeline_plots_position[edit_index].timeline_points_posz[i];
+				
+			}
+			else
+			{
+				data.position_exist = 0;
+				
+				data.x = 0;
+				data.y = 0;
+				data.z = 0;
+			}
+			
+			//if there is a playback marker added, add it to the file
+			if(timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+			{
+				data.playback_marker_exist = 1;
+				
+				data.playback_marker_type = static_cast<int>(timeline_plots_playback_markers[edit_index].timeline_playback_markers[i]);
+			}
+			else
+			{
+				data.playback_marker_exist = 0;
+				
+				data.playback_marker_type = static_cast<int>(PlaybackMarkerType::NONE);
+			}
+			
+			//write data
+			outfile.write( reinterpret_cast <const char*>( &data) ,sizeof(data));
 			
 		}
-		else
-		{
-			data.position_exist = 0;
-			
-			data.x = 0;
-			data.y = 0;
-			data.z = 0;
-		}
-		
-		//if there is a playback marker added, add it to the file
-		if(timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
-		{
-			data.playback_marker_exist = 1;
-			
-			data.playback_marker_type = static_cast<int>(timeline_plots_playback_markers[edit_index].timeline_playback_markers[i]);
-		}
-		else
-		{
-			data.playback_marker_exist = 0;
-			
-			data.playback_marker_type = static_cast<int>(PlaybackMarkerType::NONE);
-		}
-		
-		//write data
-		outfile.write( reinterpret_cast <const char*>( &data) ,sizeof(data));
-		
 	}
+	//if system is big endian, convert data to little endian
+	else
+	{
+		//write timeline points to file
+		for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
+		{
+			
+			//if there is no timeline position point nor playback marker added
+			if(!timeline_plots_position[edit_index].timeline_settings_bool_array[i] &&
+				!timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+			{
+				continue; //skip to next iteration
+			}
+			
+			TimeFramePositionPlaybackData data;
+			data.index = ReverseInt_16bit(i);
+			
+			//if there is a position point added, add it to the file
+			if(timeline_plots_position[edit_index].timeline_settings_bool_array[i])
+			{
+				data.position_exist = 1;
+				
+				data.x = ReverseFloat(timeline_plots_position[edit_index].timeline_points_posx[i]);
+				data.y = ReverseFloat(timeline_plots_position[edit_index].timeline_points_posy[i]);
+				data.z = ReverseFloat(timeline_plots_position[edit_index].timeline_points_posz[i]);
+				
+			}
+			else
+			{
+				data.position_exist = 0;
+				
+				data.x = 0;
+				data.y = 0;
+				data.z = 0;
+			}
+			
+			//if there is a playback marker added, add it to the file
+			if(timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i])
+			{
+				data.playback_marker_exist = 1;
+				
+				data.playback_marker_type = static_cast<int>(timeline_plots_playback_markers[edit_index].timeline_playback_markers[i]);
+			}
+			else
+			{
+				data.playback_marker_exist = 0;
+				
+				data.playback_marker_type = static_cast<int>(PlaybackMarkerType::NONE);
+			}
+			
+			//write data
+			outfile.write( reinterpret_cast <const char*>( &data) ,sizeof(data));
+			
+		}
+	}
+	
 			
 	//close file
 	outfile.close();
@@ -1127,33 +1260,70 @@ void Timeline::LoadTimeFramesFromFile(std::string& filepath)
 	
 	//for current selected timeline
 	size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
-		
-	//while have not reached end of file
-	while( !infile.eof())
+	
+	//check if system is big endian
+	bool systemIsBigEndian = IsSystemBigEndian();
+	
+	//if system is not big endian, assuming little endian
+	if(!systemIsBigEndian)
 	{
-		TimeFramePositionPlaybackData data;
-		
-		//read point from file. index, x value, y value, z value
-		infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
-		
-		//add point to timeline
-		uint16_t i = data.index;
-		
-		bool pos_exists = false;
-		if(data.position_exist){pos_exists = true;}
-		timeline_plots_position[edit_index].timeline_settings_bool_array[i] = pos_exists;
-		
-		timeline_plots_position[edit_index].timeline_points_posx[i] = data.x;
-		timeline_plots_position[edit_index].timeline_points_posy[i] = data.y;
-		timeline_plots_position[edit_index].timeline_points_posz[i] = data.z;
-		
-		bool pm_exists = false;
-		if(data.playback_marker_exist){pm_exists = true;}
-		
-		timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = pm_exists;
-		timeline_plots_playback_markers[edit_index].timeline_playback_markers[i] = (PlaybackMarkerType)(data.playback_marker_type);
-		
+		//while have not reached end of file
+		while( !infile.eof())
+		{
+			TimeFramePositionPlaybackData data;
+			
+			//read point from file. index, x value, y value, z value
+			infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
+			
+			//add point to timeline
+			uint16_t i = data.index;
+			
+			bool pos_exists = false;
+			if(data.position_exist){pos_exists = true;}
+			timeline_plots_position[edit_index].timeline_settings_bool_array[i] = pos_exists;
+			
+			timeline_plots_position[edit_index].timeline_points_posx[i] = data.x;
+			timeline_plots_position[edit_index].timeline_points_posy[i] = data.y;
+			timeline_plots_position[edit_index].timeline_points_posz[i] = data.z;
+			
+			bool pm_exists = false;
+			if(data.playback_marker_exist){pm_exists = true;}
+			
+			timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = pm_exists;
+			timeline_plots_playback_markers[edit_index].timeline_playback_markers[i] = (PlaybackMarkerType)(data.playback_marker_type);
+			
+		}
 	}
+	//else if system is big endian, convert little endian binary data to big endian
+	else
+	{
+		//while have not reached end of file
+		while( !infile.eof())
+		{
+			TimeFramePositionPlaybackData data;
+			
+			//read point from file. index, x value, y value, z value
+			infile.read(reinterpret_cast <char*>( &data) ,sizeof(data));
+			
+			//add point to timeline
+			uint16_t i = ReverseInt_16bit(data.index);
+			
+			bool pos_exists = false;
+			if(data.position_exist){pos_exists = true;}
+			timeline_plots_position[edit_index].timeline_settings_bool_array[i] = pos_exists;
+			
+			timeline_plots_position[edit_index].timeline_points_posx[i] = ReverseFloat(data.x);
+			timeline_plots_position[edit_index].timeline_points_posy[i] = ReverseFloat(data.y);
+			timeline_plots_position[edit_index].timeline_points_posz[i] = ReverseFloat(data.z);
+			
+			bool pm_exists = false;
+			if(data.playback_marker_exist){pm_exists = true;}
+			
+			timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = pm_exists;
+			timeline_plots_playback_markers[edit_index].timeline_playback_markers[i] = (PlaybackMarkerType)(data.playback_marker_type);
+			
+		}
+	} 
 		
 	//close file
 	infile.close();
