@@ -1,11 +1,16 @@
 3D Audio Producer Change log
 
+version x.y.z
+x = major feature version, used to indicate if major features added or major changes made
+y = minor feature version, used to indicate if minor features added or minor changes made
+z = stability version, used to indicate if minor stability improvements were added.
 
-Version 3.0 - to be released
+version 3.0.0
 	-Added individual audio source playback with playback markers in timeline.
 	-Added audio playback solver to figure out which audio sources are currently playing.
 	-Implemented project structure with relative filepaths to enable sharing of soundscape projects.
-
+	-Timeline binary data encoded and decoded in little endian in big endian and little endian systems.
+	
 version 2.0.1
 	-Fixed issue with sound loading.
 
