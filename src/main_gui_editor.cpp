@@ -1242,7 +1242,7 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	//make new project directory
 	#if defined(WIN32)
 	project_dir_path = proj_top_dir + "\\" + project_name;
-	if( _mkdir( project_dir_path.c_str() ) != 0 )
+	if( mkdir( project_dir_path.c_str() ) != 0 )
 	{
 		std::cout << "Failed to create project directory!\n";
 		return;
@@ -1259,7 +1259,7 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	//make new data directory in project directory
 	#if defined(WIN32)
 	project_data_dir_path = project_dir_path + "\\" + "data\\";
-	if( _mkdir( project_data_dir_path.c_str() ) != 0 )
+	if( mkdir( project_data_dir_path.c_str() ) != 0 )
 	{
 		std::cout << "Failed to create project data directory!\n";
 		return;
@@ -1276,7 +1276,7 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	//make new audio data directory in project data directory
 	#if defined(WIN32)
 	project_audio_data_dir_path = project_dir_path + "\\" + "data\\" + "audio\\";
-	if( _mkdir( project_audio_data_dir_path.c_str() ) != 0 )
+	if( mkdir( project_audio_data_dir_path.c_str() ) != 0 )
 	{
 		std::cout << "Failed to create project audio data directory!\n";
 		return;
@@ -1293,7 +1293,7 @@ void MainGuiEditor::CreateNewProject(std::string& project_name, std::string& pro
 	//make new timeline data directory in project data directory
 	#if defined(WIN32)
 	project_timeline_data_dir_path = project_dir_path + "\\" + "data\\" + "timeline\\";
-	if( _mkdir( project_timeline_data_dir_path.c_str() ) != 0 )
+	if( mkdir( project_timeline_data_dir_path.c_str() ) != 0 )
 	{
 		std::cout << "Failed to create project timeline data directory!\n";
 		return;

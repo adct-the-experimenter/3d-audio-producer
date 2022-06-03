@@ -690,7 +690,6 @@ void Timeline::DrawFramesFileDialog()
 		strcpy(fileDialogState.dirPathText,m_data_dir_path.c_str());
 		fileDialogState.dirPathEditMode = false;
 		
-		std::cout << "item focused: " << fileDialogState.itemFocused << std::endl;
 		
 		if (fileDialogState.SelectFilePressed)
 		{
