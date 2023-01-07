@@ -257,7 +257,7 @@ void Timeline::DrawGui_Item()
 	if( showTimeline )
 	{
 		//draw timeline area
-		Rectangle drawAreaRect = {0, 400 , GetScreenWidth(), GetScreenHeight()};
+        Rectangle drawAreaRect = {0, 400 , static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
 		DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.5f));
 		
 		DrawFramesGUI();
@@ -307,7 +307,7 @@ void Timeline::DrawTimelinePlotEditorGUI()
 		//prompt for timeline name
 		
 		
-		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2 - 120, GetScreenHeight()/2 - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
+		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
 		
 		//if ok clicked
 		if (result == 1)
@@ -385,7 +385,7 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	}
 }
 
-void Timeline::ShowPropertiesBox(int x, int y, int timeline_index, int timeline_current_frame)
+void Timeline::ShowPropertiesBox(float x, float y, int timeline_index, int timeline_current_frame)
 {
 	//skip if timeline current frame is more than max number of points in timeline plot
 	if(timeline_current_frame >= MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT){return;}
@@ -436,7 +436,7 @@ void Timeline::DrawTimelinePointsGUI()
 {
 	float leftBound = 200;
 	float upperBound = 400;
-	timelineSettings.mouseArea = {leftBound, upperBound , GetScreenWidth(), GetScreenHeight()};
+    timelineSettings.mouseArea = {leftBound, upperBound , static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
 		
 	DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
 

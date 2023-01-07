@@ -236,7 +236,7 @@ private:
 	void DrawFramesFileDialog();
 	
 	//function to show properties
-	void ShowPropertiesBox(int x, int y, int timeline_index, int timeline_current_frame);
+	void ShowPropertiesBox(float x, float y, int timeline_index, int timeline_current_frame);
 	
 	//path to directory for timeline data
 	std::string m_data_dir_path;
