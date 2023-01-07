@@ -185,7 +185,7 @@ GuiFileDialogState InitGuiFileDialog(const char *initPath)
     GuiFileDialogState state = { 0 };
 
     // Init window data
-    state.windowBounds = (Rectangle){ GetScreenWidth()/2 - 440/2, GetScreenHeight()/2 - 310/2, 440, 310 };
+    state.windowBounds = (Rectangle){ GetScreenWidth()/2.f - 440/2, GetScreenHeight()/2.f - 310/2, 440, 310 };
     state.windowActive = false;
     state.supportDrag = true;
     state.dragMode = false;
