@@ -268,7 +268,7 @@ void MainGuiEditor::HandleEvents()
 	else{disableHotkeys = false;}
 	
 	//if any of these are true, do not continue to key input
-	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive || global_dialog_in_use){return;}
+	if(disableHotkeys || dialogInUse || fileDialogState.windowActive || global_dialog_in_use){return;}
 	
 	
 	//if w key pressed
@@ -376,13 +376,13 @@ void MainGuiEditor::HandleEvents()
 		if(IsKeyDown(KEY_S))
 		{
 			proj_file_state = ProjectFileState::SAVE;
-			fileDialogState.fileDialogActive = true; //activate file dialog
+			fileDialogState.windowActive = true; //activate file dialog
 		}
 		//if o key down
 		else if(IsKeyDown(KEY_O))
 		{
 			proj_file_state = ProjectFileState::LOAD;
-			fileDialogState.fileDialogActive = true; //activate file dialog
+			fileDialogState.windowActive = true; //activate file dialog
 		}
 	}
 		
@@ -1127,27 +1127,27 @@ void MainGuiEditor::draw_project_file_dialog()
 	if( GuiButton( (Rectangle){ 25, 0, 90, 30 }, GuiIconText(ICON_FILE_OPEN, "New Project") ) )
 	{
 		proj_file_state = ProjectFileState::NEW;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 	}
 	
 	//draw load project button
 	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, GuiIconText(ICON_FILE_OPEN, "Load Project") ) )
 	{
 		proj_file_state = ProjectFileState::LOAD;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 	}
 	
 	//draw save project button if project initialized
 	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(ICON_FILE_SAVE, "Save Project") ) )
 	{
 		proj_file_state = ProjectFileState::SAVE;
-		fileDialogState.fileDialogActive = false; //do not activate file dialog
+		fileDialogState.windowActive = false; //do not activate file dialog
 		MainGuiEditor::SaveProject(project_file_path);
 		proj_file_state = ProjectFileState::NONE;
 	}
 	
 	
-	if (fileDialogState.fileDialogActive){ GuiLock();}
+	if (fileDialogState.windowActive){ GuiLock();}
 	
 	if(proj_file_state == ProjectFileState::NEW)
 	{

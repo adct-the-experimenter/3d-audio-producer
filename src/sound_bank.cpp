@@ -94,7 +94,7 @@ void SoundBank::DrawGui_Item()
 		global_dialog_in_use = false;
 	}
 	
-	if (fileDialogState.fileDialogActive){ GuiLock(); global_dialog_in_use = true;}
+	if (fileDialogState.windowActive){ GuiLock(); global_dialog_in_use = true;}
 	
 	for(std::uint8_t i = 0; i < 10; i++)
 	{
@@ -102,7 +102,7 @@ void SoundBank::DrawGui_Item()
 		if( GuiButton( (Rectangle){ leftX + 125,100.f + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
 		{
 			current_file_button_edit = i;
-			fileDialogState.fileDialogActive = true; //activate file dialog
+			fileDialogState.windowActive = true; //activate file dialog
 			break; //stop loop
 		}
 	}

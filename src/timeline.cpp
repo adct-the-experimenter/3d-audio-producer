@@ -625,7 +625,7 @@ void Timeline::DrawFramesGUI()
 	if( GuiButton( (Rectangle){ 25, 590, 40, 20 }, "Load" ) )
 	{
 		frames_file_state = FileFrameState::LOAD_NEW;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 		global_dialog_in_use = true;
 	}
 	
@@ -633,7 +633,7 @@ void Timeline::DrawFramesGUI()
 	if( GuiButton( (Rectangle){ 25, 620, 40, 20 }, "Save" ) )
 	{
 		frames_file_state = FileFrameState::SAVE_NEW;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 		global_dialog_in_use = true;
 	}
 	
@@ -652,7 +652,7 @@ void Timeline::DrawFramesFileDialog()
 {
 	
 	//file operation logic
-	if (fileDialogState.fileDialogActive){ GuiLock();}
+	if (fileDialogState.windowActive){ GuiLock();}
 	
 	if(frames_file_state == FileFrameState::LOAD_NEW)
 	{
