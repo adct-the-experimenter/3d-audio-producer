@@ -210,7 +210,7 @@ static bool addTimeline = false;
 static char textInput[256] = { 0 };
 
 //variables for file save/load
-static GuiFileDialogState fileDialogState = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+static GuiFileDialogState fileDialogState = InitGuiFileDialog(GetWorkingDirectory());
 
 //counter variable for timeline
 static uint32_t second_frame_count = 0;

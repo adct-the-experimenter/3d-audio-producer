@@ -148,7 +148,7 @@ bool MainGuiEditor::OnInit()
 		soundproducer_registry.SetReferenceToSoundProducerVector(&sound_producer_vector);
 		
 		//initialize file dialog
-		fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+		fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
 		fileDialogState.position = {200,200};
 		
 		//initialize save system
