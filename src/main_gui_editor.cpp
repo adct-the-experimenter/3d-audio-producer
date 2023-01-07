@@ -1124,21 +1124,21 @@ void MainGuiEditor::draw_project_file_dialog()
 	GuiDrawText("Project", (Rectangle){20,10,125,20}, 1, BLACK);
 	
 	//draw new project button
-	if( GuiButton( (Rectangle){ 25, 0, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "New Project") ) )
+	if( GuiButton( (Rectangle){ 25, 0, 90, 30 }, GuiIconText(ICON_FILE_OPEN, "New Project") ) )
 	{
 		proj_file_state = ProjectFileState::NEW;
 		fileDialogState.fileDialogActive = true; //activate file dialog
 	}
 	
 	//draw load project button
-	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "Load Project") ) )
+	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, GuiIconText(ICON_FILE_OPEN, "Load Project") ) )
 	{
 		proj_file_state = ProjectFileState::LOAD;
 		fileDialogState.fileDialogActive = true; //activate file dialog
 	}
 	
 	//draw save project button if project initialized
-	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(RICON_FILE_SAVE, "Save Project") ) )
+	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(ICON_FILE_SAVE, "Save Project") ) )
 	{
 		proj_file_state = ProjectFileState::SAVE;
 		fileDialogState.fileDialogActive = false; //do not activate file dialog
