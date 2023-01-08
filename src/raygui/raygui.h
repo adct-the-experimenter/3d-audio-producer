@@ -119,7 +119,7 @@
 *                         REMOVED: DrawTextEx() dependency, logic directly implemented
 *                         ADDED: Helper functions to split text in separate lines
 *       3.2 (22-May-2022) RENAMED: Some enum values, for unification, avoiding prefixes
-*                         REMOVED: GuiScrollBar(), only internal
+*                         RESTORED: GuiScrollBar(), only internal
 *                         REDESIGNED: GuiPanel() to support text parameter
 *                         REDESIGNED: GuiScrollPanel() to support text parameter
 *                         REDESIGNED: GuiColorPicker() to support text parameter
@@ -525,6 +525,7 @@ RAYGUIAPI void GuiLine(Rectangle bounds, const char *text);                     
 RAYGUIAPI void GuiPanel(Rectangle bounds, const char *text);                                            // Panel control, useful to group controls
 RAYGUIAPI int GuiTabBar(Rectangle bounds, const char **text, int count, int *active);                   // Tab Bar control, returns TAB to be closed or -1
 RAYGUIAPI Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, Vector2 *scroll); // Scroll Panel control
+RAYGUIAPI int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue);
 
 // Basic controls set
 RAYGUIAPI void GuiLabel(Rectangle bounds, const char *text);                                            // Label control, shows text
@@ -1279,7 +1280,7 @@ static const char **GuiTextSplit(const char *text, char delimiter, int *count, i
 static Vector3 ConvertHSVtoRGB(Vector3 hsv);                    // Convert color data from HSV to RGB
 static Vector3 ConvertRGBtoHSV(Vector3 rgb);                    // Convert color data from RGB to HSV
 
-static int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue);   // Scroll bar control, used by GuiScrollPanel()
+int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue);   // Scroll bar control, used by GuiScrollPanel()
 static void GuiTooltip(Rectangle controlRec);                   // Draw tooltip using control rec position
 
 
@@ -4310,7 +4311,7 @@ static Vector3 ConvertHSVtoRGB(Vector3 hsv)
 }
 
 // Scroll bar control (used by GuiScrollPanel())
-static int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue)
+int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue)
 {
     GuiState state = guiState;
 
