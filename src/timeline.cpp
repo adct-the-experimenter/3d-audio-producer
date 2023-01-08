@@ -305,10 +305,10 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	if(addTimeline)
 	{
 		//prompt for timeline name
-		
-		
-		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
-		
+
+        int isSecret = 0;
+		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput, 256, &isSecret);
+
 		//if ok clicked
 		if (result == 1)
 		{
