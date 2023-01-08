@@ -471,9 +471,8 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				
 				#ifdef DEBUG_PLAYER
+				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
 				std::cout << "Duration of sound:" << seconds << "s. \n";
 				#endif
 				
@@ -518,9 +517,8 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				
 				#ifdef DEBUG_PLAYER
+				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
 				std::cout << "Duration of sound:" << seconds << "s. \n";
 				#endif
 				
@@ -565,9 +563,8 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				
 				#ifdef DEBUG_PLAYER
+				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
 				std::cout << "Duration of sound:" << seconds << "s. \n";
 				#endif
 				
@@ -609,9 +606,8 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
 				}
 
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				
 				#ifdef DEBUG_PLAYER
+				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
 				std::cout << "Duration of sound:" << seconds << "s. \n";
 				#endif
 				
