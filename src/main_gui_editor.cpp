@@ -479,11 +479,11 @@ void MainGuiEditor::logic()
 				float cube_width = 2.0f;
 				
 				// Check collision between ray and box
-				collision = CheckCollisionRayBox( picker_ray,
+				collision = GetRayCollisionBox( picker_ray,
 						(BoundingBox){
 							(Vector3){ sp_x - cube_width/2, sp_y - cube_width/2, sp_z - cube_width/2 },
 							(Vector3){ sp_x + cube_width/2, sp_y + cube_width/2, sp_z + cube_width/2 }}
-						);
+						).hit;
 				
 				sound_producer_vector[i]->SetPickedBool(collision);
 				
