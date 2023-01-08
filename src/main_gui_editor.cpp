@@ -1152,9 +1152,6 @@ void MainGuiEditor::draw_project_file_dialog()
 	{
 		if (fileDialogState.SelectFilePressed && fileDialogState.itemFocused == -1)
 		{
-			char projectName[512] = { 0 };
-			char projectDirPath[512] = { 0 };
-			
 			std::string name = std::string(fileDialogState.fileNameTextBoxInputCopy);
 			std::string top_dir = std::string(fileDialogState.dirPathText);
 						
