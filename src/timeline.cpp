@@ -392,7 +392,7 @@ void Timeline::ShowPropertiesBox(float x, float y, int timeline_index, int timel
 	
 	Rectangle draw_rect = (Rectangle){x,y,200,100};
 	Rectangle rect_msg = (Rectangle){x,y,200,40};
-	GuiPanel(draw_rect);
+	GuiPanel(draw_rect, "Props box");
 	
 	std::string playback_marker_str = "";
 	
