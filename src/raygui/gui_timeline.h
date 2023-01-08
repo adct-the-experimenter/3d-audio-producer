@@ -102,9 +102,9 @@ TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, b
 
 //Draws timeline 
 //returns if timeline was clicked on
-bool Gui_Timeline(TimelineSettings* settings);
+void Gui_Timeline(TimelineSettings* settings);
 
-bool Gui_Timeline_Parameter(TimelineParameterSettings* settings);
+void Gui_Timeline_Parameter(TimelineParameterSettings* settings);
 
 
 #ifdef __cplusplus
@@ -160,7 +160,7 @@ TimelineParameterSettings InitTimelineParameterSettings(size_t max_num_frames, b
 //only show every 20th frame
 static int show_frame_modulo_factor = 20;
 
-bool Gui_Timeline(TimelineSettings* settings)
+void Gui_Timeline(TimelineSettings* settings)
 {
 	//draw timeline
 	//horizontal axis is the time
@@ -274,7 +274,7 @@ bool Gui_Timeline(TimelineSettings* settings)
 	}
 }
 
-bool Gui_Timeline_Parameter(TimelineParameterSettings* settings)
+void Gui_Timeline_Parameter(TimelineParameterSettings* settings)
 {
 
 	//draw points
