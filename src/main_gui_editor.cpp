@@ -1,7 +1,6 @@
 
 
 #include "main_gui_editor.h"
-
 #define RAYGUI_IMPLEMENTATION
 #define RAYGUI_SUPPORT_ICONS
 #include "raygui/raygui.h"
@@ -1207,7 +1206,7 @@ void MainGuiEditor::InitCamera()
     main_camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     main_camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     main_camera.fovy = 45.0f;                                // Camera field-of-view Y
-    main_camera.type = CAMERA_PERSPECTIVE;                   // Camera mode type
+    main_camera.projection = CAMERA_PERSPECTIVE;                   // Camera mode type
     
     SetCameraMode(main_camera, CAMERA_FREE);
 }
