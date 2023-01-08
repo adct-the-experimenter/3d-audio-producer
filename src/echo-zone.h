@@ -40,7 +40,7 @@ class EchoZone : public EffectZone
 {
 public:
 	EchoZone();
-	~EchoZone();
+	virtual ~EchoZone();
 	
 	
 	//functions to initialize echo zones
