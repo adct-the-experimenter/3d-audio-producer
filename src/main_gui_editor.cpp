@@ -214,7 +214,7 @@ bool disableHotkeys = false;
 bool dialogInUse = false;
 
 // Picking line ray
-Ray picker_ray = { 0 };
+Ray picker_ray = { {0} };
 bool picker_ray_launched = false;
 
 //represents the index of sound producer chosen
@@ -1201,7 +1201,7 @@ void MainGuiEditor::draw_project_file_dialog()
 
 void MainGuiEditor::InitCamera()
 {
-	main_camera = { 0 };
+    main_camera = { {0} };
     main_camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
     main_camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     main_camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
