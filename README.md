@@ -8,8 +8,8 @@ Listen to 3D audio through stereo headphones or surround sound system.
 
 Features from binaural-audio-editor will be ported to 3d audio producer.
 
-Examples of some 3d audio made with 3d audio producer.
-https://www.youtube.com/watch?v=byJa1Za55PY&t=20s
+## Examples of productions made by 3D Audio Producer
+- https://www.youtube.com/watch?v=byJa1Za55PY&t=20s
 
 
 ## Required Libraries
