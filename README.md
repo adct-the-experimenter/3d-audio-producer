@@ -8,6 +8,9 @@ Listen to 3D audio through stereo headphones or surround sound system.
 
 Features from binaural-audio-editor will be ported to 3d audio producer.
 
+Examples of some 3d audio made with 3d audio producer.
+https://www.youtube.com/watch?v=byJa1Za55PY&t=20s
+
 
 ## Required Libraries
 - OpenAL Soft https://github.com/kcat/openal-soft
