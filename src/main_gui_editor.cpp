@@ -148,7 +148,7 @@ bool MainGuiEditor::OnInit()
 		
 		//initialize file dialog
 		fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
-		fileDialogState.windowBounds = {200,200};
+		fileDialogState.windowBounds = {200, 200, 440, 310};
 		
 		//initialize save system
 		save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());

@@ -247,7 +247,7 @@ void Timeline::InitGUI()
 	
 	edit_timeline_listview_itemsCount = (int)timeline_plots_position.size();
 	
-	fileDialogState.windowBounds = {200,200};
+	fileDialogState.windowBounds = {200, 200, 440, 310};
 }
 
 void Timeline::DrawGui_Item()

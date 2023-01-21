@@ -33,7 +33,7 @@ SoundBank::SoundBank()
 	SoundBank::InitDataDirectory("");
 	
 	fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
-	fileDialogState.windowBounds = {200,200};
+	fileDialogState.windowBounds = {200, 200, 440, 310};
 	
 }
 
