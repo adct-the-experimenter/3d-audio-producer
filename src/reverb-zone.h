@@ -118,7 +118,7 @@ class ReverbZone : public EffectZone
 {
 public:
 	ReverbZone();
-	~ReverbZone();
+	virtual ~ReverbZone();
 	
 	//type of reverb to use for zone
 	enum class Type: std::int8_t {NONE=0, STANDARD, EAX};

@@ -210,7 +210,7 @@ static bool addTimeline = false;
 static char textInput[256] = { 0 };
 
 //variables for file save/load
-static GuiFileDialogState fileDialogState = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
+static GuiFileDialogState fileDialogState = InitGuiFileDialog(GetWorkingDirectory());
 
 //counter variable for timeline
 static uint32_t second_frame_count = 0;
@@ -247,7 +247,7 @@ void Timeline::InitGUI()
 	
 	edit_timeline_listview_itemsCount = (int)timeline_plots_position.size();
 	
-	fileDialogState.position = {200,200};
+	fileDialogState.windowBounds = {200, 200, 440, 310};
 }
 
 void Timeline::DrawGui_Item()
@@ -257,7 +257,7 @@ void Timeline::DrawGui_Item()
 	if( showTimeline )
 	{
 		//draw timeline area
-		Rectangle drawAreaRect = {0, 400 , GetScreenWidth(), GetScreenHeight()};
+        Rectangle drawAreaRect = {0, 400 , static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
 		DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.5f));
 		
 		DrawFramesGUI();
@@ -305,10 +305,10 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	if(addTimeline)
 	{
 		//prompt for timeline name
-		
-		
-		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2 - 120, GetScreenHeight()/2 - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
-		
+
+        int isSecret = 0;
+		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput, 256, &isSecret);
+
 		//if ok clicked
 		if (result == 1)
 		{
@@ -385,14 +385,14 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	}
 }
 
-void Timeline::ShowPropertiesBox(int x, int y, int timeline_index, int timeline_current_frame)
+void Timeline::ShowPropertiesBox(float x, float y, int timeline_index, int timeline_current_frame)
 {
 	//skip if timeline current frame is more than max number of points in timeline plot
 	if(timeline_current_frame >= MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT){return;}
 	
 	Rectangle draw_rect = (Rectangle){x,y,200,100};
 	Rectangle rect_msg = (Rectangle){x,y,200,40};
-	GuiPanel(draw_rect);
+	GuiPanel(draw_rect, "Props box");
 	
 	std::string playback_marker_str = "";
 	
@@ -436,7 +436,7 @@ void Timeline::DrawTimelinePointsGUI()
 {
 	float leftBound = 200;
 	float upperBound = 400;
-	timelineSettings.mouseArea = {leftBound, upperBound , GetScreenWidth(), GetScreenHeight()};
+    timelineSettings.mouseArea = {leftBound, upperBound , static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
 		
 	DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
 
@@ -625,7 +625,7 @@ void Timeline::DrawFramesGUI()
 	if( GuiButton( (Rectangle){ 25, 590, 40, 20 }, "Load" ) )
 	{
 		frames_file_state = FileFrameState::LOAD_NEW;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 		global_dialog_in_use = true;
 	}
 	
@@ -633,7 +633,7 @@ void Timeline::DrawFramesGUI()
 	if( GuiButton( (Rectangle){ 25, 620, 40, 20 }, "Save" ) )
 	{
 		frames_file_state = FileFrameState::SAVE_NEW;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 		global_dialog_in_use = true;
 	}
 	
@@ -652,7 +652,7 @@ void Timeline::DrawFramesFileDialog()
 {
 	
 	//file operation logic
-	if (fileDialogState.fileDialogActive){ GuiLock();}
+	if (fileDialogState.windowActive){ GuiLock();}
 	
 	if(frames_file_state == FileFrameState::LOAD_NEW)
 	{

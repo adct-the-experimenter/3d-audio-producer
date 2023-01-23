@@ -349,11 +349,11 @@ void EffectsManager::CheckEffectZones3DPicking(Ray& picker_ray,EffectZoneType& t
 			cube_width = standard_reverb_zones_vector[i].GetWidth();
 			
 			
-			bool collision = CheckCollisionRayBox( picker_ray,
+			bool collision = GetRayCollisionBox( picker_ray,
 					(BoundingBox){
 						(Vector3){ x - cube_width/2, y - cube_width/2, z - cube_width/2 },
 						(Vector3){ x + cube_width/2, y + cube_width/2, z + cube_width/2 }}
-					);
+					).hit;
 			
 			if(collision)
 			{
@@ -377,11 +377,11 @@ void EffectsManager::CheckEffectZones3DPicking(Ray& picker_ray,EffectZoneType& t
 			z = eax_reverb_zones_vector[i].GetPositionZ();
 			cube_width = eax_reverb_zones_vector[i].GetWidth();
 			
-			bool collision = CheckCollisionRayBox( picker_ray,
+			bool collision = GetRayCollisionBox( picker_ray,
 					(BoundingBox){
 						(Vector3){ x - cube_width/2, y - cube_width/2, z - cube_width/2 },
 						(Vector3){ x + cube_width/2, y + cube_width/2, z + cube_width/2 }}
-					);
+					).hit;
 			
 			if(collision)
 			{
@@ -404,11 +404,11 @@ void EffectsManager::CheckEffectZones3DPicking(Ray& picker_ray,EffectZoneType& t
 			z = echo_zones_vector[i].GetPositionZ();
 			cube_width = echo_zones_vector[i].GetWidth();
 			
-			bool collision = CheckCollisionRayBox( picker_ray,
+			bool collision = GetRayCollisionBox( picker_ray,
 					(BoundingBox){
 						(Vector3){ x - cube_width/2, y - cube_width/2, z - cube_width/2 },
 						(Vector3){ x + cube_width/2, y + cube_width/2, z + cube_width/2 }}
-					);
+					).hit;
 			
 			if(collision)
 			{

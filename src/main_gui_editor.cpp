@@ -1,7 +1,6 @@
 
 
 #include "main_gui_editor.h"
-
 #define RAYGUI_IMPLEMENTATION
 #define RAYGUI_SUPPORT_ICONS
 #include "raygui/raygui.h"
@@ -148,8 +147,8 @@ bool MainGuiEditor::OnInit()
 		soundproducer_registry.SetReferenceToSoundProducerVector(&sound_producer_vector);
 		
 		//initialize file dialog
-		fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
-		fileDialogState.position = {200,200};
+		fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
+		fileDialogState.windowBounds = {200, 200, 440, 310};
 		
 		//initialize save system
 		save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
@@ -215,7 +214,7 @@ bool disableHotkeys = false;
 bool dialogInUse = false;
 
 // Picking line ray
-Ray picker_ray = { 0 };
+Ray picker_ray = { {0} };
 bool picker_ray_launched = false;
 
 //represents the index of sound producer chosen
@@ -268,7 +267,7 @@ void MainGuiEditor::HandleEvents()
 	else{disableHotkeys = false;}
 	
 	//if any of these are true, do not continue to key input
-	if(disableHotkeys || dialogInUse || fileDialogState.fileDialogActive || global_dialog_in_use){return;}
+	if(disableHotkeys || dialogInUse || fileDialogState.windowActive || global_dialog_in_use){return;}
 	
 	
 	//if w key pressed
@@ -376,13 +375,13 @@ void MainGuiEditor::HandleEvents()
 		if(IsKeyDown(KEY_S))
 		{
 			proj_file_state = ProjectFileState::SAVE;
-			fileDialogState.fileDialogActive = true; //activate file dialog
+			fileDialogState.windowActive = true; //activate file dialog
 		}
 		//if o key down
 		else if(IsKeyDown(KEY_O))
 		{
 			proj_file_state = ProjectFileState::LOAD;
-			fileDialogState.fileDialogActive = true; //activate file dialog
+			fileDialogState.windowActive = true; //activate file dialog
 		}
 	}
 		
@@ -479,11 +478,11 @@ void MainGuiEditor::logic()
 				float cube_width = 2.0f;
 				
 				// Check collision between ray and box
-				collision = CheckCollisionRayBox( picker_ray,
+				collision = GetRayCollisionBox( picker_ray,
 						(BoundingBox){
 							(Vector3){ sp_x - cube_width/2, sp_y - cube_width/2, sp_z - cube_width/2 },
 							(Vector3){ sp_x + cube_width/2, sp_y + cube_width/2, sp_z + cube_width/2 }}
-						);
+						).hit;
 				
 				sound_producer_vector[i]->SetPickedBool(collision);
 				
@@ -583,8 +582,8 @@ int dropDownObjectTypeActive = 0;
 bool objectManipulationState = false;
 
 
-//gui state 
-enum class GuiState : std::uint8_t { NONE=0, 
+//gui state
+enum class OurGuiState : std::uint8_t { NONE=0,
 									CREATE_SOUND_PRODUCER, EDIT_SOUND_PRODUCER, 
 									EDIT_LISTENER, 
 									TEST_HRTF, CHANGE_HRTF, 
@@ -592,7 +591,7 @@ enum class GuiState : std::uint8_t { NONE=0,
 									CREATE_SR_ZONE, EDIT_SR_ZONE,
 									CREATE_ER_ZONE, EDIT_ER_ZONE };
 									
-static GuiState g_state = GuiState::NONE;
+static OurGuiState g_state = OurGuiState::NONE;
 
 void MainGuiEditor::draw_object_creation_menu()
 {
@@ -630,13 +629,13 @@ void MainGuiEditor::draw_object_creation_menu()
 			switch(dropDownObjectTypeActive)
 			{
 				//sound producer
-				case 2:{ g_state = GuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
+				case 2:{ g_state = OurGuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
 				//standard reverb zone
-				case 3:{ g_state = GuiState::CREATE_SR_ZONE; dialogInUse = true; break;}
+				case 3:{ g_state = OurGuiState::CREATE_SR_ZONE; dialogInUse = true; break;}
 				//eax reverb zone
-				case 4:{ g_state = GuiState::CREATE_ER_ZONE; dialogInUse = true; break;}
+				case 4:{ g_state = OurGuiState::CREATE_ER_ZONE; dialogInUse = true; break;}
 				//echo zone
-				case 5:{ g_state = GuiState::CREATE_ECHO_ZONE; dialogInUse = true; break;}
+				case 5:{ g_state = OurGuiState::CREATE_ECHO_ZONE; dialogInUse = true; break;}
 				default:{break;}
 			}
 		}
@@ -650,7 +649,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//listener
 				case 1:
 				{ 
-					g_state = GuiState::EDIT_LISTENER;
+					g_state = OurGuiState::EDIT_LISTENER;
 					dialogInUse = true;
 					edit_lt_dialog.InitGUI();
 					break;
@@ -658,7 +657,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//sound producer
 				case 2:
 				{ 
-					g_state = GuiState::EDIT_SOUND_PRODUCER; 
+					g_state = OurGuiState::EDIT_SOUND_PRODUCER;
 					dialogInUse = true;
 					edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
 					edit_sp_dialog.InitGUI();
@@ -667,7 +666,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//standard reverb zone
 				case 3:
 				{ 
-					g_state = GuiState::EDIT_SR_ZONE;
+					g_state = OurGuiState::EDIT_SR_ZONE;
 					dialogInUse = true;
 					edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 					edit_sr_zone_dialog.InitGUI();
@@ -676,7 +675,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//eax reverb zone
 				case 4:
 				{
-					g_state = GuiState::EDIT_ER_ZONE;
+					g_state = OurGuiState::EDIT_ER_ZONE;
 					dialogInUse = true;
 					edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 					edit_er_zone_dialog.InitGUI();
@@ -685,7 +684,7 @@ void MainGuiEditor::draw_object_creation_menu()
 				//echo zone
 				case 5:
 				{ 
-					g_state = GuiState::EDIT_ECHO_ZONE; 
+					g_state = OurGuiState::EDIT_ECHO_ZONE;
 					dialogInUse = true;
 					edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 					edit_echo_zone_dialog.InitGUI(); 
@@ -699,7 +698,7 @@ void MainGuiEditor::draw_object_creation_menu()
 	if(soundproducer_picked != -1 && editKeyPressed)
 	{
 		editKeyPressed = false;
-		g_state = GuiState::EDIT_SOUND_PRODUCER;
+		g_state = OurGuiState::EDIT_SOUND_PRODUCER;
 		dialogInUse = true;
 		edit_sp_dialog.SetCurrentSoundProducerEditedIndex(size_t(soundproducer_picked));
 		edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
@@ -717,7 +716,7 @@ void MainGuiEditor::draw_object_creation_menu()
 		{
 			case EffectsManager::EffectZoneType::STANDARD_REVERB:
 			{ 
-				g_state = GuiState::EDIT_SR_ZONE;
+				g_state = OurGuiState::EDIT_SR_ZONE;
 				edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 				edit_sr_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 				edit_sr_zone_dialog.InitGUI(); 
@@ -725,7 +724,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			}
 			case EffectsManager::EffectZoneType::EAX_REVERB:
 			{
-				g_state = GuiState::EDIT_ER_ZONE;
+				g_state = OurGuiState::EDIT_ER_ZONE;
 				edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 				edit_er_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 				edit_er_zone_dialog.InitGUI();
@@ -733,7 +732,7 @@ void MainGuiEditor::draw_object_creation_menu()
 			}
 			case EffectsManager::EffectZoneType::ECHO:
 			{
-				g_state = GuiState::EDIT_ECHO_ZONE; 
+				g_state = OurGuiState::EDIT_ECHO_ZONE;
 				edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
 				edit_echo_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 				edit_echo_zone_dialog.InitGUI(); 
@@ -745,20 +744,20 @@ void MainGuiEditor::draw_object_creation_menu()
 	
 	switch(g_state)
 	{
-		case GuiState::EDIT_LISTENER:
+		case OurGuiState::EDIT_LISTENER:
 		{
 			edit_lt_dialog.DrawDialog();
 			
 			if(edit_lt_dialog.OkClickedOn() || edit_lt_dialog.CancelClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_sp_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::CREATE_SOUND_PRODUCER:
+		case OurGuiState::CREATE_SOUND_PRODUCER:
 		{
 			create_sp_dialog.DrawDialog();
 			
@@ -772,34 +771,34 @@ void MainGuiEditor::draw_object_creation_menu()
 				std::uint8_t account_num =  create_sp_dialog.getAccountNumber();
 				MainGuiEditor::CreateSoundProducer(name,x, y, z, freeRoam, account_num);
 									
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_sp_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			if(create_sp_dialog.CancelClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_sp_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::EDIT_SOUND_PRODUCER:
+		case OurGuiState::EDIT_SOUND_PRODUCER:
 		{
 			edit_sp_dialog.DrawDialog();
 			
 			if(edit_sp_dialog.OkClickedOn() || edit_sp_dialog.CancelClickedOn())
 			{						
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				edit_sp_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::CREATE_ECHO_ZONE:
+		case OurGuiState::CREATE_ECHO_ZONE:
 		{
 			create_echo_zone_dialog.DrawDialog();
 			
@@ -816,33 +815,33 @@ void MainGuiEditor::draw_object_creation_menu()
 				
 				effects_manager_ptr->CreateEchoZone(name,x,y,z,width,properties);
 				
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_echo_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			if(create_echo_zone_dialog.CancelClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_echo_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::EDIT_ECHO_ZONE:
+		case OurGuiState::EDIT_ECHO_ZONE:
 		{
 			edit_echo_zone_dialog.DrawDialog();
 			
 			if(edit_echo_zone_dialog.OkClickedOn() || edit_echo_zone_dialog.CancelClickedOn())
 			{						
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				edit_echo_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::CREATE_SR_ZONE:
+		case OurGuiState::CREATE_SR_ZONE:
 		{
 			create_sr_zone_dialog.DrawDialog();
 			
@@ -859,33 +858,33 @@ void MainGuiEditor::draw_object_creation_menu()
 				
 				effects_manager_ptr->CreateStandardReverbZone(name,x,y,z,width,properties);
 				
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 
 			if(create_sr_zone_dialog.CancelClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::EDIT_SR_ZONE:
+		case OurGuiState::EDIT_SR_ZONE:
 		{
 			edit_sr_zone_dialog.DrawDialog();
 			
 			if(edit_sr_zone_dialog.OkClickedOn() || edit_sr_zone_dialog.CancelClickedOn())
 			{						
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				edit_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			break;
 		}
-		case GuiState::CREATE_ER_ZONE:
+		case OurGuiState::CREATE_ER_ZONE:
 		{
 			create_er_zone_dialog.DrawDialog();
 			
@@ -902,27 +901,27 @@ void MainGuiEditor::draw_object_creation_menu()
 				
 				effects_manager_ptr->CreateEAXReverbZone(name,x,y,z,width,properties);
 				
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_sr_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			if(create_er_zone_dialog.CancelClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				create_er_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
 			
 			break;
 		}
-		case GuiState::EDIT_ER_ZONE:
+		case OurGuiState::EDIT_ER_ZONE:
 		{
 			edit_er_zone_dialog.DrawDialog();
 			
 			if(edit_er_zone_dialog.OkClickedOn() || edit_er_zone_dialog.CancelClickedOn())
 			{						
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				edit_er_zone_dialog.resetConfig();
 				dialogInUse = false;
 			}
@@ -1074,7 +1073,7 @@ void MainGuiEditor::draw_hrtf_menu()
 	
 	if(testHRTFButtonClicked)
 	{
-		g_state = GuiState::TEST_HRTF;
+		g_state = OurGuiState::TEST_HRTF;
 		dialogInUse = true;
 		hrtf_test_dialog.SetPointerToAudioEngine(&audio_engine);
 		hrtf_test_dialog.InitGUI();
@@ -1082,7 +1081,7 @@ void MainGuiEditor::draw_hrtf_menu()
 	
 	if(changeHRTFButtonClicked)
 	{
-		g_state = GuiState::CHANGE_HRTF;
+		g_state = OurGuiState::CHANGE_HRTF;
 		dialogInUse = true;
 		change_hrtf_dialog.SetPointerToAudioEngine(&audio_engine);
 		change_hrtf_dialog.InitGUI();
@@ -1090,25 +1089,25 @@ void MainGuiEditor::draw_hrtf_menu()
 	
 	switch(g_state)
 	{
-		case GuiState::TEST_HRTF:
+		case OurGuiState::TEST_HRTF:
 		{
 			hrtf_test_dialog.DrawDialog();
 			
 			if(hrtf_test_dialog.OkClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				dialogInUse = false;
 				hrtf_test_dialog.resetConfig();
 			}
 			break;
 		}
-		case GuiState::CHANGE_HRTF:
+		case OurGuiState::CHANGE_HRTF:
 		{
 			change_hrtf_dialog.DrawDialog();
 			
 			if(change_hrtf_dialog.OkClickedOn())
 			{
-				g_state = GuiState::NONE;
+				g_state = OurGuiState::NONE;
 				dialogInUse = false;
 				change_hrtf_dialog.resetConfig();
 			}
@@ -1124,38 +1123,35 @@ void MainGuiEditor::draw_project_file_dialog()
 	GuiDrawText("Project", (Rectangle){20,10,125,20}, 1, BLACK);
 	
 	//draw new project button
-	if( GuiButton( (Rectangle){ 25, 0, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "New Project") ) )
+	if( GuiButton( (Rectangle){ 25, 0, 90, 30 }, GuiIconText(ICON_FILE_OPEN, "New Project") ) )
 	{
 		proj_file_state = ProjectFileState::NEW;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 	}
 	
 	//draw load project button
-	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, GuiIconText(RICON_FILE_OPEN, "Load Project") ) )
+	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, GuiIconText(ICON_FILE_OPEN, "Load Project") ) )
 	{
 		proj_file_state = ProjectFileState::LOAD;
-		fileDialogState.fileDialogActive = true; //activate file dialog
+		fileDialogState.windowActive = true; //activate file dialog
 	}
 	
 	//draw save project button if project initialized
-	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(RICON_FILE_SAVE, "Save Project") ) )
+	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, GuiIconText(ICON_FILE_SAVE, "Save Project") ) )
 	{
 		proj_file_state = ProjectFileState::SAVE;
-		fileDialogState.fileDialogActive = false; //do not activate file dialog
+		fileDialogState.windowActive = false; //do not activate file dialog
 		MainGuiEditor::SaveProject(project_file_path);
 		proj_file_state = ProjectFileState::NONE;
 	}
 	
 	
-	if (fileDialogState.fileDialogActive){ GuiLock();}
+	if (fileDialogState.windowActive){ GuiLock();}
 	
 	if(proj_file_state == ProjectFileState::NEW)
 	{
 		if (fileDialogState.SelectFilePressed && fileDialogState.itemFocused == -1)
 		{
-			char projectName[512] = { 0 };
-			char projectDirPath[512] = { 0 };
-			
 			std::string name = std::string(fileDialogState.fileNameTextBoxInputCopy);
 			std::string top_dir = std::string(fileDialogState.dirPathText);
 						
@@ -1202,12 +1198,12 @@ void MainGuiEditor::draw_project_file_dialog()
 
 void MainGuiEditor::InitCamera()
 {
-	main_camera = { 0 };
+    main_camera = { {0} };
     main_camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
     main_camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     main_camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     main_camera.fovy = 45.0f;                                // Camera field-of-view Y
-    main_camera.type = CAMERA_PERSPECTIVE;                   // Camera mode type
+    main_camera.projection = CAMERA_PERSPECTIVE;                   // Camera mode type
     
     SetCameraMode(main_camera, CAMERA_FREE);
 }

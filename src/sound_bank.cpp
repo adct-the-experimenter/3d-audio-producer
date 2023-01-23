@@ -32,8 +32,8 @@ SoundBank::SoundBank()
 {
 	SoundBank::InitDataDirectory("");
 	
-	fileDialogState  = InitGuiFileDialog(420, 310, GetWorkingDirectory(), false);
-	fileDialogState.position = {200,200};
+	fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
+	fileDialogState.windowBounds = {200, 200, 440, 310};
 	
 }
 
@@ -62,9 +62,9 @@ void SoundBank::DrawGui_Item()
 		//draw account number
 		char num[3];
 		strncpy ( num, std::to_string(i).c_str(), sizeof(num) );
-		GuiTextBox((Rectangle){leftX,100 + i*30,20,25}, &num[0], 20, false);
+		GuiTextBox((Rectangle){leftX,100.f + i*30,20,25}, &num[0], 20, false);
 		//draw textbox with name of sound and account number
-		if( GuiTextBox((Rectangle){leftX + 25,100 + i*30,100,25}, 
+		if( GuiTextBox((Rectangle){leftX + 25,100.f + i*30,100,25},
 						name_textboxes[i].char_name, 20, name_textboxes[i].name_box_pressed
 					) )
 		{
@@ -94,15 +94,15 @@ void SoundBank::DrawGui_Item()
 		global_dialog_in_use = false;
 	}
 	
-	if (fileDialogState.fileDialogActive){ GuiLock(); global_dialog_in_use = true;}
+	if (fileDialogState.windowActive){ GuiLock(); global_dialog_in_use = true;}
 	
 	for(std::uint8_t i = 0; i < 10; i++)
 	{
 		//draw open file button
-		if( GuiButton( (Rectangle){ leftX + 125,100 + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
+		if( GuiButton( (Rectangle){ leftX + 125,100.f + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
 		{
 			current_file_button_edit = i;
-			fileDialogState.fileDialogActive = true; //activate file dialog
+			fileDialogState.windowActive = true; //activate file dialog
 			break; //stop loop
 		}
 	}
