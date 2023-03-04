@@ -15,7 +15,7 @@ Features from binaural-audio-editor will be ported to 3d audio producer.
 ## Required Libraries
 - OpenAL Soft https://github.com/kcat/openal-soft
 
-- raylib 4.5 (master branch as of the time of writing)
+- raylib 4.2
 
 - libsndfile http://www.mega-nerd.com/libsndfile/
 
