@@ -71,7 +71,7 @@ int Gui_Dropdown_ListView(Rectangle bounds, int itemsShowCount, int itemsCount, 
 {
 	
 	Rectangle boundsOpen = bounds;
-    boundsOpen.height = (itemsShowCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+    boundsOpen.height = (itemsShowCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING));
 		
 	Rectangle& current_bounds = bounds;
 		

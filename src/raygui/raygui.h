@@ -1,6 +1,6 @@
 /*******************************************************************************************
 *
-*   raygui v3.5-dev - A simple and easy-to-use immediate-mode gui library
+*   raygui v3.1 - A simple and easy-to-use immediate-mode gui library
 *
 *   DESCRIPTION:
 *
@@ -10,11 +10,11 @@
 *   Controls provided:
 *
 *   # Container/separators Controls
-*       - WindowBox     --> StatusBar, Panel
-*       - GroupBox      --> Line
+*       - WindowBox
+*       - GroupBox
 *       - Line
-*       - Panel         --> StatusBar
-*       - ScrollPanel   --> StatusBar
+*       - Panel
+*       - ScrollPanel
 *
 *   # Basic Controls
 *       - Label
@@ -33,6 +33,7 @@
 *       - SliderBar     --> Slider
 *       - ProgressBar
 *       - StatusBar
+*       - ScrollBar     // TODO: Really? Do we need it? We have GuiScrollPanel()
 *       - DummyRec
 *       - Grid
 *
@@ -87,7 +88,7 @@
 *
 *   guiIcons size is by default: 256*(16*16/32) = 2048*4 = 8192 bytes = 8 KB
 *
-*   TOOL: rGuiIcons is a visual tool to customize raygui icons and create new ones.
+*   TOOL: rGuiIcons is a visual tool to customize raygui icons.
 *
 *
 *   CONFIGURATION:
@@ -111,23 +112,7 @@
 *
 *
 *   VERSIONS HISTORY:
-*       3.5 (xx-xxx-2022) ADDED: Multiple new icons, useful for code editing tools
-*                         ADDED: GuiTabBar(), based on GuiToggle()
-*                         REMOVED: Unneeded icon editing functions 
-*                         REDESIGNED: GuiDrawText() to divide drawing by lines
-*                         REMOVED: MeasureTextEx() dependency, logic directly implemented
-*                         REMOVED: DrawTextEx() dependency, logic directly implemented
-*                         ADDED: Helper functions to split text in separate lines
-*       3.2 (22-May-2022) RENAMED: Some enum values, for unification, avoiding prefixes
-*                         RESTORED: GuiScrollBar(), only internal
-*                         REDESIGNED: GuiPanel() to support text parameter
-*                         REDESIGNED: GuiScrollPanel() to support text parameter
-*                         REDESIGNED: GuiColorPicker() to support text parameter
-*                         REDESIGNED: GuiColorPanel() to support text parameter
-*                         REDESIGNED: GuiColorBarAlpha() to support text parameter
-*                         REDESIGNED: GuiColorBarHue() to support text parameter
-*                         REDESIGNED: GuiTextInputBox() to support password
-*       3.1 (12-Jan-2022) REVIEWED: Default style for consistency (aligned with rGuiLayout v2.5 tool)
+*       3.1 (12-Jan-2021) REVIEWED: Default style for consistency (aligned with rGuiLayout v2.5 tool)
 *                         REVIEWED: GuiLoadStyle() to support compressed font atlas image data and unload previous textures
 *                         REVIEWED: External icons usage logic
 *                         REVIEWED: GuiLine() for centered alignment when including text
@@ -181,7 +166,7 @@
 *
 *   LICENSE: zlib/libpng
 *
-*   Copyright (c) 2014-2023 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2014-2022 Ramon Santamaria (@raysan5)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -203,7 +188,7 @@
 #ifndef RAYGUI_H
 #define RAYGUI_H
 
-#define RAYGUI_VERSION  "3.2"
+#define RAYGUI_VERSION  "3.1"
 
 #if !defined(RAYGUI_STANDALONE)
     #include "raylib.h"
@@ -242,7 +227,7 @@
 // NOTE: Avoiding those calls, also avoids const strings memory usage
 #define RAYGUI_SUPPORT_LOG_INFO
 #if defined(RAYGUI_SUPPORT_LOG_INFO)
-  #define RAYGUI_LOG(...)           printf(__VA_ARGS__)
+  #define RAYGUI_LOG(...) printf(__VA_ARGS__)
 #else
   #define RAYGUI_LOG(...)
 #endif
@@ -298,15 +283,6 @@
         int format;             // Data format (PixelFormat type)
     } Texture2D;
 
-    // Image, pixel data stored in CPU memory (RAM)
-    typedef struct Image {
-        void *data;             // Image raw data
-        int width;              // Image base width
-        int height;             // Image base height
-        int mipmaps;            // Mipmap levels, 1 by default
-        int format;             // Data format (PixelFormat type)
-    } Image;
-
     // GlyphInfo, font characters glyphs info
     typedef struct GlyphInfo {
         int value;              // Character value (Unicode)
@@ -320,11 +296,10 @@
     // It should be redesigned to be provided by user
     typedef struct Font {
         int baseSize;           // Base size (default chars height)
-        int glyphCount;         // Number of glyph characters
-        int glyphPadding;       // Padding around the glyph characters
-        Texture2D texture;      // Texture atlas containing the glyphs
-        Rectangle *recs;        // Rectangles in texture for the glyphs
-        GlyphInfo *glyphs;      // Glyphs info data
+        int glyphCount;         // Number of characters
+        Texture2D texture;      // Characters texture atlas
+        Rectangle *recs;        // Characters rectangles in texture
+        GlyphInfo *chars;       // Characters info data
     } Font;
 #endif
 
@@ -332,29 +307,27 @@
 typedef struct GuiStyleProp {
     unsigned short controlId;
     unsigned short propertyId;
-    unsigned int propertyValue;
+    int propertyValue;
 } GuiStyleProp;
 
 // Gui control state
 typedef enum {
-    STATE_NORMAL = 0,
-    STATE_FOCUSED,
-    STATE_PRESSED,
-    STATE_DISABLED,
-} GuiState;
+    GUI_STATE_NORMAL = 0,
+    GUI_STATE_FOCUSED,
+    GUI_STATE_PRESSED,
+    GUI_STATE_DISABLED,
+} GuiControlState;
 
 // Gui control text alignment
 typedef enum {
-    TEXT_ALIGN_LEFT = 0,
-    TEXT_ALIGN_CENTER,
-    TEXT_ALIGN_RIGHT,
+    GUI_TEXT_ALIGN_LEFT = 0,
+    GUI_TEXT_ALIGN_CENTER,
+    GUI_TEXT_ALIGN_RIGHT,
 } GuiTextAlignment;
 
 // Gui controls
 typedef enum {
-    // Default -> populates to all controls when set
-    DEFAULT = 0,
-    // Basic controls
+    DEFAULT = 0,    // Generic control -> populates to all controls when set
     LABEL,          // Used also for: LABELBUTTON
     BUTTON,
     TOGGLE,         // Used also for: TOGGLEGROUP
@@ -365,7 +338,7 @@ typedef enum {
     DROPDOWNBOX,
     TEXTBOX,        // Used also for: TEXTBOXMULTI
     VALUEBOX,
-    SPINNER,        // Uses: BUTTON, VALUEBOX
+    SPINNER,
     LISTVIEW,
     COLORPICKER,
     SCROLLBAR,
@@ -395,97 +368,101 @@ typedef enum {
 
 // Gui extended properties depend on control
 // NOTE: RAYGUI_MAX_PROPS_EXTENDED properties (by default 8 properties)
-//----------------------------------------------------------------------------------
 
 // DEFAULT extended properties
-// NOTE: Those properties are common to all controls or global
+// NOTE: Those properties are actually common to all controls
 typedef enum {
-    TEXT_SIZE = 16,             // Text size (glyphs max height)
-    TEXT_SPACING,               // Text spacing between glyphs
-    LINE_COLOR,                 // Line control color
-    BACKGROUND_COLOR,           // Background color
+    TEXT_SIZE = 16,
+    TEXT_SPACING,
+    LINE_COLOR,
+    BACKGROUND_COLOR,
 } GuiDefaultProperty;
 
 // Label
 //typedef enum { } GuiLabelProperty;
 
-// Button/Spinner
+// Button
 //typedef enum { } GuiButtonProperty;
 
 // Toggle/ToggleGroup
 typedef enum {
-    GROUP_PADDING = 16,         // ToggleGroup separation between toggles
+    GROUP_PADDING = 16,
 } GuiToggleProperty;
 
 // Slider/SliderBar
 typedef enum {
-    SLIDER_WIDTH = 16,          // Slider size of internal bar
-    SLIDER_PADDING              // Slider/SliderBar internal bar padding
+    SLIDER_WIDTH = 16,
+    SLIDER_PADDING
 } GuiSliderProperty;
 
 // ProgressBar
 typedef enum {
-    PROGRESS_PADDING = 16,      // ProgressBar internal padding
+    PROGRESS_PADDING = 16,
 } GuiProgressBarProperty;
+
+// CheckBox
+typedef enum {
+    CHECK_PADDING = 16
+} GuiCheckBoxProperty;
+
+// ComboBox
+typedef enum {
+    COMBO_BUTTON_WIDTH = 16,
+    COMBO_BUTTON_PADDING
+} GuiComboBoxProperty;
+
+// DropdownBox
+typedef enum {
+    ARROW_PADDING = 16,
+    DROPDOWN_ITEMS_PADDING
+} GuiDropdownBoxProperty;
+
+// TextBox/TextBoxMulti/ValueBox/Spinner
+typedef enum {
+    TEXT_INNER_PADDING = 16,
+    TEXT_LINES_PADDING,
+    COLOR_SELECTED_FG,
+    COLOR_SELECTED_BG
+} GuiTextBoxProperty;
+
+// Spinner
+typedef enum {
+    SPIN_BUTTON_WIDTH = 16,
+    SPIN_BUTTON_PADDING,
+} GuiSpinnerProperty;
 
 // ScrollBar
 typedef enum {
     ARROWS_SIZE = 16,
     ARROWS_VISIBLE,
-    SCROLL_SLIDER_PADDING,      // (SLIDERBAR, SLIDER_PADDING)
+    SCROLL_SLIDER_PADDING,
     SCROLL_SLIDER_SIZE,
     SCROLL_PADDING,
     SCROLL_SPEED,
 } GuiScrollBarProperty;
 
-// CheckBox
+// ScrollBar side
 typedef enum {
-    CHECK_PADDING = 16          // CheckBox internal check padding
-} GuiCheckBoxProperty;
-
-// ComboBox
-typedef enum {
-    COMBO_BUTTON_WIDTH = 16,    // ComboBox right button width
-    COMBO_BUTTON_SPACING        // ComboBox button separation
-} GuiComboBoxProperty;
-
-// DropdownBox
-typedef enum {
-    ARROW_PADDING = 16,         // DropdownBox arrow separation from border and items
-    DROPDOWN_ITEMS_SPACING      // DropdownBox items separation
-} GuiDropdownBoxProperty;
-
-// TextBox/TextBoxMulti/ValueBox/Spinner
-typedef enum {
-    TEXT_INNER_PADDING = 16,    // TextBox/TextBoxMulti/ValueBox/Spinner inner text padding
-    TEXT_LINES_SPACING,         // TextBoxMulti lines separation
-} GuiTextBoxProperty;
-
-// Spinner
-typedef enum {
-    SPIN_BUTTON_WIDTH = 16,     // Spinner left/right buttons width
-    SPIN_BUTTON_SPACING,        // Spinner buttons separation
-} GuiSpinnerProperty;
+    SCROLLBAR_LEFT_SIDE = 0,
+    SCROLLBAR_RIGHT_SIDE
+} GuiScrollBarSide;
 
 // ListView
 typedef enum {
-    LIST_ITEMS_HEIGHT = 16,     // ListView items height
-    LIST_ITEMS_SPACING,         // ListView items separation
-    SCROLLBAR_WIDTH,            // ListView scrollbar size (usually width)
-    SCROLLBAR_SIDE,             // ListView scrollbar side (0-left, 1-right)
+    LIST_ITEMS_HEIGHT = 16,
+    LIST_ITEMS_PADDING,
+    SCROLLBAR_WIDTH,
+    SCROLLBAR_SIDE,
 } GuiListViewProperty;
 
 // ColorPicker
 typedef enum {
     COLOR_SELECTOR_SIZE = 16,
-    HUEBAR_WIDTH,               // ColorPicker right hue bar width
-    HUEBAR_PADDING,             // ColorPicker right hue bar separation from panel
-    HUEBAR_SELECTOR_HEIGHT,     // ColorPicker right hue bar selector height
-    HUEBAR_SELECTOR_OVERFLOW    // ColorPicker right hue bar selector overflow
+    HUEBAR_WIDTH,                  // Right hue bar width
+    HUEBAR_PADDING,                // Right hue bar separation from panel
+    HUEBAR_SELECTOR_HEIGHT,        // Right hue bar selector height
+    HUEBAR_SELECTOR_OVERFLOW       // Right hue bar selector overflow
 } GuiColorPickerProperty;
-
-#define SCROLLBAR_LEFT_SIDE     0
-#define SCROLLBAR_RIGHT_SIDE    1
 
 //----------------------------------------------------------------------------------
 // Global Variables Definition
@@ -522,10 +499,8 @@ RAYGUIAPI int GuiGetStyle(int control, int property);                   // Get o
 RAYGUIAPI bool GuiWindowBox(Rectangle bounds, const char *title);                                       // Window Box control, shows a window that can be closed
 RAYGUIAPI void GuiGroupBox(Rectangle bounds, const char *text);                                         // Group Box control with text name
 RAYGUIAPI void GuiLine(Rectangle bounds, const char *text);                                             // Line separator control, could contain text
-RAYGUIAPI void GuiPanel(Rectangle bounds, const char *text);                                            // Panel control, useful to group controls
-RAYGUIAPI int GuiTabBar(Rectangle bounds, const char **text, int count, int *active);                   // Tab Bar control, returns TAB to be closed or -1
-RAYGUIAPI Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, Vector2 *scroll); // Scroll Panel control
-RAYGUIAPI int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue);
+RAYGUIAPI void GuiPanel(Rectangle bounds);                                                              // Panel control, useful to group controls
+RAYGUIAPI Rectangle GuiScrollPanel(Rectangle bounds, Rectangle content, Vector2 *scroll);               // Scroll Panel control
 
 // Basic controls set
 RAYGUIAPI void GuiLabel(Rectangle bounds, const char *text);                                            // Label control, shows text
@@ -545,300 +520,36 @@ RAYGUIAPI float GuiSliderBar(Rectangle bounds, const char *textLeft, const char 
 RAYGUIAPI float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRight, float value, float minValue, float maxValue);  // Progress Bar control, shows current progress value
 RAYGUIAPI void GuiStatusBar(Rectangle bounds, const char *text);                                        // Status Bar control, shows info text
 RAYGUIAPI void GuiDummyRec(Rectangle bounds, const char *text);                                         // Dummy control for placeholders
-RAYGUIAPI Vector2 GuiGrid(Rectangle bounds, const char *text, float spacing, int subdivs);              // Grid control, returns mouse cell position
+RAYGUIAPI int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue);                    // Scroll Bar control
+RAYGUIAPI Vector2 GuiGrid(Rectangle bounds, float spacing, int subdivs);                                // Grid control
+
 
 // Advance controls set
 RAYGUIAPI int GuiListView(Rectangle bounds, const char *text, int *scrollIndex, int active);            // List View control, returns selected list item index
 RAYGUIAPI int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, int *scrollIndex, int active);      // List View with extended parameters
 RAYGUIAPI int GuiMessageBox(Rectangle bounds, const char *title, const char *message, const char *buttons);                 // Message Box control, displays a message
-RAYGUIAPI int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, const char *buttons, char *text, int textMaxSize, int *secretViewActive);   // Text Input Box control, ask for text, supports secret
-RAYGUIAPI Color GuiColorPicker(Rectangle bounds, const char *text, Color color);                        // Color Picker control (multiple color controls)
-RAYGUIAPI Color GuiColorPanel(Rectangle bounds, const char *text, Color color);                         // Color Panel control
-RAYGUIAPI float GuiColorBarAlpha(Rectangle bounds, const char *text, float alpha);                      // Color Bar Alpha control
-RAYGUIAPI float GuiColorBarHue(Rectangle bounds, const char *text, float value);                        // Color Bar Hue control
+RAYGUIAPI int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, const char *buttons, char *text);   // Text Input Box control, ask for text
+RAYGUIAPI Color GuiColorPicker(Rectangle bounds, Color color);                                          // Color Picker control (multiple color controls)
+RAYGUIAPI Color GuiColorPanel(Rectangle bounds, Color color);                                           // Color Panel control
+RAYGUIAPI float GuiColorBarAlpha(Rectangle bounds, float alpha);                                        // Color Bar Alpha control
+RAYGUIAPI float GuiColorBarHue(Rectangle bounds, float value);                                          // Color Bar Hue control
 
 // Styles loading functions
 RAYGUIAPI void GuiLoadStyle(const char *fileName);              // Load style file over global style variable (.rgs)
 RAYGUIAPI void GuiLoadStyleDefault(void);                       // Load style default over global style
 
-// Tooltips management functions
-RAYGUIAPI void GuiEnableTooltip(void);                           // Enable gui tooltips (global state)
-RAYGUIAPI void GuiDisableTooltip(void);                          // Disable gui tooltips (global state)
-RAYGUIAPI void GuiSetTooltip(const char *tooltip);               // Set tooltip string
-
 // Icons functionality
 RAYGUIAPI const char *GuiIconText(int iconId, const char *text); // Get text with icon id prepended (if supported)
-
 #if !defined(RAYGUI_NO_ICONS)
-RAYGUIAPI unsigned int *GuiGetIcons(void);                      // Get raygui icons data pointer
-RAYGUIAPI char **GuiLoadIcons(const char *fileName, bool loadIconsName);  // Load raygui icons file (.rgi) into internal icons data
 RAYGUIAPI void GuiDrawIcon(int iconId, int posX, int posY, int pixelSize, Color color);
-RAYGUIAPI void GuiSetIconScale(int scale);                      // Set icon drawing size
 
-#if !defined(RAYGUI_CUSTOM_ICONS)
-//----------------------------------------------------------------------------------
-// Icons enumeration
-//----------------------------------------------------------------------------------
-typedef enum {
-    ICON_NONE                     = 0,
-    ICON_FOLDER_FILE_OPEN         = 1,
-    ICON_FILE_SAVE_CLASSIC        = 2,
-    ICON_FOLDER_OPEN              = 3,
-    ICON_FOLDER_SAVE              = 4,
-    ICON_FILE_OPEN                = 5,
-    ICON_FILE_SAVE                = 6,
-    ICON_FILE_EXPORT              = 7,
-    ICON_FILE_ADD                 = 8,
-    ICON_FILE_DELETE              = 9,
-    ICON_FILETYPE_TEXT            = 10,
-    ICON_FILETYPE_AUDIO           = 11,
-    ICON_FILETYPE_IMAGE           = 12,
-    ICON_FILETYPE_PLAY            = 13,
-    ICON_FILETYPE_VIDEO           = 14,
-    ICON_FILETYPE_INFO            = 15,
-    ICON_FILE_COPY                = 16,
-    ICON_FILE_CUT                 = 17,
-    ICON_FILE_PASTE               = 18,
-    ICON_CURSOR_HAND              = 19,
-    ICON_CURSOR_POINTER           = 20,
-    ICON_CURSOR_CLASSIC           = 21,
-    ICON_PENCIL                   = 22,
-    ICON_PENCIL_BIG               = 23,
-    ICON_BRUSH_CLASSIC            = 24,
-    ICON_BRUSH_PAINTER            = 25,
-    ICON_WATER_DROP               = 26,
-    ICON_COLOR_PICKER             = 27,
-    ICON_RUBBER                   = 28,
-    ICON_COLOR_BUCKET             = 29,
-    ICON_TEXT_T                   = 30,
-    ICON_TEXT_A                   = 31,
-    ICON_SCALE                    = 32,
-    ICON_RESIZE                   = 33,
-    ICON_FILTER_POINT             = 34,
-    ICON_FILTER_BILINEAR          = 35,
-    ICON_CROP                     = 36,
-    ICON_CROP_ALPHA               = 37,
-    ICON_SQUARE_TOGGLE            = 38,
-    ICON_SYMMETRY                 = 39,
-    ICON_SYMMETRY_HORIZONTAL      = 40,
-    ICON_SYMMETRY_VERTICAL        = 41,
-    ICON_LENS                     = 42,
-    ICON_LENS_BIG                 = 43,
-    ICON_EYE_ON                   = 44,
-    ICON_EYE_OFF                  = 45,
-    ICON_FILTER_TOP               = 46,
-    ICON_FILTER                   = 47,
-    ICON_TARGET_POINT             = 48,
-    ICON_TARGET_SMALL             = 49,
-    ICON_TARGET_BIG               = 50,
-    ICON_TARGET_MOVE              = 51,
-    ICON_CURSOR_MOVE              = 52,
-    ICON_CURSOR_SCALE             = 53,
-    ICON_CURSOR_SCALE_RIGHT       = 54,
-    ICON_CURSOR_SCALE_LEFT        = 55,
-    ICON_UNDO                     = 56,
-    ICON_REDO                     = 57,
-    ICON_REREDO                   = 58,
-    ICON_MUTATE                   = 59,
-    ICON_ROTATE                   = 60,
-    ICON_REPEAT                   = 61,
-    ICON_SHUFFLE                  = 62,
-    ICON_EMPTYBOX                 = 63,
-    ICON_TARGET                   = 64,
-    ICON_TARGET_SMALL_FILL        = 65,
-    ICON_TARGET_BIG_FILL          = 66,
-    ICON_TARGET_MOVE_FILL         = 67,
-    ICON_CURSOR_MOVE_FILL         = 68,
-    ICON_CURSOR_SCALE_FILL        = 69,
-    ICON_CURSOR_SCALE_RIGHT_FILL  = 70,
-    ICON_CURSOR_SCALE_LEFT_FILL   = 71,
-    ICON_UNDO_FILL                = 72,
-    ICON_REDO_FILL                = 73,
-    ICON_REREDO_FILL              = 74,
-    ICON_MUTATE_FILL              = 75,
-    ICON_ROTATE_FILL              = 76,
-    ICON_REPEAT_FILL              = 77,
-    ICON_SHUFFLE_FILL             = 78,
-    ICON_EMPTYBOX_SMALL           = 79,
-    ICON_BOX                      = 80,
-    ICON_BOX_TOP                  = 81,
-    ICON_BOX_TOP_RIGHT            = 82,
-    ICON_BOX_RIGHT                = 83,
-    ICON_BOX_BOTTOM_RIGHT         = 84,
-    ICON_BOX_BOTTOM               = 85,
-    ICON_BOX_BOTTOM_LEFT          = 86,
-    ICON_BOX_LEFT                 = 87,
-    ICON_BOX_TOP_LEFT             = 88,
-    ICON_BOX_CENTER               = 89,
-    ICON_BOX_CIRCLE_MASK          = 90,
-    ICON_POT                      = 91,
-    ICON_ALPHA_MULTIPLY           = 92,
-    ICON_ALPHA_CLEAR              = 93,
-    ICON_DITHERING                = 94,
-    ICON_MIPMAPS                  = 95,
-    ICON_BOX_GRID                 = 96,
-    ICON_GRID                     = 97,
-    ICON_BOX_CORNERS_SMALL        = 98,
-    ICON_BOX_CORNERS_BIG          = 99,
-    ICON_FOUR_BOXES               = 100,
-    ICON_GRID_FILL                = 101,
-    ICON_BOX_MULTISIZE            = 102,
-    ICON_ZOOM_SMALL               = 103,
-    ICON_ZOOM_MEDIUM              = 104,
-    ICON_ZOOM_BIG                 = 105,
-    ICON_ZOOM_ALL                 = 106,
-    ICON_ZOOM_CENTER              = 107,
-    ICON_BOX_DOTS_SMALL           = 108,
-    ICON_BOX_DOTS_BIG             = 109,
-    ICON_BOX_CONCENTRIC           = 110,
-    ICON_BOX_GRID_BIG             = 111,
-    ICON_OK_TICK                  = 112,
-    ICON_CROSS                    = 113,
-    ICON_ARROW_LEFT               = 114,
-    ICON_ARROW_RIGHT              = 115,
-    ICON_ARROW_DOWN               = 116,
-    ICON_ARROW_UP                 = 117,
-    ICON_ARROW_LEFT_FILL          = 118,
-    ICON_ARROW_RIGHT_FILL         = 119,
-    ICON_ARROW_DOWN_FILL          = 120,
-    ICON_ARROW_UP_FILL            = 121,
-    ICON_AUDIO                    = 122,
-    ICON_FX                       = 123,
-    ICON_WAVE                     = 124,
-    ICON_WAVE_SINUS               = 125,
-    ICON_WAVE_SQUARE              = 126,
-    ICON_WAVE_TRIANGULAR          = 127,
-    ICON_CROSS_SMALL              = 128,
-    ICON_PLAYER_PREVIOUS          = 129,
-    ICON_PLAYER_PLAY_BACK         = 130,
-    ICON_PLAYER_PLAY              = 131,
-    ICON_PLAYER_PAUSE             = 132,
-    ICON_PLAYER_STOP              = 133,
-    ICON_PLAYER_NEXT              = 134,
-    ICON_PLAYER_RECORD            = 135,
-    ICON_MAGNET                   = 136,
-    ICON_LOCK_CLOSE               = 137,
-    ICON_LOCK_OPEN                = 138,
-    ICON_CLOCK                    = 139,
-    ICON_TOOLS                    = 140,
-    ICON_GEAR                     = 141,
-    ICON_GEAR_BIG                 = 142,
-    ICON_BIN                      = 143,
-    ICON_HAND_POINTER             = 144,
-    ICON_LASER                    = 145,
-    ICON_COIN                     = 146,
-    ICON_EXPLOSION                = 147,
-    ICON_1UP                      = 148,
-    ICON_PLAYER                   = 149,
-    ICON_PLAYER_JUMP              = 150,
-    ICON_KEY                      = 151,
-    ICON_DEMON                    = 152,
-    ICON_TEXT_POPUP               = 153,
-    ICON_GEAR_EX                  = 154,
-    ICON_CRACK                    = 155,
-    ICON_CRACK_POINTS             = 156,
-    ICON_STAR                     = 157,
-    ICON_DOOR                     = 158,
-    ICON_EXIT                     = 159,
-    ICON_MODE_2D                  = 160,
-    ICON_MODE_3D                  = 161,
-    ICON_CUBE                     = 162,
-    ICON_CUBE_FACE_TOP            = 163,
-    ICON_CUBE_FACE_LEFT           = 164,
-    ICON_CUBE_FACE_FRONT          = 165,
-    ICON_CUBE_FACE_BOTTOM         = 166,
-    ICON_CUBE_FACE_RIGHT          = 167,
-    ICON_CUBE_FACE_BACK           = 168,
-    ICON_CAMERA                   = 169,
-    ICON_SPECIAL                  = 170,
-    ICON_LINK_NET                 = 171,
-    ICON_LINK_BOXES               = 172,
-    ICON_LINK_MULTI               = 173,
-    ICON_LINK                     = 174,
-    ICON_LINK_BROKE               = 175,
-    ICON_TEXT_NOTES               = 176,
-    ICON_NOTEBOOK                 = 177,
-    ICON_SUITCASE                 = 178,
-    ICON_SUITCASE_ZIP             = 179,
-    ICON_MAILBOX                  = 180,
-    ICON_MONITOR                  = 181,
-    ICON_PRINTER                  = 182,
-    ICON_PHOTO_CAMERA             = 183,
-    ICON_PHOTO_CAMERA_FLASH       = 184,
-    ICON_HOUSE                    = 185,
-    ICON_HEART                    = 186,
-    ICON_CORNER                   = 187,
-    ICON_VERTICAL_BARS            = 188,
-    ICON_VERTICAL_BARS_FILL       = 189,
-    ICON_LIFE_BARS                = 190,
-    ICON_INFO                     = 191,
-    ICON_CROSSLINE                = 192,
-    ICON_HELP                     = 193,
-    ICON_FILETYPE_ALPHA           = 194,
-    ICON_FILETYPE_HOME            = 195,
-    ICON_LAYERS_VISIBLE           = 196,
-    ICON_LAYERS                   = 197,
-    ICON_WINDOW                   = 198,
-    ICON_HIDPI                    = 199,
-    ICON_FILETYPE_BINARY          = 200,
-    ICON_HEX                      = 201,
-    ICON_SHIELD                   = 202,
-    ICON_FILE_NEW                 = 203,
-    ICON_FOLDER_ADD               = 204,
-    ICON_ALARM                    = 205,
-    ICON_CPU                      = 206,
-    ICON_ROM                      = 207,
-    ICON_STEP_OVER                = 208,
-    ICON_STEP_INTO                = 209,
-    ICON_STEP_OUT                 = 210,
-    ICON_RESTART                  = 211,
-    ICON_BREAKPOINT_ON            = 212,
-    ICON_BREAKPOINT_OFF           = 213,
-    ICON_BURGER_MENU              = 214,
-    ICON_CASE_SENSITIVE           = 215,
-    ICON_REG_EXP                  = 216,
-    ICON_FOLDER                   = 217,
-    ICON_FILE                     = 218,
-    ICON_219                      = 219,
-    ICON_220                      = 220,
-    ICON_221                      = 221,
-    ICON_222                      = 222,
-    ICON_223                      = 223,
-    ICON_224                      = 224,
-    ICON_225                      = 225,
-    ICON_226                      = 226,
-    ICON_227                      = 227,
-    ICON_228                      = 228,
-    ICON_229                      = 229,
-    ICON_230                      = 230,
-    ICON_231                      = 231,
-    ICON_232                      = 232,
-    ICON_233                      = 233,
-    ICON_234                      = 234,
-    ICON_235                      = 235,
-    ICON_236                      = 236,
-    ICON_237                      = 237,
-    ICON_238                      = 238,
-    ICON_239                      = 239,
-    ICON_240                      = 240,
-    ICON_241                      = 241,
-    ICON_242                      = 242,
-    ICON_243                      = 243,
-    ICON_244                      = 244,
-    ICON_245                      = 245,
-    ICON_246                      = 246,
-    ICON_247                      = 247,
-    ICON_248                      = 248,
-    ICON_249                      = 249,
-    ICON_250                      = 250,
-    ICON_251                      = 251,
-    ICON_252                      = 252,
-    ICON_253                      = 253,
-    ICON_254                      = 254,
-    ICON_255                      = 255,
-} GuiIconName;
-#endif
+RAYGUIAPI unsigned int *GuiGetIcons(void);                      // Get full icons data pointer
+RAYGUIAPI unsigned int *GuiGetIconData(int iconId);             // Get icon bit data
+RAYGUIAPI void GuiSetIconData(int iconId, unsigned int *data);  // Set icon bit data
 
+RAYGUIAPI void GuiSetIconPixel(int iconId, int x, int y);       // Set icon pixel value
+RAYGUIAPI void GuiClearIconPixel(int iconId, int x, int y);     // Clear icon pixel value
+RAYGUIAPI bool GuiCheckIconPixel(int iconId, int x, int y);     // Check icon pixel value
 #endif
 
 #if defined(__cplusplus)
@@ -869,17 +580,278 @@ typedef enum {
 
 #if !defined(RAYGUI_NO_ICONS) && !defined(RAYGUI_CUSTOM_ICONS)
 
-// Embedded icons, no external file provided
-#define RAYGUI_ICON_SIZE               16          // Size of icons in pixels (squared)
-#define RAYGUI_ICON_MAX_ICONS         256          // Maximum number of icons
-#define RAYGUI_ICON_MAX_NAME_LENGTH    32          // Maximum length of icon name id
+// Embedded raygui icons, no external file provided
+#define RAYGUI_ICON_SIZE               16       // Size of icons (squared)
+#define RAYGUI_ICON_MAX_ICONS         256       // Maximum number of icons
+#define RAYGUI_ICON_MAX_NAME_LENGTH    32       // Maximum length of icon name id
 
 // Icons data is defined by bit array (every bit represents one pixel)
-// Those arrays are stored as unsigned int data arrays, so,
-// every array element defines 32 pixels (bits) of information
-// One icon is defined by 8 int, (8 int * 32 bit = 256 bit = 16*16 pixels)
-// NOTE: Number of elemens depend on RAYGUI_ICON_SIZE (by default 16x16 pixels)
+// Those arrays are stored as unsigned int data arrays, so every array
+// element defines 32 pixels (bits) of information
+// Number of elemens depend on RAYGUI_ICON_SIZE (by default 16x16 pixels)
 #define RAYGUI_ICON_DATA_ELEMENTS   (RAYGUI_ICON_SIZE*RAYGUI_ICON_SIZE/32)
+
+//----------------------------------------------------------------------------------
+// Icons enumeration
+//----------------------------------------------------------------------------------
+typedef enum {
+    RAYGUI_ICON_NONE                     = 0,
+    RAYGUI_ICON_FOLDER_FILE_OPEN         = 1,
+    RAYGUI_ICON_FILE_SAVE_CLASSIC        = 2,
+    RAYGUI_ICON_FOLDER_OPEN              = 3,
+    RAYGUI_ICON_FOLDER_SAVE              = 4,
+    RAYGUI_ICON_FILE_OPEN                = 5,
+    RAYGUI_ICON_FILE_SAVE                = 6,
+    RAYGUI_ICON_FILE_EXPORT              = 7,
+    RAYGUI_ICON_FILE_NEW                 = 8,
+    RAYGUI_ICON_FILE_DELETE              = 9,
+    RAYGUI_ICON_FILETYPE_TEXT            = 10,
+    RAYGUI_ICON_FILETYPE_AUDIO           = 11,
+    RAYGUI_ICON_FILETYPE_IMAGE           = 12,
+    RAYGUI_ICON_FILETYPE_PLAY            = 13,
+    RAYGUI_ICON_FILETYPE_VIDEO           = 14,
+    RAYGUI_ICON_FILETYPE_INFO            = 15,
+    RAYGUI_ICON_FILE_COPY                = 16,
+    RAYGUI_ICON_FILE_CUT                 = 17,
+    RAYGUI_ICON_FILE_PASTE               = 18,
+    RAYGUI_ICON_CURSOR_HAND              = 19,
+    RAYGUI_ICON_CURSOR_POINTER           = 20,
+    RAYGUI_ICON_CURSOR_CLASSIC           = 21,
+    RAYGUI_ICON_PENCIL                   = 22,
+    RAYGUI_ICON_PENCIL_BIG               = 23,
+    RAYGUI_ICON_BRUSH_CLASSIC            = 24,
+    RAYGUI_ICON_BRUSH_PAINTER            = 25,
+    RAYGUI_ICON_WATER_DROP               = 26,
+    RAYGUI_ICON_COLOR_PICKER             = 27,
+    RAYGUI_ICON_RUBBER                   = 28,
+    RAYGUI_ICON_COLOR_BUCKET             = 29,
+    RAYGUI_ICON_TEXT_T                   = 30,
+    RAYGUI_ICON_TEXT_A                   = 31,
+    RAYGUI_ICON_SCALE                    = 32,
+    RAYGUI_ICON_RESIZE                   = 33,
+    RAYGUI_ICON_FILTER_POINT             = 34,
+    RAYGUI_ICON_FILTER_BILINEAR          = 35,
+    RAYGUI_ICON_CROP                     = 36,
+    RAYGUI_ICON_CROP_ALPHA               = 37,
+    RAYGUI_ICON_SQUARE_TOGGLE            = 38,
+    RAYGUI_ICON_SYMMETRY                 = 39,
+    RAYGUI_ICON_SYMMETRY_HORIZONTAL      = 40,
+    RAYGUI_ICON_SYMMETRY_VERTICAL        = 41,
+    RAYGUI_ICON_LENS                     = 42,
+    RAYGUI_ICON_LENS_BIG                 = 43,
+    RAYGUI_ICON_EYE_ON                   = 44,
+    RAYGUI_ICON_EYE_OFF                  = 45,
+    RAYGUI_ICON_FILTER_TOP               = 46,
+    RAYGUI_ICON_FILTER                   = 47,
+    RAYGUI_ICON_TARGET_POINT             = 48,
+    RAYGUI_ICON_TARGET_SMALL             = 49,
+    RAYGUI_ICON_TARGET_BIG               = 50,
+    RAYGUI_ICON_TARGET_MOVE              = 51,
+    RAYGUI_ICON_CURSOR_MOVE              = 52,
+    RAYGUI_ICON_CURSOR_SCALE             = 53,
+    RAYGUI_ICON_CURSOR_SCALE_RIGHT       = 54,
+    RAYGUI_ICON_CURSOR_SCALE_LEFT        = 55,
+    RAYGUI_ICON_UNDO                     = 56,
+    RAYGUI_ICON_REDO                     = 57,
+    RAYGUI_ICON_REREDO                   = 58,
+    RAYGUI_ICON_MUTATE                   = 59,
+    RAYGUI_ICON_ROTATE                   = 60,
+    RAYGUI_ICON_REPEAT                   = 61,
+    RAYGUI_ICON_SHUFFLE                  = 62,
+    RAYGUI_ICON_EMPTYBOX                 = 63,
+    RAYGUI_ICON_TARGET                   = 64,
+    RAYGUI_ICON_TARGET_SMALL_FILL        = 65,
+    RAYGUI_ICON_TARGET_BIG_FILL          = 66,
+    RAYGUI_ICON_TARGET_MOVE_FILL         = 67,
+    RAYGUI_ICON_CURSOR_MOVE_FILL         = 68,
+    RAYGUI_ICON_CURSOR_SCALE_FILL        = 69,
+    RAYGUI_ICON_CURSOR_SCALE_RIGHT_FILL  = 70,
+    RAYGUI_ICON_CURSOR_SCALE_LEFT_FILL   = 71,
+    RAYGUI_ICON_UNDO_FILL                = 72,
+    RAYGUI_ICON_REDO_FILL                = 73,
+    RAYGUI_ICON_REREDO_FILL              = 74,
+    RAYGUI_ICON_MUTATE_FILL              = 75,
+    RAYGUI_ICON_ROTATE_FILL              = 76,
+    RAYGUI_ICON_REPEAT_FILL              = 77,
+    RAYGUI_ICON_SHUFFLE_FILL             = 78,
+    RAYGUI_ICON_EMPTYBOX_SMALL           = 79,
+    RAYGUI_ICON_BOX                      = 80,
+    RAYGUI_ICON_BOX_TOP                  = 81,
+    RAYGUI_ICON_BOX_TOP_RIGHT            = 82,
+    RAYGUI_ICON_BOX_RIGHT                = 83,
+    RAYGUI_ICON_BOX_BOTTOM_RIGHT         = 84,
+    RAYGUI_ICON_BOX_BOTTOM               = 85,
+    RAYGUI_ICON_BOX_BOTTOM_LEFT          = 86,
+    RAYGUI_ICON_BOX_LEFT                 = 87,
+    RAYGUI_ICON_BOX_TOP_LEFT             = 88,
+    RAYGUI_ICON_BOX_CENTER               = 89,
+    RAYGUI_ICON_BOX_CIRCLE_MASK          = 90,
+    RAYGUI_ICON_POT                      = 91,
+    RAYGUI_ICON_ALPHA_MULTIPLY           = 92,
+    RAYGUI_ICON_ALPHA_CLEAR              = 93,
+    RAYGUI_ICON_DITHERING                = 94,
+    RAYGUI_ICON_MIPMAPS                  = 95,
+    RAYGUI_ICON_BOX_GRID                 = 96,
+    RAYGUI_ICON_GRID                     = 97,
+    RAYGUI_ICON_BOX_CORNERS_SMALL        = 98,
+    RAYGUI_ICON_BOX_CORNERS_BIG          = 99,
+    RAYGUI_ICON_FOUR_BOXES               = 100,
+    RAYGUI_ICON_GRID_FILL                = 101,
+    RAYGUI_ICON_BOX_MULTISIZE            = 102,
+    RAYGUI_ICON_ZOOM_SMALL               = 103,
+    RAYGUI_ICON_ZOOM_MEDIUM              = 104,
+    RAYGUI_ICON_ZOOM_BIG                 = 105,
+    RAYGUI_ICON_ZOOM_ALL                 = 106,
+    RAYGUI_ICON_ZOOM_CENTER              = 107,
+    RAYGUI_ICON_BOX_DOTS_SMALL           = 108,
+    RAYGUI_ICON_BOX_DOTS_BIG             = 109,
+    RAYGUI_ICON_BOX_CONCENTRIC           = 110,
+    RAYGUI_ICON_BOX_GRID_BIG             = 111,
+    RAYGUI_ICON_OK_TICK                  = 112,
+    RAYGUI_ICON_CROSS                    = 113,
+    RAYGUI_ICON_ARROW_LEFT               = 114,
+    RAYGUI_ICON_ARROW_RIGHT              = 115,
+    RAYGUI_ICON_ARROW_DOWN               = 116,
+    RAYGUI_ICON_ARROW_UP                 = 117,
+    RAYGUI_ICON_ARROW_LEFT_FILL          = 118,
+    RAYGUI_ICON_ARROW_RIGHT_FILL         = 119,
+    RAYGUI_ICON_ARROW_DOWN_FILL          = 120,
+    RAYGUI_ICON_ARROW_UP_FILL            = 121,
+    RAYGUI_ICON_AUDIO                    = 122,
+    RAYGUI_ICON_FX                       = 123,
+    RAYGUI_ICON_WAVE                     = 124,
+    RAYGUI_ICON_WAVE_SINUS               = 125,
+    RAYGUI_ICON_WAVE_SQUARE              = 126,
+    RAYGUI_ICON_WAVE_TRIANGULAR          = 127,
+    RAYGUI_ICON_CROSS_SMALL              = 128,
+    RAYGUI_ICON_PLAYER_PREVIOUS          = 129,
+    RAYGUI_ICON_PLAYER_PLAY_BACK         = 130,
+    RAYGUI_ICON_PLAYER_PLAY              = 131,
+    RAYGUI_ICON_PLAYER_PAUSE             = 132,
+    RAYGUI_ICON_PLAYER_STOP              = 133,
+    RAYGUI_ICON_PLAYER_NEXT              = 134,
+    RAYGUI_ICON_PLAYER_RECORD            = 135,
+    RAYGUI_ICON_MAGNET                   = 136,
+    RAYGUI_ICON_LOCK_CLOSE               = 137,
+    RAYGUI_ICON_LOCK_OPEN                = 138,
+    RAYGUI_ICON_CLOCK                    = 139,
+    RAYGUI_ICON_TOOLS                    = 140,
+    RAYGUI_ICON_GEAR                     = 141,
+    RAYGUI_ICON_GEAR_BIG                 = 142,
+    RAYGUI_ICON_BIN                      = 143,
+    RAYGUI_ICON_HAND_POINTER             = 144,
+    RAYGUI_ICON_LASER                    = 145,
+    RAYGUI_ICON_COIN                     = 146,
+    RAYGUI_ICON_EXPLOSION                = 147,
+    RAYGUI_ICON_1UP                      = 148,
+    RAYGUI_ICON_PLAYER                   = 149,
+    RAYGUI_ICON_PLAYER_JUMP              = 150,
+    RAYGUI_ICON_KEY                      = 151,
+    RAYGUI_ICON_DEMON                    = 152,
+    RAYGUI_ICON_TEXT_POPUP               = 153,
+    RAYGUI_ICON_GEAR_EX                  = 154,
+    RAYGUI_ICON_CRACK                    = 155,
+    RAYGUI_ICON_CRACK_POINTS             = 156,
+    RAYGUI_ICON_STAR                     = 157,
+    RAYGUI_ICON_DOOR                     = 158,
+    RAYGUI_ICON_EXIT                     = 159,
+    RAYGUI_ICON_MODE_2D                  = 160,
+    RAYGUI_ICON_MODE_3D                  = 161,
+    RAYGUI_ICON_CUBE                     = 162,
+    RAYGUI_ICON_CUBE_FACE_TOP            = 163,
+    RAYGUI_ICON_CUBE_FACE_LEFT           = 164,
+    RAYGUI_ICON_CUBE_FACE_FRONT          = 165,
+    RAYGUI_ICON_CUBE_FACE_BOTTOM         = 166,
+    RAYGUI_ICON_CUBE_FACE_RIGHT          = 167,
+    RAYGUI_ICON_CUBE_FACE_BACK           = 168,
+    RAYGUI_ICON_CAMERA                   = 169,
+    RAYGUI_ICON_SPECIAL                  = 170,
+    RAYGUI_ICON_LINK_NET                 = 171,
+    RAYGUI_ICON_LINK_BOXES               = 172,
+    RAYGUI_ICON_LINK_MULTI               = 173,
+    RAYGUI_ICON_LINK                     = 174,
+    RAYGUI_ICON_LINK_BROKE               = 175,
+    RAYGUI_ICON_TEXT_NOTES               = 176,
+    RAYGUI_ICON_NOTEBOOK                 = 177,
+    RAYGUI_ICON_SUITCASE                 = 178,
+    RAYGUI_ICON_SUITCASE_ZIP             = 179,
+    RAYGUI_ICON_MAILBOX                  = 180,
+    RAYGUI_ICON_MONITOR                  = 181,
+    RAYGUI_ICON_PRINTER                  = 182,
+    RAYGUI_ICON_PHOTO_CAMERA             = 183,
+    RAYGUI_ICON_PHOTO_CAMERA_FLASH       = 184,
+    RAYGUI_ICON_HOUSE                    = 185,
+    RAYGUI_ICON_HEART                    = 186,
+    RAYGUI_ICON_CORNER                   = 187,
+    RAYGUI_ICON_VERTICAL_BARS            = 188,
+    RAYGUI_ICON_VERTICAL_BARS_FILL       = 189,
+    RAYGUI_ICON_LIFE_BARS                = 190,
+    RAYGUI_ICON_INFO                     = 191,
+    RAYGUI_ICON_CROSSLINE                = 192,
+    RAYGUI_ICON_HELP                     = 193,
+    RAYGUI_ICON_FILETYPE_ALPHA           = 194,
+    RAYGUI_ICON_FILETYPE_HOME            = 195,
+    RAYGUI_ICON_LAYERS_VISIBLE           = 196,
+    RAYGUI_ICON_LAYERS                   = 197,
+    RAYGUI_ICON_WINDOW                   = 198,
+    RAYGUI_ICON_HIDPI                    = 199,
+    RAYGUI_ICON_200                      = 200,
+    RAYGUI_ICON_201                      = 201,
+    RAYGUI_ICON_202                      = 202,
+    RAYGUI_ICON_203                      = 203,
+    RAYGUI_ICON_204                      = 204,
+    RAYGUI_ICON_205                      = 205,
+    RAYGUI_ICON_206                      = 206,
+    RAYGUI_ICON_207                      = 207,
+    RAYGUI_ICON_208                      = 208,
+    RAYGUI_ICON_209                      = 209,
+    RAYGUI_ICON_210                      = 210,
+    RAYGUI_ICON_211                      = 211,
+    RAYGUI_ICON_212                      = 212,
+    RAYGUI_ICON_213                      = 213,
+    RAYGUI_ICON_214                      = 214,
+    RAYGUI_ICON_215                      = 215,
+    RAYGUI_ICON_216                      = 216,
+    RAYGUI_ICON_217                      = 217,
+    RAYGUI_ICON_218                      = 218,
+    RAYGUI_ICON_219                      = 219,
+    RAYGUI_ICON_220                      = 220,
+    RAYGUI_ICON_221                      = 221,
+    RAYGUI_ICON_222                      = 222,
+    RAYGUI_ICON_223                      = 223,
+    RAYGUI_ICON_224                      = 224,
+    RAYGUI_ICON_225                      = 225,
+    RAYGUI_ICON_226                      = 226,
+    RAYGUI_ICON_227                      = 227,
+    RAYGUI_ICON_228                      = 228,
+    RAYGUI_ICON_229                      = 229,
+    RAYGUI_ICON_230                      = 230,
+    RAYGUI_ICON_231                      = 231,
+    RAYGUI_ICON_232                      = 232,
+    RAYGUI_ICON_233                      = 233,
+    RAYGUI_ICON_234                      = 234,
+    RAYGUI_ICON_235                      = 235,
+    RAYGUI_ICON_236                      = 236,
+    RAYGUI_ICON_237                      = 237,
+    RAYGUI_ICON_238                      = 238,
+    RAYGUI_ICON_239                      = 239,
+    RAYGUI_ICON_240                      = 240,
+    RAYGUI_ICON_241                      = 241,
+    RAYGUI_ICON_242                      = 242,
+    RAYGUI_ICON_243                      = 243,
+    RAYGUI_ICON_244                      = 244,
+    RAYGUI_ICON_245                      = 245,
+    RAYGUI_ICON_246                      = 246,
+    RAYGUI_ICON_247                      = 247,
+    RAYGUI_ICON_248                      = 248,
+    RAYGUI_ICON_249                      = 249,
+    RAYGUI_ICON_250                      = 250,
+    RAYGUI_ICON_251                      = 251,
+    RAYGUI_ICON_252                      = 252,
+    RAYGUI_ICON_253                      = 253,
+    RAYGUI_ICON_254                      = 254,
+    RAYGUI_ICON_255                      = 255,
+} guiIconName;
 
 //----------------------------------------------------------------------------------
 // Icons data for all gui possible icons (allocated on data segment by default)
@@ -893,266 +865,263 @@ typedef enum {
 // guiIcons size is by default: 256*(16*16/32) = 2048*4 = 8192 bytes = 8 KB
 //----------------------------------------------------------------------------------
 static unsigned int guiIcons[RAYGUI_ICON_MAX_ICONS*RAYGUI_ICON_DATA_ELEMENTS] = {
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_NONE
-    0x3ff80000, 0x2f082008, 0x2042207e, 0x40027fc2, 0x40024002, 0x40024002, 0x40024002, 0x00007ffe,      // ICON_FOLDER_FILE_OPEN
-    0x3ffe0000, 0x44226422, 0x400247e2, 0x5ffa4002, 0x57ea500a, 0x500a500a, 0x40025ffa, 0x00007ffe,      // ICON_FILE_SAVE_CLASSIC
-    0x00000000, 0x0042007e, 0x40027fc2, 0x40024002, 0x41024002, 0x44424282, 0x793e4102, 0x00000100,      // ICON_FOLDER_OPEN
-    0x00000000, 0x0042007e, 0x40027fc2, 0x40024002, 0x41024102, 0x44424102, 0x793e4282, 0x00000000,      // ICON_FOLDER_SAVE
-    0x3ff00000, 0x201c2010, 0x20042004, 0x21042004, 0x24442284, 0x21042104, 0x20042104, 0x00003ffc,      // ICON_FILE_OPEN
-    0x3ff00000, 0x201c2010, 0x20042004, 0x21042004, 0x21042104, 0x22842444, 0x20042104, 0x00003ffc,      // ICON_FILE_SAVE
-    0x3ff00000, 0x201c2010, 0x00042004, 0x20041004, 0x20844784, 0x00841384, 0x20042784, 0x00003ffc,      // ICON_FILE_EXPORT
-    0x3ff00000, 0x201c2010, 0x20042004, 0x20042004, 0x22042204, 0x22042f84, 0x20042204, 0x00003ffc,      // ICON_FILE_ADD
-    0x3ff00000, 0x201c2010, 0x20042004, 0x20042004, 0x25042884, 0x25042204, 0x20042884, 0x00003ffc,      // ICON_FILE_DELETE
-    0x3ff00000, 0x201c2010, 0x20042004, 0x20042ff4, 0x20042ff4, 0x20042ff4, 0x20042004, 0x00003ffc,      // ICON_FILETYPE_TEXT
-    0x3ff00000, 0x201c2010, 0x27042004, 0x244424c4, 0x26442444, 0x20642664, 0x20042004, 0x00003ffc,      // ICON_FILETYPE_AUDIO
-    0x3ff00000, 0x201c2010, 0x26042604, 0x20042004, 0x35442884, 0x2414222c, 0x20042004, 0x00003ffc,      // ICON_FILETYPE_IMAGE
-    0x3ff00000, 0x201c2010, 0x20c42004, 0x22442144, 0x22442444, 0x20c42144, 0x20042004, 0x00003ffc,      // ICON_FILETYPE_PLAY
-    0x3ff00000, 0x3ffc2ff0, 0x3f3c2ff4, 0x3dbc2eb4, 0x3dbc2bb4, 0x3f3c2eb4, 0x3ffc2ff4, 0x00002ff4,      // ICON_FILETYPE_VIDEO
-    0x3ff00000, 0x201c2010, 0x21842184, 0x21842004, 0x21842184, 0x21842184, 0x20042184, 0x00003ffc,      // ICON_FILETYPE_INFO
-    0x0ff00000, 0x381c0810, 0x28042804, 0x28042804, 0x28042804, 0x28042804, 0x20102ffc, 0x00003ff0,      // ICON_FILE_COPY
-    0x00000000, 0x701c0000, 0x079c1e14, 0x55a000f0, 0x079c00f0, 0x701c1e14, 0x00000000, 0x00000000,      // ICON_FILE_CUT
-    0x01c00000, 0x13e41bec, 0x3f841004, 0x204420c4, 0x20442044, 0x20442044, 0x207c2044, 0x00003fc0,      // ICON_FILE_PASTE
-    0x00000000, 0x3aa00fe0, 0x2abc2aa0, 0x2aa42aa4, 0x20042aa4, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_CURSOR_HAND
-    0x00000000, 0x003c000c, 0x030800c8, 0x30100c10, 0x10202020, 0x04400840, 0x01800280, 0x00000000,      // ICON_CURSOR_POINTER
-    0x00000000, 0x00180000, 0x01f00078, 0x03e007f0, 0x07c003e0, 0x04000e40, 0x00000000, 0x00000000,      // ICON_CURSOR_CLASSIC
-    0x00000000, 0x04000000, 0x11000a00, 0x04400a80, 0x01100220, 0x00580088, 0x00000038, 0x00000000,      // ICON_PENCIL
-    0x04000000, 0x15000a00, 0x50402880, 0x14102820, 0x05040a08, 0x015c028c, 0x007c00bc, 0x00000000,      // ICON_PENCIL_BIG
-    0x01c00000, 0x01400140, 0x01400140, 0x0ff80140, 0x0ff80808, 0x0aa80808, 0x0aa80aa8, 0x00000ff8,      // ICON_BRUSH_CLASSIC
-    0x1ffc0000, 0x5ffc7ffe, 0x40004000, 0x00807f80, 0x01c001c0, 0x01c001c0, 0x01c001c0, 0x00000080,      // ICON_BRUSH_PAINTER
-    0x00000000, 0x00800000, 0x01c00080, 0x03e001c0, 0x07f003e0, 0x036006f0, 0x000001c0, 0x00000000,      // ICON_WATER_DROP
-    0x00000000, 0x3e003800, 0x1f803f80, 0x0c201e40, 0x02080c10, 0x00840104, 0x00380044, 0x00000000,      // ICON_COLOR_PICKER
-    0x00000000, 0x07800300, 0x1fe00fc0, 0x3f883fd0, 0x0e021f04, 0x02040402, 0x00f00108, 0x00000000,      // ICON_RUBBER
-    0x00c00000, 0x02800140, 0x08200440, 0x20081010, 0x2ffe3004, 0x03f807fc, 0x00e001f0, 0x00000040,      // ICON_COLOR_BUCKET
-    0x00000000, 0x21843ffc, 0x01800180, 0x01800180, 0x01800180, 0x01800180, 0x03c00180, 0x00000000,      // ICON_TEXT_T
-    0x00800000, 0x01400180, 0x06200340, 0x0c100620, 0x1ff80c10, 0x380c1808, 0x70067004, 0x0000f80f,      // ICON_TEXT_A
-    0x78000000, 0x50004000, 0x00004800, 0x03c003c0, 0x03c003c0, 0x00100000, 0x0002000a, 0x0000000e,      // ICON_SCALE
-    0x75560000, 0x5e004002, 0x54001002, 0x41001202, 0x408200fe, 0x40820082, 0x40820082, 0x00006afe,      // ICON_RESIZE
-    0x00000000, 0x3f003f00, 0x3f003f00, 0x3f003f00, 0x00400080, 0x001c0020, 0x001c001c, 0x00000000,      // ICON_FILTER_POINT
-    0x6d800000, 0x00004080, 0x40804080, 0x40800000, 0x00406d80, 0x001c0020, 0x001c001c, 0x00000000,      // ICON_FILTER_BILINEAR
-    0x40080000, 0x1ffe2008, 0x14081008, 0x11081208, 0x10481088, 0x10081028, 0x10047ff8, 0x00001002,      // ICON_CROP
-    0x00100000, 0x3ffc0010, 0x2ab03550, 0x22b02550, 0x20b02150, 0x20302050, 0x2000fff0, 0x00002000,      // ICON_CROP_ALPHA
-    0x40000000, 0x1ff82000, 0x04082808, 0x01082208, 0x00482088, 0x00182028, 0x35542008, 0x00000002,      // ICON_SQUARE_TOGGLE
-    0x00000000, 0x02800280, 0x06c006c0, 0x0ea00ee0, 0x1e901eb0, 0x3e883e98, 0x7efc7e8c, 0x00000000,      // ICON_SYMMETRY
-    0x01000000, 0x05600100, 0x1d480d50, 0x7d423d44, 0x3d447d42, 0x0d501d48, 0x01000560, 0x00000100,      // ICON_SYMMETRY_HORIZONTAL
-    0x01800000, 0x04200240, 0x10080810, 0x00001ff8, 0x00007ffe, 0x0ff01ff8, 0x03c007e0, 0x00000180,      // ICON_SYMMETRY_VERTICAL
-    0x00000000, 0x010800f0, 0x02040204, 0x02040204, 0x07f00308, 0x1c000e00, 0x30003800, 0x00000000,      // ICON_LENS
-    0x00000000, 0x061803f0, 0x08240c0c, 0x08040814, 0x0c0c0804, 0x23f01618, 0x18002400, 0x00000000,      // ICON_LENS_BIG
-    0x00000000, 0x00000000, 0x1c7007c0, 0x638e3398, 0x1c703398, 0x000007c0, 0x00000000, 0x00000000,      // ICON_EYE_ON
-    0x00000000, 0x10002000, 0x04700fc0, 0x610e3218, 0x1c703098, 0x001007a0, 0x00000008, 0x00000000,      // ICON_EYE_OFF
-    0x00000000, 0x00007ffc, 0x40047ffc, 0x10102008, 0x04400820, 0x02800280, 0x02800280, 0x00000100,      // ICON_FILTER_TOP
-    0x00000000, 0x40027ffe, 0x10082004, 0x04200810, 0x02400240, 0x02400240, 0x01400240, 0x000000c0,      // ICON_FILTER
-    0x00800000, 0x00800080, 0x00000080, 0x3c9e0000, 0x00000000, 0x00800080, 0x00800080, 0x00000000,      // ICON_TARGET_POINT
-    0x00800000, 0x00800080, 0x00800080, 0x3f7e01c0, 0x008001c0, 0x00800080, 0x00800080, 0x00000000,      // ICON_TARGET_SMALL
-    0x00800000, 0x00800080, 0x03e00080, 0x3e3e0220, 0x03e00220, 0x00800080, 0x00800080, 0x00000000,      // ICON_TARGET_BIG
-    0x01000000, 0x04400280, 0x01000100, 0x43842008, 0x43849ab2, 0x01002008, 0x04400100, 0x01000280,      // ICON_TARGET_MOVE
-    0x01000000, 0x04400280, 0x01000100, 0x41042108, 0x41049ff2, 0x01002108, 0x04400100, 0x01000280,      // ICON_CURSOR_MOVE
-    0x781e0000, 0x500a4002, 0x04204812, 0x00000240, 0x02400000, 0x48120420, 0x4002500a, 0x0000781e,      // ICON_CURSOR_SCALE
-    0x00000000, 0x20003c00, 0x24002800, 0x01000200, 0x00400080, 0x00140024, 0x003c0004, 0x00000000,      // ICON_CURSOR_SCALE_RIGHT
-    0x00000000, 0x0004003c, 0x00240014, 0x00800040, 0x02000100, 0x28002400, 0x3c002000, 0x00000000,      // ICON_CURSOR_SCALE_LEFT
-    0x00000000, 0x00100020, 0x10101fc8, 0x10001020, 0x10001000, 0x10001000, 0x00001fc0, 0x00000000,      // ICON_UNDO
-    0x00000000, 0x08000400, 0x080813f8, 0x00080408, 0x00080008, 0x00080008, 0x000003f8, 0x00000000,      // ICON_REDO
-    0x00000000, 0x3ffc0000, 0x20042004, 0x20002000, 0x20402000, 0x3f902020, 0x00400020, 0x00000000,      // ICON_REREDO
-    0x00000000, 0x3ffc0000, 0x20042004, 0x27fc2004, 0x20202000, 0x3fc82010, 0x00200010, 0x00000000,      // ICON_MUTATE
-    0x00000000, 0x0ff00000, 0x10081818, 0x11801008, 0x10001180, 0x18101020, 0x00100fc8, 0x00000020,      // ICON_ROTATE
-    0x00000000, 0x04000200, 0x240429fc, 0x20042204, 0x20442004, 0x3f942024, 0x00400020, 0x00000000,      // ICON_REPEAT
-    0x00000000, 0x20001000, 0x22104c0e, 0x00801120, 0x11200040, 0x4c0e2210, 0x10002000, 0x00000000,      // ICON_SHUFFLE
-    0x7ffe0000, 0x50024002, 0x44024802, 0x41024202, 0x40424082, 0x40124022, 0x4002400a, 0x00007ffe,      // ICON_EMPTYBOX
-    0x00800000, 0x03e00080, 0x08080490, 0x3c9e0808, 0x08080808, 0x03e00490, 0x00800080, 0x00000000,      // ICON_TARGET
-    0x00800000, 0x00800080, 0x00800080, 0x3ffe01c0, 0x008001c0, 0x00800080, 0x00800080, 0x00000000,      // ICON_TARGET_SMALL_FILL
-    0x00800000, 0x00800080, 0x03e00080, 0x3ffe03e0, 0x03e003e0, 0x00800080, 0x00800080, 0x00000000,      // ICON_TARGET_BIG_FILL
-    0x01000000, 0x07c00380, 0x01000100, 0x638c2008, 0x638cfbbe, 0x01002008, 0x07c00100, 0x01000380,      // ICON_TARGET_MOVE_FILL
-    0x01000000, 0x07c00380, 0x01000100, 0x610c2108, 0x610cfffe, 0x01002108, 0x07c00100, 0x01000380,      // ICON_CURSOR_MOVE_FILL
-    0x781e0000, 0x6006700e, 0x04204812, 0x00000240, 0x02400000, 0x48120420, 0x700e6006, 0x0000781e,      // ICON_CURSOR_SCALE_FILL
-    0x00000000, 0x38003c00, 0x24003000, 0x01000200, 0x00400080, 0x000c0024, 0x003c001c, 0x00000000,      // ICON_CURSOR_SCALE_RIGHT_FILL
-    0x00000000, 0x001c003c, 0x0024000c, 0x00800040, 0x02000100, 0x30002400, 0x3c003800, 0x00000000,      // ICON_CURSOR_SCALE_LEFT_FILL
-    0x00000000, 0x00300020, 0x10301ff8, 0x10001020, 0x10001000, 0x10001000, 0x00001fc0, 0x00000000,      // ICON_UNDO_FILL
-    0x00000000, 0x0c000400, 0x0c081ff8, 0x00080408, 0x00080008, 0x00080008, 0x000003f8, 0x00000000,      // ICON_REDO_FILL
-    0x00000000, 0x3ffc0000, 0x20042004, 0x20002000, 0x20402000, 0x3ff02060, 0x00400060, 0x00000000,      // ICON_REREDO_FILL
-    0x00000000, 0x3ffc0000, 0x20042004, 0x27fc2004, 0x20202000, 0x3ff82030, 0x00200030, 0x00000000,      // ICON_MUTATE_FILL
-    0x00000000, 0x0ff00000, 0x10081818, 0x11801008, 0x10001180, 0x18301020, 0x00300ff8, 0x00000020,      // ICON_ROTATE_FILL
-    0x00000000, 0x06000200, 0x26042ffc, 0x20042204, 0x20442004, 0x3ff42064, 0x00400060, 0x00000000,      // ICON_REPEAT_FILL
-    0x00000000, 0x30001000, 0x32107c0e, 0x00801120, 0x11200040, 0x7c0e3210, 0x10003000, 0x00000000,      // ICON_SHUFFLE_FILL
-    0x00000000, 0x30043ffc, 0x24042804, 0x21042204, 0x20442084, 0x20142024, 0x3ffc200c, 0x00000000,      // ICON_EMPTYBOX_SMALL
-    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX
-    0x00000000, 0x23c43ffc, 0x23c423c4, 0x200423c4, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX_TOP
-    0x00000000, 0x3e043ffc, 0x3e043e04, 0x20043e04, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX_TOP_RIGHT
-    0x00000000, 0x20043ffc, 0x20042004, 0x3e043e04, 0x3e043e04, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX_RIGHT
-    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x3e042004, 0x3e043e04, 0x3ffc3e04, 0x00000000,      // ICON_BOX_BOTTOM_RIGHT
-    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x23c42004, 0x23c423c4, 0x3ffc23c4, 0x00000000,      // ICON_BOX_BOTTOM
-    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x207c2004, 0x207c207c, 0x3ffc207c, 0x00000000,      // ICON_BOX_BOTTOM_LEFT
-    0x00000000, 0x20043ffc, 0x20042004, 0x207c207c, 0x207c207c, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX_LEFT
-    0x00000000, 0x207c3ffc, 0x207c207c, 0x2004207c, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX_TOP_LEFT
-    0x00000000, 0x20043ffc, 0x20042004, 0x23c423c4, 0x23c423c4, 0x20042004, 0x3ffc2004, 0x00000000,      // ICON_BOX_CENTER
-    0x7ffe0000, 0x40024002, 0x47e24182, 0x4ff247e2, 0x47e24ff2, 0x418247e2, 0x40024002, 0x00007ffe,      // ICON_BOX_CIRCLE_MASK
-    0x7fff0000, 0x40014001, 0x40014001, 0x49555ddd, 0x4945495d, 0x400149c5, 0x40014001, 0x00007fff,      // ICON_POT
-    0x7ffe0000, 0x53327332, 0x44ce4cce, 0x41324332, 0x404e40ce, 0x48125432, 0x4006540e, 0x00007ffe,      // ICON_ALPHA_MULTIPLY
-    0x7ffe0000, 0x53327332, 0x44ce4cce, 0x41324332, 0x5c4e40ce, 0x44124432, 0x40065c0e, 0x00007ffe,      // ICON_ALPHA_CLEAR
-    0x7ffe0000, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x00007ffe,      // ICON_DITHERING
-    0x07fe0000, 0x1ffa0002, 0x7fea000a, 0x402a402a, 0x5b2a512a, 0x5128552a, 0x40205128, 0x00007fe0,      // ICON_MIPMAPS
-    0x00000000, 0x1ff80000, 0x12481248, 0x12481ff8, 0x1ff81248, 0x12481248, 0x00001ff8, 0x00000000,      // ICON_BOX_GRID
-    0x12480000, 0x7ffe1248, 0x12481248, 0x12487ffe, 0x7ffe1248, 0x12481248, 0x12487ffe, 0x00001248,      // ICON_GRID
-    0x00000000, 0x1c380000, 0x1c3817e8, 0x08100810, 0x08100810, 0x17e81c38, 0x00001c38, 0x00000000,      // ICON_BOX_CORNERS_SMALL
-    0x700e0000, 0x700e5ffa, 0x20042004, 0x20042004, 0x20042004, 0x20042004, 0x5ffa700e, 0x0000700e,      // ICON_BOX_CORNERS_BIG
-    0x3f7e0000, 0x21422142, 0x21422142, 0x00003f7e, 0x21423f7e, 0x21422142, 0x3f7e2142, 0x00000000,      // ICON_FOUR_BOXES
-    0x00000000, 0x3bb80000, 0x3bb83bb8, 0x3bb80000, 0x3bb83bb8, 0x3bb80000, 0x3bb83bb8, 0x00000000,      // ICON_GRID_FILL
-    0x7ffe0000, 0x7ffe7ffe, 0x77fe7000, 0x77fe77fe, 0x777e7700, 0x777e777e, 0x777e777e, 0x0000777e,      // ICON_BOX_MULTISIZE
-    0x781e0000, 0x40024002, 0x00004002, 0x01800000, 0x00000180, 0x40020000, 0x40024002, 0x0000781e,      // ICON_ZOOM_SMALL
-    0x781e0000, 0x40024002, 0x00004002, 0x03c003c0, 0x03c003c0, 0x40020000, 0x40024002, 0x0000781e,      // ICON_ZOOM_MEDIUM
-    0x781e0000, 0x40024002, 0x07e04002, 0x07e007e0, 0x07e007e0, 0x400207e0, 0x40024002, 0x0000781e,      // ICON_ZOOM_BIG
-    0x781e0000, 0x5ffa4002, 0x1ff85ffa, 0x1ff81ff8, 0x1ff81ff8, 0x5ffa1ff8, 0x40025ffa, 0x0000781e,      // ICON_ZOOM_ALL
-    0x00000000, 0x2004381c, 0x00002004, 0x00000000, 0x00000000, 0x20040000, 0x381c2004, 0x00000000,      // ICON_ZOOM_CENTER
-    0x00000000, 0x1db80000, 0x10081008, 0x10080000, 0x00001008, 0x10081008, 0x00001db8, 0x00000000,      // ICON_BOX_DOTS_SMALL
-    0x35560000, 0x00002002, 0x00002002, 0x00002002, 0x00002002, 0x00002002, 0x35562002, 0x00000000,      // ICON_BOX_DOTS_BIG
-    0x7ffe0000, 0x40024002, 0x48124ff2, 0x49924812, 0x48124992, 0x4ff24812, 0x40024002, 0x00007ffe,      // ICON_BOX_CONCENTRIC
-    0x00000000, 0x10841ffc, 0x10841084, 0x1ffc1084, 0x10841084, 0x10841084, 0x00001ffc, 0x00000000,      // ICON_BOX_GRID_BIG
-    0x00000000, 0x00000000, 0x10000000, 0x04000800, 0x01040200, 0x00500088, 0x00000020, 0x00000000,      // ICON_OK_TICK
-    0x00000000, 0x10080000, 0x04200810, 0x01800240, 0x02400180, 0x08100420, 0x00001008, 0x00000000,      // ICON_CROSS
-    0x00000000, 0x02000000, 0x00800100, 0x00200040, 0x00200010, 0x00800040, 0x02000100, 0x00000000,      // ICON_ARROW_LEFT
-    0x00000000, 0x00400000, 0x01000080, 0x04000200, 0x04000800, 0x01000200, 0x00400080, 0x00000000,      // ICON_ARROW_RIGHT
-    0x00000000, 0x00000000, 0x00000000, 0x08081004, 0x02200410, 0x00800140, 0x00000000, 0x00000000,      // ICON_ARROW_DOWN
-    0x00000000, 0x00000000, 0x01400080, 0x04100220, 0x10040808, 0x00000000, 0x00000000, 0x00000000,      // ICON_ARROW_UP
-    0x00000000, 0x02000000, 0x03800300, 0x03e003c0, 0x03e003f0, 0x038003c0, 0x02000300, 0x00000000,      // ICON_ARROW_LEFT_FILL
-    0x00000000, 0x00400000, 0x01c000c0, 0x07c003c0, 0x07c00fc0, 0x01c003c0, 0x004000c0, 0x00000000,      // ICON_ARROW_RIGHT_FILL
-    0x00000000, 0x00000000, 0x00000000, 0x0ff81ffc, 0x03e007f0, 0x008001c0, 0x00000000, 0x00000000,      // ICON_ARROW_DOWN_FILL
-    0x00000000, 0x00000000, 0x01c00080, 0x07f003e0, 0x1ffc0ff8, 0x00000000, 0x00000000, 0x00000000,      // ICON_ARROW_UP_FILL
-    0x00000000, 0x18a008c0, 0x32881290, 0x24822686, 0x26862482, 0x12903288, 0x08c018a0, 0x00000000,      // ICON_AUDIO
-    0x00000000, 0x04800780, 0x004000c0, 0x662000f0, 0x08103c30, 0x130a0e18, 0x0000318e, 0x00000000,      // ICON_FX
-    0x00000000, 0x00800000, 0x08880888, 0x2aaa0a8a, 0x0a8a2aaa, 0x08880888, 0x00000080, 0x00000000,      // ICON_WAVE
-    0x00000000, 0x00600000, 0x01080090, 0x02040108, 0x42044204, 0x24022402, 0x00001800, 0x00000000,      // ICON_WAVE_SINUS
-    0x00000000, 0x07f80000, 0x04080408, 0x04080408, 0x04080408, 0x7c0e0408, 0x00000000, 0x00000000,      // ICON_WAVE_SQUARE
-    0x00000000, 0x00000000, 0x00a00040, 0x22084110, 0x08021404, 0x00000000, 0x00000000, 0x00000000,      // ICON_WAVE_TRIANGULAR
-    0x00000000, 0x00000000, 0x04200000, 0x01800240, 0x02400180, 0x00000420, 0x00000000, 0x00000000,      // ICON_CROSS_SMALL
-    0x00000000, 0x18380000, 0x12281428, 0x10a81128, 0x112810a8, 0x14281228, 0x00001838, 0x00000000,      // ICON_PLAYER_PREVIOUS
-    0x00000000, 0x18000000, 0x11801600, 0x10181060, 0x10601018, 0x16001180, 0x00001800, 0x00000000,      // ICON_PLAYER_PLAY_BACK
-    0x00000000, 0x00180000, 0x01880068, 0x18080608, 0x06081808, 0x00680188, 0x00000018, 0x00000000,      // ICON_PLAYER_PLAY
-    0x00000000, 0x1e780000, 0x12481248, 0x12481248, 0x12481248, 0x12481248, 0x00001e78, 0x00000000,      // ICON_PLAYER_PAUSE
-    0x00000000, 0x1ff80000, 0x10081008, 0x10081008, 0x10081008, 0x10081008, 0x00001ff8, 0x00000000,      // ICON_PLAYER_STOP
-    0x00000000, 0x1c180000, 0x14481428, 0x15081488, 0x14881508, 0x14281448, 0x00001c18, 0x00000000,      // ICON_PLAYER_NEXT
-    0x00000000, 0x03c00000, 0x08100420, 0x10081008, 0x10081008, 0x04200810, 0x000003c0, 0x00000000,      // ICON_PLAYER_RECORD
-    0x00000000, 0x0c3007e0, 0x13c81818, 0x14281668, 0x14281428, 0x1c381c38, 0x08102244, 0x00000000,      // ICON_MAGNET
-    0x07c00000, 0x08200820, 0x3ff80820, 0x23882008, 0x21082388, 0x20082108, 0x1ff02008, 0x00000000,      // ICON_LOCK_CLOSE
-    0x07c00000, 0x08000800, 0x3ff80800, 0x23882008, 0x21082388, 0x20082108, 0x1ff02008, 0x00000000,      // ICON_LOCK_OPEN
-    0x01c00000, 0x0c180770, 0x3086188c, 0x60832082, 0x60034781, 0x30062002, 0x0c18180c, 0x01c00770,      // ICON_CLOCK
-    0x0a200000, 0x1b201b20, 0x04200e20, 0x04200420, 0x04700420, 0x0e700e70, 0x0e700e70, 0x04200e70,      // ICON_TOOLS
-    0x01800000, 0x3bdc318c, 0x0ff01ff8, 0x7c3e1e78, 0x1e787c3e, 0x1ff80ff0, 0x318c3bdc, 0x00000180,      // ICON_GEAR
-    0x01800000, 0x3ffc318c, 0x1c381ff8, 0x781e1818, 0x1818781e, 0x1ff81c38, 0x318c3ffc, 0x00000180,      // ICON_GEAR_BIG
-    0x00000000, 0x08080ff8, 0x08081ffc, 0x0aa80aa8, 0x0aa80aa8, 0x0aa80aa8, 0x08080aa8, 0x00000ff8,      // ICON_BIN
-    0x00000000, 0x00000000, 0x20043ffc, 0x08043f84, 0x04040f84, 0x04040784, 0x000007fc, 0x00000000,      // ICON_HAND_POINTER
-    0x00000000, 0x24400400, 0x00001480, 0x6efe0e00, 0x00000e00, 0x24401480, 0x00000400, 0x00000000,      // ICON_LASER
-    0x00000000, 0x03c00000, 0x08300460, 0x11181118, 0x11181118, 0x04600830, 0x000003c0, 0x00000000,      // ICON_COIN
-    0x00000000, 0x10880080, 0x06c00810, 0x366c07e0, 0x07e00240, 0x00001768, 0x04200240, 0x00000000,      // ICON_EXPLOSION
-    0x00000000, 0x3d280000, 0x2528252c, 0x3d282528, 0x05280528, 0x05e80528, 0x00000000, 0x00000000,      // ICON_1UP
-    0x01800000, 0x03c003c0, 0x018003c0, 0x0ff007e0, 0x0bd00bd0, 0x0a500bd0, 0x02400240, 0x02400240,      // ICON_PLAYER
-    0x01800000, 0x03c003c0, 0x118013c0, 0x03c81ff8, 0x07c003c8, 0x04400440, 0x0c080478, 0x00000000,      // ICON_PLAYER_JUMP
-    0x3ff80000, 0x30183ff8, 0x30183018, 0x3ff83ff8, 0x03000300, 0x03c003c0, 0x03e00300, 0x000003e0,      // ICON_KEY
-    0x3ff80000, 0x3ff83ff8, 0x33983ff8, 0x3ff83398, 0x3ff83ff8, 0x00000540, 0x0fe00aa0, 0x00000fe0,      // ICON_DEMON
-    0x00000000, 0x0ff00000, 0x20041008, 0x25442004, 0x10082004, 0x06000bf0, 0x00000300, 0x00000000,      // ICON_TEXT_POPUP
-    0x00000000, 0x11440000, 0x07f00be8, 0x1c1c0e38, 0x1c1c0c18, 0x07f00e38, 0x11440be8, 0x00000000,      // ICON_GEAR_EX
-    0x00000000, 0x20080000, 0x0c601010, 0x07c00fe0, 0x07c007c0, 0x0c600fe0, 0x20081010, 0x00000000,      // ICON_CRACK
-    0x00000000, 0x20080000, 0x0c601010, 0x04400fe0, 0x04405554, 0x0c600fe0, 0x20081010, 0x00000000,      // ICON_CRACK_POINTS
-    0x00000000, 0x00800080, 0x01c001c0, 0x1ffc3ffe, 0x03e007f0, 0x07f003e0, 0x0c180770, 0x00000808,      // ICON_STAR
-    0x0ff00000, 0x08180810, 0x08100818, 0x0a100810, 0x08180810, 0x08100818, 0x08100810, 0x00001ff8,      // ICON_DOOR
-    0x0ff00000, 0x08100810, 0x08100810, 0x10100010, 0x4f902010, 0x10102010, 0x08100010, 0x00000ff0,      // ICON_EXIT
-    0x00040000, 0x001f000e, 0x0ef40004, 0x12f41284, 0x0ef41214, 0x10040004, 0x7ffc3004, 0x10003000,      // ICON_MODE_2D
-    0x78040000, 0x501f600e, 0x0ef44004, 0x12f41284, 0x0ef41284, 0x10140004, 0x7ffc300c, 0x10003000,      // ICON_MODE_3D
-    0x7fe00000, 0x50286030, 0x47fe4804, 0x44224402, 0x44224422, 0x241275e2, 0x0c06140a, 0x000007fe,      // ICON_CUBE
-    0x7fe00000, 0x5ff87ff0, 0x47fe4ffc, 0x44224402, 0x44224422, 0x241275e2, 0x0c06140a, 0x000007fe,      // ICON_CUBE_FACE_TOP
-    0x7fe00000, 0x50386030, 0x47fe483c, 0x443e443e, 0x443e443e, 0x241e75fe, 0x0c06140e, 0x000007fe,      // ICON_CUBE_FACE_LEFT
-    0x7fe00000, 0x50286030, 0x47fe4804, 0x47fe47fe, 0x47fe47fe, 0x27fe77fe, 0x0ffe17fe, 0x000007fe,      // ICON_CUBE_FACE_FRONT
-    0x7fe00000, 0x50286030, 0x47fe4804, 0x44224402, 0x44224422, 0x3ff27fe2, 0x0ffe1ffa, 0x000007fe,      // ICON_CUBE_FACE_BOTTOM
-    0x7fe00000, 0x70286030, 0x7ffe7804, 0x7c227c02, 0x7c227c22, 0x3c127de2, 0x0c061c0a, 0x000007fe,      // ICON_CUBE_FACE_RIGHT
-    0x7fe00000, 0x7fe87ff0, 0x7ffe7fe4, 0x7fe27fe2, 0x7fe27fe2, 0x24127fe2, 0x0c06140a, 0x000007fe,      // ICON_CUBE_FACE_BACK
-    0x00000000, 0x2a0233fe, 0x22022602, 0x22022202, 0x2a022602, 0x00a033fe, 0x02080110, 0x00000000,      // ICON_CAMERA
-    0x00000000, 0x200c3ffc, 0x000c000c, 0x3ffc000c, 0x30003000, 0x30003000, 0x3ffc3004, 0x00000000,      // ICON_SPECIAL
-    0x00000000, 0x0022003e, 0x012201e2, 0x0100013e, 0x01000100, 0x79000100, 0x4f004900, 0x00007800,      // ICON_LINK_NET
-    0x00000000, 0x44007c00, 0x45004600, 0x00627cbe, 0x00620022, 0x45007cbe, 0x44004600, 0x00007c00,      // ICON_LINK_BOXES
-    0x00000000, 0x0044007c, 0x0010007c, 0x3f100010, 0x3f1021f0, 0x3f100010, 0x3f0021f0, 0x00000000,      // ICON_LINK_MULTI
-    0x00000000, 0x0044007c, 0x00440044, 0x0010007c, 0x00100010, 0x44107c10, 0x440047f0, 0x00007c00,      // ICON_LINK
-    0x00000000, 0x0044007c, 0x00440044, 0x0000007c, 0x00000010, 0x44007c10, 0x44004550, 0x00007c00,      // ICON_LINK_BROKE
-    0x02a00000, 0x22a43ffc, 0x20042004, 0x20042ff4, 0x20042ff4, 0x20042ff4, 0x20042004, 0x00003ffc,      // ICON_TEXT_NOTES
-    0x3ffc0000, 0x20042004, 0x245e27c4, 0x27c42444, 0x2004201e, 0x201e2004, 0x20042004, 0x00003ffc,      // ICON_NOTEBOOK
-    0x00000000, 0x07e00000, 0x04200420, 0x24243ffc, 0x24242424, 0x24242424, 0x3ffc2424, 0x00000000,      // ICON_SUITCASE
-    0x00000000, 0x0fe00000, 0x08200820, 0x40047ffc, 0x7ffc5554, 0x40045554, 0x7ffc4004, 0x00000000,      // ICON_SUITCASE_ZIP
-    0x00000000, 0x20043ffc, 0x3ffc2004, 0x13c81008, 0x100813c8, 0x10081008, 0x1ff81008, 0x00000000,      // ICON_MAILBOX
-    0x00000000, 0x40027ffe, 0x5ffa5ffa, 0x5ffa5ffa, 0x40025ffa, 0x03c07ffe, 0x1ff81ff8, 0x00000000,      // ICON_MONITOR
-    0x0ff00000, 0x6bfe7ffe, 0x7ffe7ffe, 0x68167ffe, 0x08106816, 0x08100810, 0x0ff00810, 0x00000000,      // ICON_PRINTER
-    0x3ff80000, 0xfffe2008, 0x870a8002, 0x904a888a, 0x904a904a, 0x870a888a, 0xfffe8002, 0x00000000,      // ICON_PHOTO_CAMERA
-    0x0fc00000, 0xfcfe0cd8, 0x8002fffe, 0x84428382, 0x84428442, 0x80028382, 0xfffe8002, 0x00000000,      // ICON_PHOTO_CAMERA_FLASH
-    0x00000000, 0x02400180, 0x08100420, 0x20041008, 0x23c42004, 0x22442244, 0x3ffc2244, 0x00000000,      // ICON_HOUSE
-    0x00000000, 0x1c700000, 0x3ff83ef8, 0x3ff83ff8, 0x0fe01ff0, 0x038007c0, 0x00000100, 0x00000000,      // ICON_HEART
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x80000000, 0xe000c000,      // ICON_CORNER
-    0x00000000, 0x14001c00, 0x15c01400, 0x15401540, 0x155c1540, 0x15541554, 0x1ddc1554, 0x00000000,      // ICON_VERTICAL_BARS
-    0x00000000, 0x03000300, 0x1b001b00, 0x1b601b60, 0x1b6c1b60, 0x1b6c1b6c, 0x1b6c1b6c, 0x00000000,      // ICON_VERTICAL_BARS_FILL
-    0x00000000, 0x00000000, 0x403e7ffe, 0x7ffe403e, 0x7ffe0000, 0x43fe43fe, 0x00007ffe, 0x00000000,      // ICON_LIFE_BARS
-    0x7ffc0000, 0x43844004, 0x43844284, 0x43844004, 0x42844284, 0x42844284, 0x40044384, 0x00007ffc,      // ICON_INFO
-    0x40008000, 0x10002000, 0x04000800, 0x01000200, 0x00400080, 0x00100020, 0x00040008, 0x00010002,      // ICON_CROSSLINE
-    0x00000000, 0x1ff01ff0, 0x18301830, 0x1f001830, 0x03001f00, 0x00000300, 0x03000300, 0x00000000,      // ICON_HELP
-    0x3ff00000, 0x2abc3550, 0x2aac3554, 0x2aac3554, 0x2aac3554, 0x2aac3554, 0x2aac3554, 0x00003ffc,      // ICON_FILETYPE_ALPHA
-    0x3ff00000, 0x201c2010, 0x22442184, 0x28142424, 0x29942814, 0x2ff42994, 0x20042004, 0x00003ffc,      // ICON_FILETYPE_HOME
-    0x07fe0000, 0x04020402, 0x7fe20402, 0x44224422, 0x44224422, 0x402047fe, 0x40204020, 0x00007fe0,      // ICON_LAYERS_VISIBLE
-    0x07fe0000, 0x04020402, 0x7c020402, 0x44024402, 0x44024402, 0x402047fe, 0x40204020, 0x00007fe0,      // ICON_LAYERS
-    0x00000000, 0x40027ffe, 0x7ffe4002, 0x40024002, 0x40024002, 0x40024002, 0x7ffe4002, 0x00000000,      // ICON_WINDOW
-    0x09100000, 0x09f00910, 0x09100910, 0x00000910, 0x24a2779e, 0x27a224a2, 0x709e20a2, 0x00000000,      // ICON_HIDPI
-    0x3ff00000, 0x201c2010, 0x2a842e84, 0x2e842a84, 0x2ba42004, 0x2aa42aa4, 0x20042ba4, 0x00003ffc,      // ICON_FILETYPE_BINARY
-    0x00000000, 0x00000000, 0x00120012, 0x4a5e4bd2, 0x485233d2, 0x00004bd2, 0x00000000, 0x00000000,      // ICON_HEX
-    0x01800000, 0x381c0660, 0x23c42004, 0x23c42044, 0x13c82204, 0x08101008, 0x02400420, 0x00000180,      // ICON_SHIELD
-    0x007e0000, 0x20023fc2, 0x40227fe2, 0x400a403a, 0x400a400a, 0x400a400a, 0x4008400e, 0x00007ff8,      // ICON_FILE_NEW
-    0x00000000, 0x0042007e, 0x40027fc2, 0x44024002, 0x5f024402, 0x44024402, 0x7ffe4002, 0x00000000,      // ICON_FOLDER_ADD
-    0x44220000, 0x12482244, 0xf3cf0000, 0x14280420, 0x48122424, 0x08100810, 0x1ff81008, 0x03c00420,      // ICON_ALARM
-    0x0aa00000, 0x1ff80aa0, 0x1068700e, 0x1008706e, 0x1008700e, 0x1008700e, 0x0aa01ff8, 0x00000aa0,      // ICON_CPU
-    0x07e00000, 0x04201db8, 0x04a01c38, 0x04a01d38, 0x04a01d38, 0x04a01d38, 0x04201d38, 0x000007e0,      // ICON_ROM
-    0x00000000, 0x03c00000, 0x3c382ff0, 0x3c04380c, 0x01800000, 0x03c003c0, 0x00000180, 0x00000000,      // ICON_STEP_OVER
-    0x01800000, 0x01800180, 0x01800180, 0x03c007e0, 0x00000180, 0x01800000, 0x03c003c0, 0x00000180,      // ICON_STEP_INTO
-    0x01800000, 0x07e003c0, 0x01800180, 0x01800180, 0x00000180, 0x01800000, 0x03c003c0, 0x00000180,      // ICON_STEP_OUT
-    0x00000000, 0x0ff003c0, 0x181c1c34, 0x303c301c, 0x30003000, 0x1c301800, 0x03c00ff0, 0x00000000,      // ICON_RESTART
-    0x00000000, 0x00000000, 0x07e003c0, 0x0ff00ff0, 0x0ff00ff0, 0x03c007e0, 0x00000000, 0x00000000,      // ICON_BREAKPOINT_ON
-    0x00000000, 0x00000000, 0x042003c0, 0x08100810, 0x08100810, 0x03c00420, 0x00000000, 0x00000000,      // ICON_BREAKPOINT_OFF
-    0x00000000, 0x00000000, 0x1ff81ff8, 0x1ff80000, 0x00001ff8, 0x1ff81ff8, 0x00000000, 0x00000000,      // ICON_BURGER_MENU
-    0x00000000, 0x00000000, 0x00880070, 0x0c880088, 0x1e8810f8, 0x3e881288, 0x00000000, 0x00000000,      // ICON_CASE_SENSITIVE
-    0x00000000, 0x02000000, 0x07000a80, 0x07001fc0, 0x02000a80, 0x00300030, 0x00000000, 0x00000000,      // ICON_REG_EXP
-    0x00000000, 0x0042007e, 0x40027fc2, 0x40024002, 0x40024002, 0x40024002, 0x7ffe4002, 0x00000000,      // ICON_FOLDER
-    0x3ff00000, 0x201c2010, 0x20042004, 0x20042004, 0x20042004, 0x20042004, 0x20042004, 0x00003ffc,      // ICON_FILE
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_219
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_220
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_221
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_222
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_223
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_224
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_225
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_226
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_227
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_228
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_229
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_230
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_231
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_232
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_233
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_234
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_235
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_236
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_237
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_238
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_239
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_240
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_241
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_242
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_243
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_244
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_245
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_246
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_247
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_248
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_249
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_250
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_251
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_252
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_253
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_254
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,      // ICON_255
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_NONE
+    0x3ff80000, 0x2f082008, 0x2042207e, 0x40027fc2, 0x40024002, 0x40024002, 0x40024002, 0x00007ffe,     // RAYGUI_ICON_FOLDER_FILE_OPEN
+    0x3ffe0000, 0x44226422, 0x400247e2, 0x5ffa4002, 0x57ea500a, 0x500a500a, 0x40025ffa, 0x00007ffe,     // RAYGUI_ICON_FILE_SAVE_CLASSIC
+    0x00000000, 0x0042007e, 0x40027fc2, 0x40024002, 0x41024002, 0x44424282, 0x793e4102, 0x00000100,     // RAYGUI_ICON_FOLDER_OPEN
+    0x00000000, 0x0042007e, 0x40027fc2, 0x40024002, 0x41024102, 0x44424102, 0x793e4282, 0x00000000,     // RAYGUI_ICON_FOLDER_SAVE
+    0x3ff00000, 0x201c2010, 0x20042004, 0x21042004, 0x24442284, 0x21042104, 0x20042104, 0x00003ffc,     // RAYGUI_ICON_FILE_OPEN
+    0x3ff00000, 0x201c2010, 0x20042004, 0x21042004, 0x21042104, 0x22842444, 0x20042104, 0x00003ffc,     // RAYGUI_ICON_FILE_SAVE
+    0x3ff00000, 0x201c2010, 0x00042004, 0x20041004, 0x20844784, 0x00841384, 0x20042784, 0x00003ffc,     // RAYGUI_ICON_FILE_EXPORT
+    0x3ff00000, 0x201c2010, 0x20042004, 0x20042004, 0x22042204, 0x22042f84, 0x20042204, 0x00003ffc,     // RAYGUI_ICON_FILE_NEW
+    0x3ff00000, 0x201c2010, 0x20042004, 0x20042004, 0x25042884, 0x25042204, 0x20042884, 0x00003ffc,     // RAYGUI_ICON_FILE_DELETE
+    0x3ff00000, 0x201c2010, 0x20042004, 0x20042ff4, 0x20042ff4, 0x20042ff4, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_TEXT
+    0x3ff00000, 0x201c2010, 0x27042004, 0x244424c4, 0x26442444, 0x20642664, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_AUDIO
+    0x3ff00000, 0x201c2010, 0x26042604, 0x20042004, 0x35442884, 0x2414222c, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_IMAGE
+    0x3ff00000, 0x201c2010, 0x20c42004, 0x22442144, 0x22442444, 0x20c42144, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_PLAY
+    0x3ff00000, 0x3ffc2ff0, 0x3f3c2ff4, 0x3dbc2eb4, 0x3dbc2bb4, 0x3f3c2eb4, 0x3ffc2ff4, 0x00002ff4,     // RAYGUI_ICON_FILETYPE_VIDEO
+    0x3ff00000, 0x201c2010, 0x21842184, 0x21842004, 0x21842184, 0x21842184, 0x20042184, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_INFO
+    0x0ff00000, 0x381c0810, 0x28042804, 0x28042804, 0x28042804, 0x28042804, 0x20102ffc, 0x00003ff0,     // RAYGUI_ICON_FILE_COPY
+    0x00000000, 0x701c0000, 0x079c1e14, 0x55a000f0, 0x079c00f0, 0x701c1e14, 0x00000000, 0x00000000,     // RAYGUI_ICON_FILE_CUT
+    0x01c00000, 0x13e41bec, 0x3f841004, 0x204420c4, 0x20442044, 0x20442044, 0x207c2044, 0x00003fc0,     // RAYGUI_ICON_FILE_PASTE
+    0x00000000, 0x3aa00fe0, 0x2abc2aa0, 0x2aa42aa4, 0x20042aa4, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_CURSOR_HAND
+    0x00000000, 0x003c000c, 0x030800c8, 0x30100c10, 0x10202020, 0x04400840, 0x01800280, 0x00000000,     // RAYGUI_ICON_CURSOR_POINTER
+    0x00000000, 0x00180000, 0x01f00078, 0x03e007f0, 0x07c003e0, 0x04000e40, 0x00000000, 0x00000000,     // RAYGUI_ICON_CURSOR_CLASSIC
+    0x00000000, 0x04000000, 0x11000a00, 0x04400a80, 0x01100220, 0x00580088, 0x00000038, 0x00000000,     // RAYGUI_ICON_PENCIL
+    0x04000000, 0x15000a00, 0x50402880, 0x14102820, 0x05040a08, 0x015c028c, 0x007c00bc, 0x00000000,     // RAYGUI_ICON_PENCIL_BIG
+    0x01c00000, 0x01400140, 0x01400140, 0x0ff80140, 0x0ff80808, 0x0aa80808, 0x0aa80aa8, 0x00000ff8,     // RAYGUI_ICON_BRUSH_CLASSIC
+    0x1ffc0000, 0x5ffc7ffe, 0x40004000, 0x00807f80, 0x01c001c0, 0x01c001c0, 0x01c001c0, 0x00000080,     // RAYGUI_ICON_BRUSH_PAINTER
+    0x00000000, 0x00800000, 0x01c00080, 0x03e001c0, 0x07f003e0, 0x036006f0, 0x000001c0, 0x00000000,     // RAYGUI_ICON_WATER_DROP
+    0x00000000, 0x3e003800, 0x1f803f80, 0x0c201e40, 0x02080c10, 0x00840104, 0x00380044, 0x00000000,     // RAYGUI_ICON_COLOR_PICKER
+    0x00000000, 0x07800300, 0x1fe00fc0, 0x3f883fd0, 0x0e021f04, 0x02040402, 0x00f00108, 0x00000000,     // RAYGUI_ICON_RUBBER
+    0x00c00000, 0x02800140, 0x08200440, 0x20081010, 0x2ffe3004, 0x03f807fc, 0x00e001f0, 0x00000040,     // RAYGUI_ICON_COLOR_BUCKET
+    0x00000000, 0x21843ffc, 0x01800180, 0x01800180, 0x01800180, 0x01800180, 0x03c00180, 0x00000000,     // RAYGUI_ICON_TEXT_T
+    0x00800000, 0x01400180, 0x06200340, 0x0c100620, 0x1ff80c10, 0x380c1808, 0x70067004, 0x0000f80f,     // RAYGUI_ICON_TEXT_A
+    0x78000000, 0x50004000, 0x00004800, 0x03c003c0, 0x03c003c0, 0x00100000, 0x0002000a, 0x0000000e,     // RAYGUI_ICON_SCALE
+    0x75560000, 0x5e004002, 0x54001002, 0x41001202, 0x408200fe, 0x40820082, 0x40820082, 0x00006afe,     // RAYGUI_ICON_RESIZE
+    0x00000000, 0x3f003f00, 0x3f003f00, 0x3f003f00, 0x00400080, 0x001c0020, 0x001c001c, 0x00000000,     // RAYGUI_ICON_FILTER_POINT
+    0x6d800000, 0x00004080, 0x40804080, 0x40800000, 0x00406d80, 0x001c0020, 0x001c001c, 0x00000000,     // RAYGUI_ICON_FILTER_BILINEAR
+    0x40080000, 0x1ffe2008, 0x14081008, 0x11081208, 0x10481088, 0x10081028, 0x10047ff8, 0x00001002,     // RAYGUI_ICON_CROP
+    0x00100000, 0x3ffc0010, 0x2ab03550, 0x22b02550, 0x20b02150, 0x20302050, 0x2000fff0, 0x00002000,     // RAYGUI_ICON_CROP_ALPHA
+    0x40000000, 0x1ff82000, 0x04082808, 0x01082208, 0x00482088, 0x00182028, 0x35542008, 0x00000002,     // RAYGUI_ICON_SQUARE_TOGGLE
+    0x00000000, 0x02800280, 0x06c006c0, 0x0ea00ee0, 0x1e901eb0, 0x3e883e98, 0x7efc7e8c, 0x00000000,     // RAYGUI_ICON_SIMMETRY
+    0x01000000, 0x05600100, 0x1d480d50, 0x7d423d44, 0x3d447d42, 0x0d501d48, 0x01000560, 0x00000100,     // RAYGUI_ICON_SIMMETRY_HORIZONTAL
+    0x01800000, 0x04200240, 0x10080810, 0x00001ff8, 0x00007ffe, 0x0ff01ff8, 0x03c007e0, 0x00000180,     // RAYGUI_ICON_SIMMETRY_VERTICAL
+    0x00000000, 0x010800f0, 0x02040204, 0x02040204, 0x07f00308, 0x1c000e00, 0x30003800, 0x00000000,     // RAYGUI_ICON_LENS
+    0x00000000, 0x061803f0, 0x08240c0c, 0x08040814, 0x0c0c0804, 0x23f01618, 0x18002400, 0x00000000,     // RAYGUI_ICON_LENS_BIG
+    0x00000000, 0x00000000, 0x1c7007c0, 0x638e3398, 0x1c703398, 0x000007c0, 0x00000000, 0x00000000,     // RAYGUI_ICON_EYE_ON
+    0x00000000, 0x10002000, 0x04700fc0, 0x610e3218, 0x1c703098, 0x001007a0, 0x00000008, 0x00000000,     // RAYGUI_ICON_EYE_OFF
+    0x00000000, 0x00007ffc, 0x40047ffc, 0x10102008, 0x04400820, 0x02800280, 0x02800280, 0x00000100,     // RAYGUI_ICON_FILTER_TOP
+    0x00000000, 0x40027ffe, 0x10082004, 0x04200810, 0x02400240, 0x02400240, 0x01400240, 0x000000c0,     // RAYGUI_ICON_FILTER
+    0x00800000, 0x00800080, 0x00000080, 0x3c9e0000, 0x00000000, 0x00800080, 0x00800080, 0x00000000,     // RAYGUI_ICON_TARGET_POINT
+    0x00800000, 0x00800080, 0x00800080, 0x3f7e01c0, 0x008001c0, 0x00800080, 0x00800080, 0x00000000,     // RAYGUI_ICON_TARGET_SMALL
+    0x00800000, 0x00800080, 0x03e00080, 0x3e3e0220, 0x03e00220, 0x00800080, 0x00800080, 0x00000000,     // RAYGUI_ICON_TARGET_BIG
+    0x01000000, 0x04400280, 0x01000100, 0x43842008, 0x43849ab2, 0x01002008, 0x04400100, 0x01000280,     // RAYGUI_ICON_TARGET_MOVE
+    0x01000000, 0x04400280, 0x01000100, 0x41042108, 0x41049ff2, 0x01002108, 0x04400100, 0x01000280,     // RAYGUI_ICON_CURSOR_MOVE
+    0x781e0000, 0x500a4002, 0x04204812, 0x00000240, 0x02400000, 0x48120420, 0x4002500a, 0x0000781e,     // RAYGUI_ICON_CURSOR_SCALE
+    0x00000000, 0x20003c00, 0x24002800, 0x01000200, 0x00400080, 0x00140024, 0x003c0004, 0x00000000,     // RAYGUI_ICON_CURSOR_SCALE_RIGHT
+    0x00000000, 0x0004003c, 0x00240014, 0x00800040, 0x02000100, 0x28002400, 0x3c002000, 0x00000000,     // RAYGUI_ICON_CURSOR_SCALE_LEFT
+    0x00000000, 0x00100020, 0x10101fc8, 0x10001020, 0x10001000, 0x10001000, 0x00001fc0, 0x00000000,     // RAYGUI_ICON_UNDO
+    0x00000000, 0x08000400, 0x080813f8, 0x00080408, 0x00080008, 0x00080008, 0x000003f8, 0x00000000,     // RAYGUI_ICON_REDO
+    0x00000000, 0x3ffc0000, 0x20042004, 0x20002000, 0x20402000, 0x3f902020, 0x00400020, 0x00000000,     // RAYGUI_ICON_REREDO
+    0x00000000, 0x3ffc0000, 0x20042004, 0x27fc2004, 0x20202000, 0x3fc82010, 0x00200010, 0x00000000,     // RAYGUI_ICON_MUTATE
+    0x00000000, 0x0ff00000, 0x10081818, 0x11801008, 0x10001180, 0x18101020, 0x00100fc8, 0x00000020,     // RAYGUI_ICON_ROTATE
+    0x00000000, 0x04000200, 0x240429fc, 0x20042204, 0x20442004, 0x3f942024, 0x00400020, 0x00000000,     // RAYGUI_ICON_REPEAT
+    0x00000000, 0x20001000, 0x22104c0e, 0x00801120, 0x11200040, 0x4c0e2210, 0x10002000, 0x00000000,     // RAYGUI_ICON_SHUFFLE
+    0x7ffe0000, 0x50024002, 0x44024802, 0x41024202, 0x40424082, 0x40124022, 0x4002400a, 0x00007ffe,     // RAYGUI_ICON_EMPTYBOX
+    0x00800000, 0x03e00080, 0x08080490, 0x3c9e0808, 0x08080808, 0x03e00490, 0x00800080, 0x00000000,     // RAYGUI_ICON_TARGET
+    0x00800000, 0x00800080, 0x00800080, 0x3ffe01c0, 0x008001c0, 0x00800080, 0x00800080, 0x00000000,     // RAYGUI_ICON_TARGET_SMALL_FILL
+    0x00800000, 0x00800080, 0x03e00080, 0x3ffe03e0, 0x03e003e0, 0x00800080, 0x00800080, 0x00000000,     // RAYGUI_ICON_TARGET_BIG_FILL
+    0x01000000, 0x07c00380, 0x01000100, 0x638c2008, 0x638cfbbe, 0x01002008, 0x07c00100, 0x01000380,     // RAYGUI_ICON_TARGET_MOVE_FILL
+    0x01000000, 0x07c00380, 0x01000100, 0x610c2108, 0x610cfffe, 0x01002108, 0x07c00100, 0x01000380,     // RAYGUI_ICON_CURSOR_MOVE_FILL
+    0x781e0000, 0x6006700e, 0x04204812, 0x00000240, 0x02400000, 0x48120420, 0x700e6006, 0x0000781e,     // RAYGUI_ICON_CURSOR_SCALE_FILL
+    0x00000000, 0x38003c00, 0x24003000, 0x01000200, 0x00400080, 0x000c0024, 0x003c001c, 0x00000000,     // RAYGUI_ICON_CURSOR_SCALE_RIGHT
+    0x00000000, 0x001c003c, 0x0024000c, 0x00800040, 0x02000100, 0x30002400, 0x3c003800, 0x00000000,     // RAYGUI_ICON_CURSOR_SCALE_LEFT
+    0x00000000, 0x00300020, 0x10301ff8, 0x10001020, 0x10001000, 0x10001000, 0x00001fc0, 0x00000000,     // RAYGUI_ICON_UNDO_FILL
+    0x00000000, 0x0c000400, 0x0c081ff8, 0x00080408, 0x00080008, 0x00080008, 0x000003f8, 0x00000000,     // RAYGUI_ICON_REDO_FILL
+    0x00000000, 0x3ffc0000, 0x20042004, 0x20002000, 0x20402000, 0x3ff02060, 0x00400060, 0x00000000,     // RAYGUI_ICON_REREDO_FILL
+    0x00000000, 0x3ffc0000, 0x20042004, 0x27fc2004, 0x20202000, 0x3ff82030, 0x00200030, 0x00000000,     // RAYGUI_ICON_MUTATE_FILL
+    0x00000000, 0x0ff00000, 0x10081818, 0x11801008, 0x10001180, 0x18301020, 0x00300ff8, 0x00000020,     // RAYGUI_ICON_ROTATE_FILL
+    0x00000000, 0x06000200, 0x26042ffc, 0x20042204, 0x20442004, 0x3ff42064, 0x00400060, 0x00000000,     // RAYGUI_ICON_REPEAT_FILL
+    0x00000000, 0x30001000, 0x32107c0e, 0x00801120, 0x11200040, 0x7c0e3210, 0x10003000, 0x00000000,     // RAYGUI_ICON_SHUFFLE_FILL
+    0x00000000, 0x30043ffc, 0x24042804, 0x21042204, 0x20442084, 0x20142024, 0x3ffc200c, 0x00000000,     // RAYGUI_ICON_EMPTYBOX_SMALL
+    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX
+    0x00000000, 0x23c43ffc, 0x23c423c4, 0x200423c4, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX_TOP
+    0x00000000, 0x3e043ffc, 0x3e043e04, 0x20043e04, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX_TOP_RIGHT
+    0x00000000, 0x20043ffc, 0x20042004, 0x3e043e04, 0x3e043e04, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX_RIGHT
+    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x3e042004, 0x3e043e04, 0x3ffc3e04, 0x00000000,     // RAYGUI_ICON_BOX_BOTTOM_RIGHT
+    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x23c42004, 0x23c423c4, 0x3ffc23c4, 0x00000000,     // RAYGUI_ICON_BOX_BOTTOM
+    0x00000000, 0x20043ffc, 0x20042004, 0x20042004, 0x207c2004, 0x207c207c, 0x3ffc207c, 0x00000000,     // RAYGUI_ICON_BOX_BOTTOM_LEFT
+    0x00000000, 0x20043ffc, 0x20042004, 0x207c207c, 0x207c207c, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX_LEFT
+    0x00000000, 0x207c3ffc, 0x207c207c, 0x2004207c, 0x20042004, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX_TOP_LEFT
+    0x00000000, 0x20043ffc, 0x20042004, 0x23c423c4, 0x23c423c4, 0x20042004, 0x3ffc2004, 0x00000000,     // RAYGUI_ICON_BOX_CIRCLE_MASK
+    0x7ffe0000, 0x40024002, 0x47e24182, 0x4ff247e2, 0x47e24ff2, 0x418247e2, 0x40024002, 0x00007ffe,     // RAYGUI_ICON_BOX_CENTER
+    0x7fff0000, 0x40014001, 0x40014001, 0x49555ddd, 0x4945495d, 0x400149c5, 0x40014001, 0x00007fff,     // RAYGUI_ICON_POT
+    0x7ffe0000, 0x53327332, 0x44ce4cce, 0x41324332, 0x404e40ce, 0x48125432, 0x4006540e, 0x00007ffe,     // RAYGUI_ICON_ALPHA_MULTIPLY
+    0x7ffe0000, 0x53327332, 0x44ce4cce, 0x41324332, 0x5c4e40ce, 0x44124432, 0x40065c0e, 0x00007ffe,     // RAYGUI_ICON_ALPHA_CLEAR
+    0x7ffe0000, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x42fe417e, 0x00007ffe,     // RAYGUI_ICON_DITHERING
+    0x07fe0000, 0x1ffa0002, 0x7fea000a, 0x402a402a, 0x5b2a512a, 0x5128552a, 0x40205128, 0x00007fe0,     // RAYGUI_ICON_MIPMAPS
+    0x00000000, 0x1ff80000, 0x12481248, 0x12481ff8, 0x1ff81248, 0x12481248, 0x00001ff8, 0x00000000,     // RAYGUI_ICON_BOX_GRID
+    0x12480000, 0x7ffe1248, 0x12481248, 0x12487ffe, 0x7ffe1248, 0x12481248, 0x12487ffe, 0x00001248,     // RAYGUI_ICON_GRID
+    0x00000000, 0x1c380000, 0x1c3817e8, 0x08100810, 0x08100810, 0x17e81c38, 0x00001c38, 0x00000000,     // RAYGUI_ICON_BOX_CORNERS_SMALL
+    0x700e0000, 0x700e5ffa, 0x20042004, 0x20042004, 0x20042004, 0x20042004, 0x5ffa700e, 0x0000700e,     // RAYGUI_ICON_BOX_CORNERS_BIG
+    0x3f7e0000, 0x21422142, 0x21422142, 0x00003f7e, 0x21423f7e, 0x21422142, 0x3f7e2142, 0x00000000,     // RAYGUI_ICON_FOUR_BOXES
+    0x00000000, 0x3bb80000, 0x3bb83bb8, 0x3bb80000, 0x3bb83bb8, 0x3bb80000, 0x3bb83bb8, 0x00000000,     // RAYGUI_ICON_GRID_FILL
+    0x7ffe0000, 0x7ffe7ffe, 0x77fe7000, 0x77fe77fe, 0x777e7700, 0x777e777e, 0x777e777e, 0x0000777e,     // RAYGUI_ICON_BOX_MULTISIZE
+    0x781e0000, 0x40024002, 0x00004002, 0x01800000, 0x00000180, 0x40020000, 0x40024002, 0x0000781e,     // RAYGUI_ICON_ZOOM_SMALL
+    0x781e0000, 0x40024002, 0x00004002, 0x03c003c0, 0x03c003c0, 0x40020000, 0x40024002, 0x0000781e,     // RAYGUI_ICON_ZOOM_MEDIUM
+    0x781e0000, 0x40024002, 0x07e04002, 0x07e007e0, 0x07e007e0, 0x400207e0, 0x40024002, 0x0000781e,     // RAYGUI_ICON_ZOOM_BIG
+    0x781e0000, 0x5ffa4002, 0x1ff85ffa, 0x1ff81ff8, 0x1ff81ff8, 0x5ffa1ff8, 0x40025ffa, 0x0000781e,     // RAYGUI_ICON_ZOOM_ALL
+    0x00000000, 0x2004381c, 0x00002004, 0x00000000, 0x00000000, 0x20040000, 0x381c2004, 0x00000000,     // RAYGUI_ICON_ZOOM_CENTER
+    0x00000000, 0x1db80000, 0x10081008, 0x10080000, 0x00001008, 0x10081008, 0x00001db8, 0x00000000,     // RAYGUI_ICON_BOX_DOTS_SMALL
+    0x35560000, 0x00002002, 0x00002002, 0x00002002, 0x00002002, 0x00002002, 0x35562002, 0x00000000,     // RAYGUI_ICON_BOX_DOTS_BIG
+    0x7ffe0000, 0x40024002, 0x48124ff2, 0x49924812, 0x48124992, 0x4ff24812, 0x40024002, 0x00007ffe,     // RAYGUI_ICON_BOX_CONCENTRIC
+    0x00000000, 0x10841ffc, 0x10841084, 0x1ffc1084, 0x10841084, 0x10841084, 0x00001ffc, 0x00000000,     // RAYGUI_ICON_BOX_GRID_BIG
+    0x00000000, 0x00000000, 0x10000000, 0x04000800, 0x01040200, 0x00500088, 0x00000020, 0x00000000,     // RAYGUI_ICON_OK_TICK
+    0x00000000, 0x10080000, 0x04200810, 0x01800240, 0x02400180, 0x08100420, 0x00001008, 0x00000000,     // RAYGUI_ICON_CROSS
+    0x00000000, 0x02000000, 0x00800100, 0x00200040, 0x00200010, 0x00800040, 0x02000100, 0x00000000,     // RAYGUI_ICON_ARROW_LEFT
+    0x00000000, 0x00400000, 0x01000080, 0x04000200, 0x04000800, 0x01000200, 0x00400080, 0x00000000,     // RAYGUI_ICON_ARROW_RIGHT
+    0x00000000, 0x00000000, 0x00000000, 0x08081004, 0x02200410, 0x00800140, 0x00000000, 0x00000000,     // RAYGUI_ICON_ARROW_DOWN
+    0x00000000, 0x00000000, 0x01400080, 0x04100220, 0x10040808, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_ARROW_UP
+    0x00000000, 0x02000000, 0x03800300, 0x03e003c0, 0x03e003f0, 0x038003c0, 0x02000300, 0x00000000,     // RAYGUI_ICON_ARROW_LEFT_FILL
+    0x00000000, 0x00400000, 0x01c000c0, 0x07c003c0, 0x07c00fc0, 0x01c003c0, 0x004000c0, 0x00000000,     // RAYGUI_ICON_ARROW_RIGHT_FILL
+    0x00000000, 0x00000000, 0x00000000, 0x0ff81ffc, 0x03e007f0, 0x008001c0, 0x00000000, 0x00000000,     // RAYGUI_ICON_ARROW_DOWN_FILL
+    0x00000000, 0x00000000, 0x01c00080, 0x07f003e0, 0x1ffc0ff8, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_ARROW_UP_FILL
+    0x00000000, 0x18a008c0, 0x32881290, 0x24822686, 0x26862482, 0x12903288, 0x08c018a0, 0x00000000,     // RAYGUI_ICON_AUDIO
+    0x00000000, 0x04800780, 0x004000c0, 0x662000f0, 0x08103c30, 0x130a0e18, 0x0000318e, 0x00000000,     // RAYGUI_ICON_FX
+    0x00000000, 0x00800000, 0x08880888, 0x2aaa0a8a, 0x0a8a2aaa, 0x08880888, 0x00000080, 0x00000000,     // RAYGUI_ICON_WAVE
+    0x00000000, 0x00600000, 0x01080090, 0x02040108, 0x42044204, 0x24022402, 0x00001800, 0x00000000,     // RAYGUI_ICON_WAVE_SINUS
+    0x00000000, 0x07f80000, 0x04080408, 0x04080408, 0x04080408, 0x7c0e0408, 0x00000000, 0x00000000,     // RAYGUI_ICON_WAVE_SQUARE
+    0x00000000, 0x00000000, 0x00a00040, 0x22084110, 0x08021404, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_WAVE_TRIANGULAR
+    0x00000000, 0x00000000, 0x04200000, 0x01800240, 0x02400180, 0x00000420, 0x00000000, 0x00000000,     // RAYGUI_ICON_CROSS_SMALL
+    0x00000000, 0x18380000, 0x12281428, 0x10a81128, 0x112810a8, 0x14281228, 0x00001838, 0x00000000,     // RAYGUI_ICON_PLAYER_PREVIOUS
+    0x00000000, 0x18000000, 0x11801600, 0x10181060, 0x10601018, 0x16001180, 0x00001800, 0x00000000,     // RAYGUI_ICON_PLAYER_PLAY_BACK
+    0x00000000, 0x00180000, 0x01880068, 0x18080608, 0x06081808, 0x00680188, 0x00000018, 0x00000000,     // RAYGUI_ICON_PLAYER_PLAY
+    0x00000000, 0x1e780000, 0x12481248, 0x12481248, 0x12481248, 0x12481248, 0x00001e78, 0x00000000,     // RAYGUI_ICON_PLAYER_PAUSE
+    0x00000000, 0x1ff80000, 0x10081008, 0x10081008, 0x10081008, 0x10081008, 0x00001ff8, 0x00000000,     // RAYGUI_ICON_PLAYER_STOP
+    0x00000000, 0x1c180000, 0x14481428, 0x15081488, 0x14881508, 0x14281448, 0x00001c18, 0x00000000,     // RAYGUI_ICON_PLAYER_NEXT
+    0x00000000, 0x03c00000, 0x08100420, 0x10081008, 0x10081008, 0x04200810, 0x000003c0, 0x00000000,     // RAYGUI_ICON_PLAYER_RECORD
+    0x00000000, 0x0c3007e0, 0x13c81818, 0x14281668, 0x14281428, 0x1c381c38, 0x08102244, 0x00000000,     // RAYGUI_ICON_MAGNET
+    0x07c00000, 0x08200820, 0x3ff80820, 0x23882008, 0x21082388, 0x20082108, 0x1ff02008, 0x00000000,     // RAYGUI_ICON_LOCK_CLOSE
+    0x07c00000, 0x08000800, 0x3ff80800, 0x23882008, 0x21082388, 0x20082108, 0x1ff02008, 0x00000000,     // RAYGUI_ICON_LOCK_OPEN
+    0x01c00000, 0x0c180770, 0x3086188c, 0x60832082, 0x60034781, 0x30062002, 0x0c18180c, 0x01c00770,     // RAYGUI_ICON_CLOCK
+    0x0a200000, 0x1b201b20, 0x04200e20, 0x04200420, 0x04700420, 0x0e700e70, 0x0e700e70, 0x04200e70,     // RAYGUI_ICON_TOOLS
+    0x01800000, 0x3bdc318c, 0x0ff01ff8, 0x7c3e1e78, 0x1e787c3e, 0x1ff80ff0, 0x318c3bdc, 0x00000180,     // RAYGUI_ICON_GEAR
+    0x01800000, 0x3ffc318c, 0x1c381ff8, 0x781e1818, 0x1818781e, 0x1ff81c38, 0x318c3ffc, 0x00000180,     // RAYGUI_ICON_GEAR_BIG
+    0x00000000, 0x08080ff8, 0x08081ffc, 0x0aa80aa8, 0x0aa80aa8, 0x0aa80aa8, 0x08080aa8, 0x00000ff8,     // RAYGUI_ICON_BIN
+    0x00000000, 0x00000000, 0x20043ffc, 0x08043f84, 0x04040f84, 0x04040784, 0x000007fc, 0x00000000,     // RAYGUI_ICON_HAND_POINTER
+    0x00000000, 0x24400400, 0x00001480, 0x6efe0e00, 0x00000e00, 0x24401480, 0x00000400, 0x00000000,     // RAYGUI_ICON_LASER
+    0x00000000, 0x03c00000, 0x08300460, 0x11181118, 0x11181118, 0x04600830, 0x000003c0, 0x00000000,     // RAYGUI_ICON_COIN
+    0x00000000, 0x10880080, 0x06c00810, 0x366c07e0, 0x07e00240, 0x00001768, 0x04200240, 0x00000000,     // RAYGUI_ICON_EXPLOSION
+    0x00000000, 0x3d280000, 0x2528252c, 0x3d282528, 0x05280528, 0x05e80528, 0x00000000, 0x00000000,     // RAYGUI_ICON_1UP
+    0x01800000, 0x03c003c0, 0x018003c0, 0x0ff007e0, 0x0bd00bd0, 0x0a500bd0, 0x02400240, 0x02400240,     // RAYGUI_ICON_PLAYER
+    0x01800000, 0x03c003c0, 0x118013c0, 0x03c81ff8, 0x07c003c8, 0x04400440, 0x0c080478, 0x00000000,     // RAYGUI_ICON_PLAYER_JUMP
+    0x3ff80000, 0x30183ff8, 0x30183018, 0x3ff83ff8, 0x03000300, 0x03c003c0, 0x03e00300, 0x000003e0,     // RAYGUI_ICON_KEY
+    0x3ff80000, 0x3ff83ff8, 0x33983ff8, 0x3ff83398, 0x3ff83ff8, 0x00000540, 0x0fe00aa0, 0x00000fe0,     // RAYGUI_ICON_DEMON
+    0x00000000, 0x0ff00000, 0x20041008, 0x25442004, 0x10082004, 0x06000bf0, 0x00000300, 0x00000000,     // RAYGUI_ICON_TEXT_POPUP
+    0x00000000, 0x11440000, 0x07f00be8, 0x1c1c0e38, 0x1c1c0c18, 0x07f00e38, 0x11440be8, 0x00000000,     // RAYGUI_ICON_GEAR_EX
+    0x00000000, 0x20080000, 0x0c601010, 0x07c00fe0, 0x07c007c0, 0x0c600fe0, 0x20081010, 0x00000000,     // RAYGUI_ICON_CRACK
+    0x00000000, 0x20080000, 0x0c601010, 0x04400fe0, 0x04405554, 0x0c600fe0, 0x20081010, 0x00000000,     // RAYGUI_ICON_CRACK_POINTS
+    0x00000000, 0x00800080, 0x01c001c0, 0x1ffc3ffe, 0x03e007f0, 0x07f003e0, 0x0c180770, 0x00000808,     // RAYGUI_ICON_STAR
+    0x0ff00000, 0x08180810, 0x08100818, 0x0a100810, 0x08180810, 0x08100818, 0x08100810, 0x00001ff8,     // RAYGUI_ICON_DOOR
+    0x0ff00000, 0x08100810, 0x08100810, 0x10100010, 0x4f902010, 0x10102010, 0x08100010, 0x00000ff0,     // RAYGUI_ICON_EXIT
+    0x00040000, 0x001f000e, 0x0ef40004, 0x12f41284, 0x0ef41214, 0x10040004, 0x7ffc3004, 0x10003000,     // RAYGUI_ICON_MODE_2D
+    0x78040000, 0x501f600e, 0x0ef44004, 0x12f41284, 0x0ef41284, 0x10140004, 0x7ffc300c, 0x10003000,     // RAYGUI_ICON_MODE_3D
+    0x7fe00000, 0x50286030, 0x47fe4804, 0x44224402, 0x44224422, 0x241275e2, 0x0c06140a, 0x000007fe,     // RAYGUI_ICON_CUBE
+    0x7fe00000, 0x5ff87ff0, 0x47fe4ffc, 0x44224402, 0x44224422, 0x241275e2, 0x0c06140a, 0x000007fe,     // RAYGUI_ICON_CUBE_FACE_TOP
+    0x7fe00000, 0x50386030, 0x47fe483c, 0x443e443e, 0x443e443e, 0x241e75fe, 0x0c06140e, 0x000007fe,     // RAYGUI_ICON_CUBE_FACE_LEFT
+    0x7fe00000, 0x50286030, 0x47fe4804, 0x47fe47fe, 0x47fe47fe, 0x27fe77fe, 0x0ffe17fe, 0x000007fe,     // RAYGUI_ICON_CUBE_FACE_FRONT
+    0x7fe00000, 0x50286030, 0x47fe4804, 0x44224402, 0x44224422, 0x3ff27fe2, 0x0ffe1ffa, 0x000007fe,     // RAYGUI_ICON_CUBE_FACE_BOTTOM
+    0x7fe00000, 0x70286030, 0x7ffe7804, 0x7c227c02, 0x7c227c22, 0x3c127de2, 0x0c061c0a, 0x000007fe,     // RAYGUI_ICON_CUBE_FACE_RIGHT
+    0x7fe00000, 0x7fe87ff0, 0x7ffe7fe4, 0x7fe27fe2, 0x7fe27fe2, 0x24127fe2, 0x0c06140a, 0x000007fe,     // RAYGUI_ICON_CUBE_FACE_BACK
+    0x00000000, 0x2a0233fe, 0x22022602, 0x22022202, 0x2a022602, 0x00a033fe, 0x02080110, 0x00000000,     // RAYGUI_ICON_CAMERA
+    0x00000000, 0x200c3ffc, 0x000c000c, 0x3ffc000c, 0x30003000, 0x30003000, 0x3ffc3004, 0x00000000,     // RAYGUI_ICON_SPECIAL
+    0x00000000, 0x0022003e, 0x012201e2, 0x0100013e, 0x01000100, 0x79000100, 0x4f004900, 0x00007800,     // RAYGUI_ICON_LINK_NET
+    0x00000000, 0x44007c00, 0x45004600, 0x00627cbe, 0x00620022, 0x45007cbe, 0x44004600, 0x00007c00,     // RAYGUI_ICON_LINK_BOXES
+    0x00000000, 0x0044007c, 0x0010007c, 0x3f100010, 0x3f1021f0, 0x3f100010, 0x3f0021f0, 0x00000000,     // RAYGUI_ICON_LINK_MULTI
+    0x00000000, 0x0044007c, 0x00440044, 0x0010007c, 0x00100010, 0x44107c10, 0x440047f0, 0x00007c00,     // RAYGUI_ICON_LINK
+    0x00000000, 0x0044007c, 0x00440044, 0x0000007c, 0x00000010, 0x44007c10, 0x44004550, 0x00007c00,     // RAYGUI_ICON_LINK_BROKE
+    0x02a00000, 0x22a43ffc, 0x20042004, 0x20042ff4, 0x20042ff4, 0x20042ff4, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_TEXT_NOTES
+    0x3ffc0000, 0x20042004, 0x245e27c4, 0x27c42444, 0x2004201e, 0x201e2004, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_NOTEBOOK
+    0x00000000, 0x07e00000, 0x04200420, 0x24243ffc, 0x24242424, 0x24242424, 0x3ffc2424, 0x00000000,     // RAYGUI_ICON_SUITCASE
+    0x00000000, 0x0fe00000, 0x08200820, 0x40047ffc, 0x7ffc5554, 0x40045554, 0x7ffc4004, 0x00000000,     // RAYGUI_ICON_SUITCASE_ZIP
+    0x00000000, 0x20043ffc, 0x3ffc2004, 0x13c81008, 0x100813c8, 0x10081008, 0x1ff81008, 0x00000000,     // RAYGUI_ICON_MAILBOX
+    0x00000000, 0x40027ffe, 0x5ffa5ffa, 0x5ffa5ffa, 0x40025ffa, 0x03c07ffe, 0x1ff81ff8, 0x00000000,     // RAYGUI_ICON_MONITOR
+    0x0ff00000, 0x6bfe7ffe, 0x7ffe7ffe, 0x68167ffe, 0x08106816, 0x08100810, 0x0ff00810, 0x00000000,     // RAYGUI_ICON_PRINTER
+    0x3ff80000, 0xfffe2008, 0x870a8002, 0x904a888a, 0x904a904a, 0x870a888a, 0xfffe8002, 0x00000000,     // RAYGUI_ICON_PHOTO_CAMERA
+    0x0fc00000, 0xfcfe0cd8, 0x8002fffe, 0x84428382, 0x84428442, 0x80028382, 0xfffe8002, 0x00000000,     // RAYGUI_ICON_PHOTO_CAMERA_FLASH
+    0x00000000, 0x02400180, 0x08100420, 0x20041008, 0x23c42004, 0x22442244, 0x3ffc2244, 0x00000000,     // RAYGUI_ICON_HOUSE
+    0x00000000, 0x1c700000, 0x3ff83ef8, 0x3ff83ff8, 0x0fe01ff0, 0x038007c0, 0x00000100, 0x00000000,     // RAYGUI_ICON_HEART
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x80000000, 0xe000c000,     // RAYGUI_ICON_CORNER
+    0x00000000, 0x14001c00, 0x15c01400, 0x15401540, 0x155c1540, 0x15541554, 0x1ddc1554, 0x00000000,     // RAYGUI_ICON_VERTICAL_BARS
+    0x00000000, 0x03000300, 0x1b001b00, 0x1b601b60, 0x1b6c1b60, 0x1b6c1b6c, 0x1b6c1b6c, 0x00000000,     // RAYGUI_ICON_VERTICAL_BARS_FILL
+    0x00000000, 0x00000000, 0x403e7ffe, 0x7ffe403e, 0x7ffe0000, 0x43fe43fe, 0x00007ffe, 0x00000000,     // RAYGUI_ICON_LIFE_BARS
+    0x7ffc0000, 0x43844004, 0x43844284, 0x43844004, 0x42844284, 0x42844284, 0x40044384, 0x00007ffc,     // RAYGUI_ICON_INFO
+    0x40008000, 0x10002000, 0x04000800, 0x01000200, 0x00400080, 0x00100020, 0x00040008, 0x00010002,     // RAYGUI_ICON_CROSSLINE
+    0x00000000, 0x1ff01ff0, 0x18301830, 0x1f001830, 0x03001f00, 0x00000300, 0x03000300, 0x00000000,     // RAYGUI_ICON_HELP
+    0x3ff00000, 0x2abc3550, 0x2aac3554, 0x2aac3554, 0x2aac3554, 0x2aac3554, 0x2aac3554, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_ALPHA
+    0x3ff00000, 0x201c2010, 0x22442184, 0x28142424, 0x29942814, 0x2ff42994, 0x20042004, 0x00003ffc,     // RAYGUI_ICON_FILETYPE_HOME
+    0x07fe0000, 0x04020402, 0x7fe20402, 0x44224422, 0x44224422, 0x402047fe, 0x40204020, 0x00007fe0,     // RAYGUI_ICON_LAYERS_VISIBLE
+    0x07fe0000, 0x04020402, 0x7c020402, 0x44024402, 0x44024402, 0x402047fe, 0x40204020, 0x00007fe0,     // RAYGUI_ICON_LAYERS
+    0x00000000, 0x40027ffe, 0x7ffe4002, 0x40024002, 0x40024002, 0x40024002, 0x7ffe4002, 0x00000000,     // RAYGUI_ICON_WINDOW
+    0x09100000, 0x09f00910, 0x09100910, 0x00000910, 0x24a2779e, 0x27a224a2, 0x709e20a2, 0x00000000,     // RAYGUI_ICON_HIDPI
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_200
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_201
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_202
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_203
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_204
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_205
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_206
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_207
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_208
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_209
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_210
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_211
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_212
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_213
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_214
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_215
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_216
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_217
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_218
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_219
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_220
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_221
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_222
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_223
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_224
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_225
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_226
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_227
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_228
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_229
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_230
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_231
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_232
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_233
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_234
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_235
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_236
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_237
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_238
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_239
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_240
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_241
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_242
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_243
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_244
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_245
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_246
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_247
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_248
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_249
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_250
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_251
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_252
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_253
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_254
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // RAYGUI_ICON_255
 };
-
-// NOTE: We keep a pointer to the icons array, useful to point to other sets if required
-static unsigned int *guiIconsPtr = guiIcons;
 
 #endif      // !RAYGUI_NO_ICONS && !RAYGUI_CUSTOM_ICONS
 
@@ -1173,17 +1142,11 @@ typedef enum { BORDER = 0, BASE, TEXT, OTHER } GuiPropertyElement;
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
-static GuiState guiState = STATE_NORMAL;    // Gui global state, if !STATE_NORMAL, forces defined state
+static GuiControlState guiState = GUI_STATE_NORMAL;
 
-static Font guiFont = { 0 };                // Gui current font (WARNING: highly coupled to raylib)
-static bool guiLocked = false;              // Gui lock state (no inputs processed)
-static float guiAlpha = 1.0f;               // Gui element transpacency on drawing
-
-static unsigned int guiIconScale = 1;       // Gui icon default scale (if icons enabled)
-
-static bool guiTooltip = false;             // Tooltip enabled/disabled
-static const char *guiTooltipPtr = NULL;    // Tooltip string pointer (string provided by user)
-
+static Font guiFont = { 0 };            // Gui current font (WARNING: highly coupled to raylib)
+static bool guiLocked = false;          // Gui lock state (no inputs processed)
+static float guiAlpha = 1.0f;           // Gui element transpacency on drawing
 
 //----------------------------------------------------------------------------------
 // Style data array for all gui style properties (allocated on data segment by default)
@@ -1199,7 +1162,7 @@ static const char *guiTooltipPtr = NULL;    // Tooltip string pointer (string pr
 //----------------------------------------------------------------------------------
 static unsigned int guiStyle[RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED)] = { 0 };
 
-static bool guiStyleLoaded = false;         // Style loaded flag for lazy style initialization
+static bool guiStyleLoaded = false;     // Style loaded flag for lazy style initialization
 
 //----------------------------------------------------------------------------------
 // Standalone Mode Functions Declaration
@@ -1246,6 +1209,9 @@ static Texture2D LoadTextureFromImage(Image image);         // -- GuiLoadStyle()
 static void SetShapesTexture(Texture2D tex, Rectangle rec); // -- GuiLoadStyle()
 static char *LoadFileText(const char *fileName);            // -- GuiLoadStyle()
 static const char *GetDirectoryPath(const char *filePath);  // -- GuiLoadStyle()
+
+static Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing);   // -- GetTextWidth(), GuiTextBoxMulti()
+static void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint);  // -- GuiDrawText()
 //-------------------------------------------------------------------------------
 
 // raylib functions already implemented in raygui
@@ -1257,8 +1223,7 @@ static bool CheckCollisionPointRec(Vector2 point, Rectangle rec);   // Check if 
 static const char *TextFormat(const char *text, ...);               // Formatting of text with variables to 'embed'
 static const char **TextSplit(const char *text, char delimiter, int *count);    // Split text into multiple strings
 static int TextToInteger(const char *text);         // Get integer value from text
-
-static int GetCodepointNext(const char *text, int *codepointSize);  // Get next codepoint in a UTF-8 encoded text
+static int GetCodepoint(const char *text, int *bytesProcessed);     // Get next codepoint in a UTF-8 encoded text
 static const char *CodepointToUTF8(int codepoint, int *byteSize);   // Encode codepoint into UTF-8 text (char array size returned as parameter)
 
 static void DrawRectangleGradientV(int posX, int posY, int width, int height, Color color1, Color color2);  // Draw rectangle vertical gradient
@@ -1269,31 +1234,27 @@ static void DrawRectangleGradientV(int posX, int posY, int width, int height, Co
 //----------------------------------------------------------------------------------
 // Module specific Functions Declaration
 //----------------------------------------------------------------------------------
-static int GetTextWidth(const char *text);                      // Gui get text width using gui font and style
+static int GetTextWidth(const char *text);                      // Gui get text width using default font
 static Rectangle GetTextBounds(int control, Rectangle bounds);  // Get text bounds considering control bounds
 static const char *GetTextIcon(const char *text, int *iconId);  // Get text icon if provided and move text cursor
 
 static void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint);         // Gui draw text using default font
 static void GuiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, Color color);   // Gui draw rectangle using default raygui style
 
-static const char **GuiTextSplit(const char *text, char delimiter, int *count, int *textRow);   // Split controls text into multiple strings
+static const char **GuiTextSplit(const char *text, int *count, int *textRow);   // Split controls text into multiple strings
 static Vector3 ConvertHSVtoRGB(Vector3 hsv);                    // Convert color data from HSV to RGB
 static Vector3 ConvertRGBtoHSV(Vector3 rgb);                    // Convert color data from RGB to HSV
-
-int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue);   // Scroll bar control, used by GuiScrollPanel()
-static void GuiTooltip(Rectangle controlRec);                   // Draw tooltip using control rec position
-
 
 //----------------------------------------------------------------------------------
 // Gui Setup Functions Definition
 //----------------------------------------------------------------------------------
 // Enable gui global state
-// NOTE: We check for STATE_DISABLED to avoid messing custom global state setups
-void GuiEnable(void) { if (guiState == STATE_DISABLED) guiState = STATE_NORMAL; }
+// NOTE: We check for GUI_STATE_DISABLED to avoid messing custom global state setups
+void GuiEnable(void) { if (guiState == GUI_STATE_DISABLED) guiState = GUI_STATE_NORMAL; }
 
 // Disable gui global state
-// NOTE: We check for STATE_NORMAL to avoid messing custom global state setups
-void GuiDisable(void) { if (guiState == STATE_NORMAL) guiState = STATE_DISABLED; }
+// NOTE: We check for GUI_STATE_NORMAL to avoid messing custom global state setups
+void GuiDisable(void) { if (guiState == GUI_STATE_NORMAL) guiState = GUI_STATE_DISABLED; }
 
 // Lock gui global state
 void GuiLock(void) { guiLocked = true; }
@@ -1314,7 +1275,7 @@ void GuiFade(float alpha)
 }
 
 // Set gui state (global state)
-void GuiSetState(int state) { guiState = (GuiState)state; }
+void GuiSetState(int state) { guiState = (GuiControlState)state; }
 
 // Get gui state (global state)
 int GuiGetState(void) { return guiState; }
@@ -1374,7 +1335,7 @@ bool GuiWindowBox(Rectangle bounds, const char *title)
         #define RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT        24
     #endif
 
-    //GuiState state = guiState;
+    //GuiControlState state = guiState;
     bool clicked = false;
 
     int statusBarHeight = RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT;
@@ -1394,17 +1355,17 @@ bool GuiWindowBox(Rectangle bounds, const char *title)
     // Draw control
     //--------------------------------------------------------------------
     GuiStatusBar(statusBar, title); // Draw window header as status bar
-    GuiPanel(windowPanel, NULL);    // Draw window base
+    GuiPanel(windowPanel);          // Draw window base
 
     // Draw window close button
     int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
     int tempTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
     GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
 #if defined(RAYGUI_NO_ICONS)
     clicked = GuiButton(closeButtonRec, "x");
 #else
-    clicked = GuiButton(closeButtonRec, GuiIconText(ICON_CROSS_SMALL, NULL));
+    clicked = GuiButton(closeButtonRec, GuiIconText(RAYGUI_ICON_CROSS_SMALL, NULL));
 #endif
     GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
     GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlignment);
@@ -1419,32 +1380,32 @@ void GuiGroupBox(Rectangle bounds, const char *text)
     #if !defined(RAYGUI_GROUPBOX_LINE_THICK)
         #define RAYGUI_GROUPBOX_LINE_THICK     1
     #endif
+    #if !defined(RAYGUI_GROUPBOX_TEXT_PADDING)
+        #define RAYGUI_GROUPBOX_TEXT_PADDING  10
+    #endif
 
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
-    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height - 1, bounds.width, RAYGUI_GROUPBOX_LINE_THICK }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
-    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - 1, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == GUI_STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height - 1, bounds.width, RAYGUI_GROUPBOX_LINE_THICK }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == GUI_STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - 1, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == GUI_STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
 
-    GuiLine(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y - GuiGetStyle(DEFAULT, TEXT_SIZE)/2, bounds.width, (float)GuiGetStyle(DEFAULT, TEXT_SIZE) }, text);
+    GuiLine(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y, bounds.width, 1 }, text);
     //--------------------------------------------------------------------
 }
 
 // Line control
 void GuiLine(Rectangle bounds, const char *text)
 {
-    #if !defined(RAYGUI_LINE_ORIGIN_SIZE)
-        #define RAYGUI_LINE_MARGIN_TEXT  12
-    #endif
     #if !defined(RAYGUI_LINE_TEXT_PADDING)
-        #define RAYGUI_LINE_TEXT_PADDING  4
+        #define RAYGUI_LINE_TEXT_PADDING  8
     #endif
 
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
-    Color color = Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha);
+    Color color = Fade(GetColor(GuiGetStyle(DEFAULT, (state == GUI_STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha);
 
     // Draw control
     //--------------------------------------------------------------------
@@ -1454,123 +1415,40 @@ void GuiLine(Rectangle bounds, const char *text)
         Rectangle textBounds = { 0 };
         textBounds.width = (float)GetTextWidth(text);
         textBounds.height = bounds.height;
-        textBounds.x = bounds.x + RAYGUI_LINE_MARGIN_TEXT;
+        textBounds.x = bounds.x + RAYGUI_LINE_TEXT_PADDING;
         textBounds.y = bounds.y;
 
         // Draw line with embedded text label: "--- text --------------"
-        GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height/2, RAYGUI_LINE_MARGIN_TEXT - RAYGUI_LINE_TEXT_PADDING, 1 }, 0, BLANK, color);
-        GuiDrawText(text, textBounds, TEXT_ALIGN_LEFT, color);
-        GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x + 12 + textBounds.width + 4, bounds.y + bounds.height/2, bounds.width - textBounds.width - RAYGUI_LINE_MARGIN_TEXT - RAYGUI_LINE_TEXT_PADDING, 1 }, 0, BLANK, color);
+        GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height/2, RAYGUI_LINE_TEXT_PADDING - 2, 1 }, 0, BLANK, color);
+        GuiLabel(textBounds, text);
+        GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x + RAYGUI_LINE_TEXT_PADDING + textBounds.width + 4, bounds.y + bounds.height/2, bounds.width - textBounds.width - RAYGUI_LINE_TEXT_PADDING - 4, 1 }, 0, BLANK, color);
     }
     //--------------------------------------------------------------------
 }
 
 // Panel control
-void GuiPanel(Rectangle bounds, const char *text)
+void GuiPanel(Rectangle bounds)
 {
     #if !defined(RAYGUI_PANEL_BORDER_WIDTH)
         #define RAYGUI_PANEL_BORDER_WIDTH   1
     #endif
 
-    GuiState state = guiState;
-
-    // Text will be drawn as a header bar (if provided)
-    Rectangle statusBar = { bounds.x, bounds.y, bounds.width, (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT };
-    if ((text != NULL) && (bounds.height < RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2.0f)) bounds.height = RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2.0f;
-
-    if (text != NULL)
-    {
-        // Move panel bounds after the header bar
-        bounds.y += (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - 1;
-        bounds.height -= (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + 1;
-    }
+    GuiControlState state = guiState;
 
     // Draw control
     //--------------------------------------------------------------------
-    if (text != NULL) GuiStatusBar(statusBar, text);  // Draw panel header as status bar
-
-    GuiDrawRectangle(bounds, RAYGUI_PANEL_BORDER_WIDTH, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED: LINE_COLOR)), guiAlpha),
-                     Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BASE_COLOR_DISABLED : BACKGROUND_COLOR)), guiAlpha));
+    GuiDrawRectangle(bounds, RAYGUI_PANEL_BORDER_WIDTH, Fade(GetColor(GuiGetStyle(DEFAULT, (state == GUI_STATE_DISABLED)? BORDER_COLOR_DISABLED: LINE_COLOR)), guiAlpha),
+                     Fade(GetColor(GuiGetStyle(DEFAULT, (state == GUI_STATE_DISABLED)? BASE_COLOR_DISABLED : BACKGROUND_COLOR)), guiAlpha));
     //--------------------------------------------------------------------
-}
-
-// Tab Bar control
-// NOTE: Using GuiToggle() for the TABS
-int GuiTabBar(Rectangle bounds, const char **text, int count, int *active)
-{
-    #define RAYGUI_TABBAR_ITEM_WIDTH    160
-
-    GuiState state = guiState;
-
-    int closing = -1;
-    Rectangle tabBounds = { bounds.x, bounds.y, RAYGUI_TABBAR_ITEM_WIDTH, bounds.height };
-
-    if (*active < 0) *active = 0;
-    else if (*active > count - 1) *active = count - 1;
-
-    int offsetX = 0;    // Required in case tabs go out of screen
-    offsetX = (*active + 2)*RAYGUI_TABBAR_ITEM_WIDTH - GetScreenWidth();
-    if (offsetX < 0) offsetX = 0;
-
-    // Draw control
-    //--------------------------------------------------------------------
-    for (int i = 0; i < count; i++)
-    {
-        tabBounds.x = bounds.x + (RAYGUI_TABBAR_ITEM_WIDTH + 4)*i - offsetX;
-
-        if (tabBounds.x < GetScreenWidth())
-        {
-            // Draw tabs as toggle controls
-            int textAlignment = GuiGetStyle(TOGGLE, TEXT_ALIGNMENT);
-            int textPadding = GuiGetStyle(TOGGLE, TEXT_PADDING);
-            GuiSetStyle(TOGGLE, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-            GuiSetStyle(TOGGLE, TEXT_PADDING, 8);
-            if (i == *active) GuiToggle(tabBounds, GuiIconText(12, text[i]), true);
-            else if (GuiToggle(tabBounds, GuiIconText(12, text[i]), false) == true) *active = i;
-            GuiSetStyle(TOGGLE, TEXT_PADDING, textPadding);
-            GuiSetStyle(TOGGLE, TEXT_ALIGNMENT, textAlignment);
-
-            // Draw tab close button
-            // NOTE: Only draw close button for curren tab: if (CheckCollisionPointRec(mousePoint, tabBounds))
-            int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
-            int tempTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-            GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-            GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-#if defined(RAYGUI_NO_ICONS)
-            if (GuiButton(closeButtonRec, "x")) closing = i;
-#else
-            if (GuiButton(RAYGUI_CLITERAL(Rectangle){ tabBounds.x + tabBounds.width - 14 - 5, tabBounds.y + 5, 14, 14 }, GuiIconText(ICON_CROSS_SMALL, NULL))) closing = i;
-#endif
-            GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
-            GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlignment);
-        }
-    }
-
-    // Draw tab-bar bottom line
-    GuiDrawRectangle(RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height - 1, bounds.width, 1 }, 0, BLANK, GetColor(GuiGetStyle(TOGGLE, BORDER_COLOR_NORMAL)));
-    //--------------------------------------------------------------------
-
-    return closing;     // Return closing tab requested
 }
 
 // Scroll Panel control
-Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, Vector2 *scroll)
+Rectangle GuiScrollPanel(Rectangle bounds, Rectangle content, Vector2 *scroll)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     Vector2 scrollPos = { 0.0f, 0.0f };
     if (scroll != NULL) scrollPos = *scroll;
-
-    // Text will be drawn as a header bar (if provided)
-    Rectangle statusBar = { bounds.x, bounds.y, bounds.width, (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT };
-    if (bounds.height < RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2.0f) bounds.height = RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT*2.0f;
-
-    if (text != NULL)
-    {
-        // Move panel bounds after the header bar
-        bounds.y += (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - 1;
-        bounds.height -= (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + 1;
-    }
 
     bool hasHorizontalScrollBar = (content.width > bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH))? true : false;
     bool hasVerticalScrollBar = (content.height > bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH))? true : false;
@@ -1579,10 +1457,10 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
     if (!hasHorizontalScrollBar) hasHorizontalScrollBar = (hasVerticalScrollBar && (content.width > (bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH))))? true : false;
     if (!hasVerticalScrollBar) hasVerticalScrollBar = (hasHorizontalScrollBar && (content.height > (bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH))))? true : false;
 
-    int horizontalScrollBarWidth = hasHorizontalScrollBar? GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH) : 0;
-    int verticalScrollBarWidth =  hasVerticalScrollBar? GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH) : 0;
-    Rectangle horizontalScrollBar = { (float)((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + verticalScrollBarWidth : (float)bounds.x) + GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)bounds.y + bounds.height - horizontalScrollBarWidth - GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)bounds.width - verticalScrollBarWidth - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)horizontalScrollBarWidth };
-    Rectangle verticalScrollBar = { (float)((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)bounds.x + bounds.width - verticalScrollBarWidth - GuiGetStyle(DEFAULT, BORDER_WIDTH)), (float)bounds.y + GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)verticalScrollBarWidth, (float)bounds.height - horizontalScrollBarWidth - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) };
+    const int horizontalScrollBarWidth = hasHorizontalScrollBar? GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH) : 0;
+    const int verticalScrollBarWidth =  hasVerticalScrollBar? GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH) : 0;
+    const Rectangle horizontalScrollBar = { (float)((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + verticalScrollBarWidth : (float)bounds.x) + GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)bounds.y + bounds.height - horizontalScrollBarWidth - GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)bounds.width - verticalScrollBarWidth - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)horizontalScrollBarWidth };
+    const Rectangle verticalScrollBar = { (float)((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)bounds.x + bounds.width - verticalScrollBarWidth - GuiGetStyle(DEFAULT, BORDER_WIDTH)), (float)bounds.y + GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)verticalScrollBarWidth, (float)bounds.height - horizontalScrollBarWidth - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) };
 
     // Calculate view area (area without the scrollbars)
     Rectangle view = (GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)?
@@ -1593,24 +1471,23 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
     if (view.width > content.width) view.width = content.width;
     if (view.height > content.height) view.height = content.height;
 
-    float horizontalMin = hasHorizontalScrollBar? ((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(DEFAULT, BORDER_WIDTH) : (((float)GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    float horizontalMax = hasHorizontalScrollBar? content.width - bounds.width + (float)verticalScrollBarWidth + GuiGetStyle(DEFAULT, BORDER_WIDTH) - (((float)GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)verticalScrollBarWidth : 0) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    float verticalMin = hasVerticalScrollBar? 0.0f : -1.0f;
-    float verticalMax = hasVerticalScrollBar? content.height - bounds.height + (float)horizontalScrollBarWidth + (float)GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    const float horizontalMin = hasHorizontalScrollBar? ((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(DEFAULT, BORDER_WIDTH) : (((float)GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    const float horizontalMax = hasHorizontalScrollBar? content.width - bounds.width + (float)verticalScrollBarWidth + GuiGetStyle(DEFAULT, BORDER_WIDTH) - (((float)GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)verticalScrollBarWidth : 0) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    const float verticalMin = hasVerticalScrollBar? (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    const float verticalMax = hasVerticalScrollBar? content.height - bounds.height + (float)horizontalScrollBarWidth + (float)GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check button state
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
 
-#if defined(SUPPORT_SCROLLBAR_KEY_INPUT)
             if (hasHorizontalScrollBar)
             {
                 if (IsKeyDown(KEY_RIGHT)) scrollPos.x -= GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
@@ -1622,11 +1499,11 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
                 if (IsKeyDown(KEY_DOWN)) scrollPos.y -= GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
                 if (IsKeyDown(KEY_UP)) scrollPos.y += GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
             }
-#endif
+
             float wheelMove = GetMouseWheelMove();
 
             // Horizontal scroll (Shift + Mouse wheel)
-            if (hasHorizontalScrollBar && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_SHIFT))) scrollPos.x += wheelMove*20;
+            if (hasHorizontalScrollBar && (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))) scrollPos.x += wheelMove*20;
             else scrollPos.y += wheelMove*20; // Vertical scroll
         }
     }
@@ -1640,9 +1517,7 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
 
     // Draw control
     //--------------------------------------------------------------------
-    if (text != NULL) GuiStatusBar(statusBar, text);  // Draw panel header as status bar
-
-    GuiDrawRectangle(bounds, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)), guiAlpha));        // Draw background
+    GuiDrawRectangle(bounds, 0, BLANK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));        // Draw background
 
     // Save size of the scrollbar slider
     const int slider = GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE);
@@ -1654,7 +1529,6 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
         GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, (int)(((bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth)/(int)content.width)*((int)bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth)));
         scrollPos.x = (float)-GuiScrollBar(horizontalScrollBar, (int)-scrollPos.x, (int)horizontalMin, (int)horizontalMax);
     }
-    else scrollPos.x = 0.0f;
 
     // Draw vertical scrollbar if visible
     if (hasVerticalScrollBar)
@@ -1663,12 +1537,11 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
         GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, (int)(((bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth)/(int)content.height)*((int)bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth)));
         scrollPos.y = (float)-GuiScrollBar(verticalScrollBar, (int)-scrollPos.y, (int)verticalMin, (int)verticalMax);
     }
-    else scrollPos.y = 0.0f;
 
     // Draw detail corner rectangle if both scroll bars are visible
     if (hasHorizontalScrollBar && hasVerticalScrollBar)
     {
-        Rectangle corner = { (GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH) + 2) : (horizontalScrollBar.x + horizontalScrollBar.width + 2), verticalScrollBar.y + verticalScrollBar.height + 2, (float)horizontalScrollBarWidth - 4, (float)verticalScrollBarWidth - 4 };
+        Rectangle corner = { (GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE) ? (bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH) + 2) : (horizontalScrollBar.x + horizontalScrollBar.width + 2), verticalScrollBar.y + verticalScrollBar.height + 2, (float)horizontalScrollBarWidth - 4, (float)verticalScrollBarWidth - 4 };
         GuiDrawRectangle(corner, 0, BLANK, Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT + (state*3))), guiAlpha));
     }
 
@@ -1687,36 +1560,36 @@ Rectangle GuiScrollPanel(Rectangle bounds, const char *text, Rectangle content, 
 // Label control
 void GuiLabel(Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     // Update control
     //--------------------------------------------------------------------
-    //...
+    // ...
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawText(text, GetTextBounds(LABEL, bounds), GuiGetStyle(LABEL, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(text, GetTextBounds(LABEL, bounds), GuiGetStyle(LABEL, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LABEL, (state == GUI_STATE_DISABLED)? TEXT_COLOR_DISABLED : TEXT_COLOR_NORMAL)), guiAlpha));
     //--------------------------------------------------------------------
 }
 
 // Button control, returns true when clicked
 bool GuiButton(Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     bool pressed = false;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check button state
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
 
             if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) pressed = true;
         }
@@ -1727,8 +1600,6 @@ bool GuiButton(Rectangle bounds, const char *text)
     //--------------------------------------------------------------------
     GuiDrawRectangle(bounds, GuiGetStyle(BUTTON, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(BUTTON, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(BUTTON, BASE + (state*3))), guiAlpha));
     GuiDrawText(text, GetTextBounds(BUTTON, bounds), GuiGetStyle(BUTTON, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(BUTTON, TEXT + (state*3))), guiAlpha));
-    
-    if (state == STATE_FOCUSED) GuiTooltip(bounds);
     //------------------------------------------------------------------
 
     return pressed;
@@ -1737,24 +1608,24 @@ bool GuiButton(Rectangle bounds, const char *text)
 // Label button control
 bool GuiLabelButton(Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     bool pressed = false;
 
     // NOTE: We force bounds.width to be all text
-    float textWidth = (float)GetTextWidth(text);
+    float textWidth = MeasureTextEx(guiFont, text, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), (float)GuiGetStyle(DEFAULT, TEXT_SPACING)).x;
     if (bounds.width < textWidth) bounds.width = textWidth;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check checkbox state
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
 
             if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) pressed = true;
         }
@@ -1772,31 +1643,31 @@ bool GuiLabelButton(Rectangle bounds, const char *text)
 // Toggle Button control, returns true when active
 bool GuiToggle(Rectangle bounds, const char *text, bool active)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check toggle button state
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
             else if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
             {
-                state = STATE_NORMAL;
+                state = GUI_STATE_NORMAL;
                 active = !active;
             }
-            else state = STATE_FOCUSED;
+            else state = GUI_STATE_FOCUSED;
         }
     }
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    if (state == STATE_NORMAL)
+    if (state == GUI_STATE_NORMAL)
     {
         GuiDrawRectangle(bounds, GuiGetStyle(TOGGLE, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TOGGLE, (active? BORDER_COLOR_PRESSED : (BORDER + state*3)))), guiAlpha), Fade(GetColor(GuiGetStyle(TOGGLE, (active? BASE_COLOR_PRESSED : (BASE + state*3)))), guiAlpha));
         GuiDrawText(text, GetTextBounds(TOGGLE, bounds), GuiGetStyle(TOGGLE, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(TOGGLE, (active? TEXT_COLOR_PRESSED : (TEXT + state*3)))), guiAlpha));
@@ -1806,26 +1677,24 @@ bool GuiToggle(Rectangle bounds, const char *text, bool active)
         GuiDrawRectangle(bounds, GuiGetStyle(TOGGLE, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TOGGLE, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(TOGGLE, BASE + state*3)), guiAlpha));
         GuiDrawText(text, GetTextBounds(TOGGLE, bounds), GuiGetStyle(TOGGLE, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(TOGGLE, TEXT + state*3)), guiAlpha));
     }
-
-    if (state == STATE_FOCUSED) GuiTooltip(bounds);
     //--------------------------------------------------------------------
 
     return active;
 }
 
-// Toggle Group control, returns toggled button codepointIndex
+// Toggle Group control, returns toggled button index
 int GuiToggleGroup(Rectangle bounds, const char *text, int active)
 {
-    #if !defined(RAYGUI_TOGGLEGROUP_MAX_ITEMS)
-        #define RAYGUI_TOGGLEGROUP_MAX_ITEMS    32
+    #if !defined(RAYGUI_TOGGLEGROUP_MAX_ELEMENTS)
+        #define RAYGUI_TOGGLEGROUP_MAX_ELEMENTS    32
     #endif
 
     float initBoundsX = bounds.x;
 
     // Get substrings items from text (items pointers)
-    int rows[RAYGUI_TOGGLEGROUP_MAX_ITEMS] = { 0 };
+    int rows[RAYGUI_TOGGLEGROUP_MAX_ELEMENTS] = { 0 };
     int itemCount = 0;
-    const char **items = GuiTextSplit(text, ';', &itemCount, rows);
+    const char **items = GuiTextSplit(text, &itemCount, rows);
 
     int prevRow = rows[0];
 
@@ -1850,7 +1719,7 @@ int GuiToggleGroup(Rectangle bounds, const char *text, int active)
 // Check Box control, returns true when active
 bool GuiCheckBox(Rectangle bounds, const char *text, bool checked)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     Rectangle textBounds = { 0 };
 
@@ -1860,17 +1729,17 @@ bool GuiCheckBox(Rectangle bounds, const char *text, bool checked)
         textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(CHECKBOX, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        if (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(CHECKBOX, TEXT_PADDING);
+        if (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(CHECKBOX, TEXT_PADDING);
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         Rectangle totalBounds = {
-            (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT)? textBounds.x : bounds.x,
+            (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_LEFT)? textBounds.x : bounds.x,
             bounds.y,
             bounds.width + textBounds.width + GuiGetStyle(CHECKBOX, TEXT_PADDING),
             bounds.height,
@@ -1879,8 +1748,8 @@ bool GuiCheckBox(Rectangle bounds, const char *text, bool checked)
         // Check checkbox state
         if (CheckCollisionPointRec(mousePoint, totalBounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
 
             if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) checked = !checked;
         }
@@ -1900,32 +1769,32 @@ bool GuiCheckBox(Rectangle bounds, const char *text, bool checked)
         GuiDrawRectangle(check, 0, BLANK, Fade(GetColor(GuiGetStyle(CHECKBOX, TEXT + state*3)), guiAlpha));
     }
 
-    GuiDrawText(text, textBounds, (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(text, textBounds, (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_RIGHT)? GUI_TEXT_ALIGN_LEFT : GUI_TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
     //--------------------------------------------------------------------
 
     return checked;
 }
 
-// Combo Box control, returns selected item codepointIndex
+// Combo Box control, returns selected item index
 int GuiComboBox(Rectangle bounds, const char *text, int active)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
-    bounds.width -= (GuiGetStyle(COMBOBOX, COMBO_BUTTON_WIDTH) + GuiGetStyle(COMBOBOX, COMBO_BUTTON_SPACING));
+    bounds.width -= (GuiGetStyle(COMBOBOX, COMBO_BUTTON_WIDTH) + GuiGetStyle(COMBOBOX, COMBO_BUTTON_PADDING));
 
-    Rectangle selector = { (float)bounds.x + bounds.width + GuiGetStyle(COMBOBOX, COMBO_BUTTON_SPACING),
+    Rectangle selector = { (float)bounds.x + bounds.width + GuiGetStyle(COMBOBOX, COMBO_BUTTON_PADDING),
                            (float)bounds.y, (float)GuiGetStyle(COMBOBOX, COMBO_BUTTON_WIDTH), (float)bounds.height };
 
     // Get substrings items from text (items pointers, lengths and count)
     int itemCount = 0;
-    const char **items = GuiTextSplit(text, ';', &itemCount, NULL);
+    const char **items = GuiTextSplit(text, &itemCount, NULL);
 
     if (active < 0) active = 0;
     else if (active > itemCount - 1) active = itemCount - 1;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked && (itemCount > 1))
+    if ((state != GUI_STATE_DISABLED) && !guiLocked && (itemCount > 1))
     {
         Vector2 mousePoint = GetMousePosition();
 
@@ -1938,8 +1807,8 @@ int GuiComboBox(Rectangle bounds, const char *text, int active)
                 if (active >= itemCount) active = 0;
             }
 
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
         }
     }
     //--------------------------------------------------------------------
@@ -1955,7 +1824,7 @@ int GuiComboBox(Rectangle bounds, const char *text, int active)
     int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
     int tempTextAlign = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
     GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
 
     GuiButton(selector, TextFormat("%i/%i", active + 1, itemCount));
 
@@ -1970,16 +1839,16 @@ int GuiComboBox(Rectangle bounds, const char *text, int active)
 // NOTE: Returns mouse click
 bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMode)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     int itemSelected = *active;
     int itemFocused = -1;
 
     // Get substrings items from text (items pointers, lengths and count)
     int itemCount = 0;
-    const char **items = GuiTextSplit(text, ';', &itemCount, NULL);
+    const char **items = GuiTextSplit(text, &itemCount, NULL);
 
     Rectangle boundsOpen = bounds;
-    boundsOpen.height = (itemCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+    boundsOpen.height = (itemCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING));
 
     Rectangle itemBounds = bounds;
 
@@ -1987,13 +1856,13 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && (editMode || !guiLocked) && (itemCount > 1))
+    if ((state != GUI_STATE_DISABLED) && (editMode || !guiLocked) && (itemCount > 1))
     {
         Vector2 mousePoint = GetMousePosition();
 
         if (editMode)
         {
-            state = STATE_PRESSED;
+            state = GUI_STATE_PRESSED;
 
             // Check if mouse has been pressed or released outside limits
             if (!CheckCollisionPointRec(mousePoint, boundsOpen))
@@ -2008,7 +1877,7 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
             for (int i = 0; i < itemCount; i++)
             {
                 // Update item rectangle y position for next item
-                itemBounds.y += (bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+                itemBounds.y += (bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING));
 
                 if (CheckCollisionPointRec(mousePoint, itemBounds))
                 {
@@ -2031,9 +1900,9 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
                 {
                     pressed = true;
-                    state = STATE_PRESSED;
+                    state = GUI_STATE_PRESSED;
                 }
-                else state = STATE_FOCUSED;
+                else state = GUI_STATE_FOCUSED;
             }
         }
     }
@@ -2041,7 +1910,7 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
 
     // Draw control
     //--------------------------------------------------------------------
-    if (editMode) GuiPanel(boundsOpen, NULL);
+    if (editMode) GuiPanel(boundsOpen);
 
     GuiDrawRectangle(bounds, GuiGetStyle(DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BASE + state*3)), guiAlpha));
     GuiDrawText(items[itemSelected], GetTextBounds(DEFAULT, bounds), GuiGetStyle(DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + state*3)), guiAlpha));
@@ -2052,7 +1921,7 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
         for (int i = 0; i < itemCount; i++)
         {
             // Update item rectangle y position for next item
-            itemBounds.y += (bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+            itemBounds.y += (bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING));
 
             if (i == itemSelected)
             {
@@ -2071,10 +1940,10 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
     // Draw arrows (using icon if available)
 #if defined(RAYGUI_NO_ICONS)
     GuiDrawText("v", RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - GuiGetStyle(DROPDOWNBOX, ARROW_PADDING), bounds.y + bounds.height/2 - 2, 10, 10 },
-                TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
+                GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
 #else
     GuiDrawText("#120#", RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - GuiGetStyle(DROPDOWNBOX, ARROW_PADDING), bounds.y + bounds.height/2 - 6, 10, 10 },
-                TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));   // ICON_ARROW_DOWN_FILL
+                GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));   // RAYGUI_ICON_ARROW_DOWN_FILL
 #endif
     //--------------------------------------------------------------------
 
@@ -2086,44 +1955,41 @@ bool GuiDropdownBox(Rectangle bounds, const char *text, int *active, bool editMo
 // NOTE 2: Returns if KEY_ENTER pressed (useful for data validation)
 bool GuiTextBox(Rectangle bounds, char *text, int textSize, bool editMode)
 {
-    GuiState state = guiState;
-    Rectangle textBounds = GetTextBounds(TEXTBOX, bounds);
-
+    GuiControlState state = guiState;
     bool pressed = false;
-    int textWidth = GetTextWidth(text);
 
     Rectangle cursor = {
-        bounds.x + GuiGetStyle(TEXTBOX, TEXT_PADDING) + textWidth + 2,
+        bounds.x + GuiGetStyle(TEXTBOX, TEXT_PADDING) + GetTextWidth(text) + 2,
         bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE),
         4,
         (float)GuiGetStyle(DEFAULT, TEXT_SIZE)*2
     };
 
-    if (cursor.height >= bounds.height) cursor.height = bounds.height - GuiGetStyle(TEXTBOX, BORDER_WIDTH)*2;
-    if (cursor.y < (bounds.y + GuiGetStyle(TEXTBOX, BORDER_WIDTH))) cursor.y = bounds.y + GuiGetStyle(TEXTBOX, BORDER_WIDTH);
+    if (cursor.height > bounds.height) cursor.height = bounds.height - GuiGetStyle(TEXTBOX, BORDER_WIDTH)*2;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         if (editMode)
         {
-            state = STATE_PRESSED;
+            state = GUI_STATE_PRESSED;
 
             int key = GetCharPressed();      // Returns codepoint as Unicode
             int keyCount = (int)strlen(text);
-            int byteSize = 0;
-            const char *textUTF8 = CodepointToUTF8(key, &byteSize);
 
             // Only allow keys in range [32..125]
-            if ((keyCount + byteSize) < textSize)
+            if (keyCount < (textSize - 1))
             {
-                //float maxWidth = (bounds.width - (GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING)*2));
+                float maxWidth = (bounds.width - (GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING)*2));
 
-                if (key >= 32)
+                if ((GetTextWidth(text) < (maxWidth - GuiGetStyle(DEFAULT, TEXT_SIZE))) && (key >= 32))
                 {
+                    int byteSize = 0;
+                    const char *textUTF8 = CodepointToUTF8(key, &byteSize);
+
                     for (int i = 0; i < byteSize; i++)
                     {
                         text[keyCount] = textUTF8[i];
@@ -2139,18 +2005,24 @@ bool GuiTextBox(Rectangle bounds, char *text, int textSize, bool editMode)
             {
                 if (IsKeyPressed(KEY_BACKSPACE))
                 {
-                    while ((keyCount > 0) && ((text[--keyCount] & 0xc0) == 0x80));
+                    keyCount--;
                     text[keyCount] = '\0';
+                    if (keyCount < 0) keyCount = 0;
                 }
             }
 
             if (IsKeyPressed(KEY_ENTER) || (!CheckCollisionPointRec(mousePoint, bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) pressed = true;
+
+            // Check text alignment to position cursor properly
+            int textAlignment = GuiGetStyle(TEXTBOX, TEXT_ALIGNMENT);
+            if (textAlignment == GUI_TEXT_ALIGN_CENTER) cursor.x = bounds.x + GetTextWidth(text)/2 + bounds.width/2 + 1;
+            else if (textAlignment == GUI_TEXT_ALIGN_RIGHT) cursor.x = bounds.x + bounds.width - GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING);
         }
         else
         {
             if (CheckCollisionPointRec(mousePoint, bounds))
             {
-                state = STATE_FOCUSED;
+                state = GUI_STATE_FOCUSED;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) pressed = true;
             }
         }
@@ -2159,35 +2031,20 @@ bool GuiTextBox(Rectangle bounds, char *text, int textSize, bool editMode)
 
     // Draw control
     //--------------------------------------------------------------------
-    if (state == STATE_PRESSED)
+    if (state == GUI_STATE_PRESSED)
     {
         GuiDrawRectangle(bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_PRESSED)), guiAlpha));
     }
-    else if (state == STATE_DISABLED)
+    else if (state == GUI_STATE_DISABLED)
     {
         GuiDrawRectangle(bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_DISABLED)), guiAlpha));
     }
     else GuiDrawRectangle(bounds, 1, Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), BLANK);
 
-    if (editMode)
-    {
-        // In case we edit and text does not fit in the textbox,
-        // we move text pointer to a position it fits inside the text box
-        while ((textWidth >= textBounds.width) && (text[0] != '\0'))
-        {
-            int codepointSize = 0;
-            GetCodepointNext(text, &codepointSize);
-            text += codepointSize;
-            textWidth = GetTextWidth(text);
-            cursor.x = textBounds.x + textWidth + 2;
-        }
-    }
-
-    GuiDrawText(text, textBounds, GuiGetStyle(TEXTBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(TEXTBOX, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(text, GetTextBounds(TEXTBOX, bounds), GuiGetStyle(TEXTBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(TEXTBOX, TEXT + (state*3))), guiAlpha));
 
     // Draw cursor
     if (editMode) GuiDrawRectangle(cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER_COLOR_PRESSED)), guiAlpha));
-    else if (state == STATE_FOCUSED) GuiTooltip(bounds);
     //--------------------------------------------------------------------
 
     return pressed;
@@ -2196,13 +2053,13 @@ bool GuiTextBox(Rectangle bounds, char *text, int textSize, bool editMode)
 // Spinner control, returns selected value
 bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, int maxValue, bool editMode)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     bool pressed = false;
     int tempValue = *value;
 
-    Rectangle spinner = { bounds.x + GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_SPACING), bounds.y,
-                          bounds.width - 2*(GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_SPACING)), bounds.height };
+    Rectangle spinner = { bounds.x + GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_PADDING), bounds.y,
+                          bounds.width - 2*(GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_PADDING)), bounds.height };
     Rectangle leftButtonBound = { (float)bounds.x, (float)bounds.y, (float)GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
     Rectangle rightButtonBound = { (float)bounds.x + bounds.width - GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.y, (float)GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
 
@@ -2213,20 +2070,20 @@ bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, in
         textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(SPINNER, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        if (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SPINNER, TEXT_PADDING);
+        if (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SPINNER, TEXT_PADDING);
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check spinner state
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
         }
     }
 
@@ -2234,8 +2091,8 @@ bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, in
     if (GuiButton(leftButtonBound, "<")) tempValue--;
     if (GuiButton(rightButtonBound, ">")) tempValue++;
 #else
-    if (GuiButton(leftButtonBound, GuiIconText(ICON_ARROW_LEFT_FILL, NULL))) tempValue--;
-    if (GuiButton(rightButtonBound, GuiIconText(ICON_ARROW_RIGHT_FILL, NULL))) tempValue++;
+    if (GuiButton(leftButtonBound, GuiIconText(RAYGUI_ICON_ARROW_LEFT_FILL, NULL))) tempValue--;
+    if (GuiButton(rightButtonBound, GuiIconText(RAYGUI_ICON_ARROW_RIGHT_FILL, NULL))) tempValue++;
 #endif
 
     if (!editMode)
@@ -2255,13 +2112,15 @@ bool GuiSpinner(Rectangle bounds, const char *text, int *value, int minValue, in
     int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
     int tempTextAlign = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
     GuiSetStyle(BUTTON, BORDER_WIDTH, GuiGetStyle(SPINNER, BORDER_WIDTH));
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
+
+
 
     GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlign);
     GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
 
     // Draw text label if provided
-    GuiDrawText(text, textBounds, (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(text, textBounds, (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_RIGHT)? GUI_TEXT_ALIGN_LEFT : GUI_TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
     //--------------------------------------------------------------------
 
     *value = tempValue;
@@ -2276,7 +2135,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
         #define RAYGUI_VALUEBOX_MAX_CHARS  32
     #endif
 
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     bool pressed = false;
 
     char textValue[RAYGUI_VALUEBOX_MAX_CHARS + 1] = "\0";
@@ -2289,12 +2148,12 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
         textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(VALUEBOX, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        if (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(VALUEBOX, TEXT_PADDING);
+        if (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(VALUEBOX, TEXT_PADDING);
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
@@ -2302,7 +2161,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
 
         if (editMode)
         {
-            state = STATE_PRESSED;
+            state = GUI_STATE_PRESSED;
 
             int keyCount = (int)strlen(textValue);
 
@@ -2328,15 +2187,15 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
                 {
                     keyCount--;
                     textValue[keyCount] = '\0';
+                    if (keyCount < 0) keyCount = 0;
                     valueHasChanged = true;
                 }
             }
 
             if (valueHasChanged) *value = TextToInteger(textValue);
 
-            // NOTE: We are not clamp values until user input finishes
-            //if (*value > maxValue) *value = maxValue;
-            //else if (*value < minValue) *value = minValue;
+            if (*value > maxValue) *value = maxValue;
+            else if (*value < minValue) *value = minValue;
 
             if (IsKeyPressed(KEY_ENTER) || (!CheckCollisionPointRec(mousePoint, bounds) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))) pressed = true;
         }
@@ -2347,7 +2206,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
 
             if (CheckCollisionPointRec(mousePoint, bounds))
             {
-                state = STATE_FOCUSED;
+                state = GUI_STATE_FOCUSED;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) pressed = true;
             }
         }
@@ -2357,23 +2216,23 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
     // Draw control
     //--------------------------------------------------------------------
     Color baseColor = BLANK;
-    if (state == STATE_PRESSED) baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_PRESSED));
-    else if (state == STATE_DISABLED) baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_DISABLED));
+    if (state == GUI_STATE_PRESSED) baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_PRESSED));
+    else if (state == GUI_STATE_DISABLED) baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_DISABLED));
 
     // WARNING: BLANK color does not work properly with Fade()
     GuiDrawRectangle(bounds, GuiGetStyle(VALUEBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER + (state*3))), guiAlpha), baseColor);
-    GuiDrawText(textValue, GetTextBounds(VALUEBOX, bounds), TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(VALUEBOX, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(textValue, GetTextBounds(VALUEBOX, bounds), GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(VALUEBOX, TEXT + (state*3))), guiAlpha));
 
     // Draw cursor
     if (editMode)
     {
         // NOTE: ValueBox internal text is always centered
-        Rectangle cursor = { bounds.x + GetTextWidth(textValue)/2 + bounds.width/2 + 1, bounds.y + 2*GuiGetStyle(VALUEBOX, BORDER_WIDTH), 4, bounds.height - 4*GuiGetStyle(VALUEBOX, BORDER_WIDTH) };
+        Rectangle cursor = { bounds.x + GetTextWidth(textValue)/2 + bounds.width/2 + 2, bounds.y + 2*GuiGetStyle(VALUEBOX, BORDER_WIDTH), 4, bounds.height - 4*GuiGetStyle(VALUEBOX, BORDER_WIDTH) };
         GuiDrawRectangle(cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER_COLOR_PRESSED)), guiAlpha));
     }
 
     // Draw text label if provided
-    GuiDrawText(text, textBounds, (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(text, textBounds, (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_RIGHT)? GUI_TEXT_ALIGN_LEFT : GUI_TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
     //--------------------------------------------------------------------
 
     return pressed;
@@ -2382,7 +2241,7 @@ bool GuiValueBox(Rectangle bounds, const char *text, int *value, int minValue, i
 // Text Box control with multiple lines
 bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     bool pressed = false;
 
     Rectangle textAreaBounds = {
@@ -2399,22 +2258,20 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         if (editMode)
         {
-            state = STATE_PRESSED;
+            state = GUI_STATE_PRESSED;
 
             // We get an Unicode codepoint
             int codepoint = GetCharPressed();
             int textLength = (int)strlen(text);     // Length in bytes (UTF-8 string)
-            int byteSize = 0;
-            const char *textUTF8 = CodepointToUTF8(codepoint, &byteSize);
 
             // Introduce characters
-            if ((textLength + byteSize) < textSize)
+            if (textLength < (textSize - 1))
             {
                 if (IsKeyPressed(KEY_ENTER))
                 {
@@ -2446,7 +2303,7 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
                     {
                         // Remove latest UTF-8 unicode character introduced (n bytes)
                         int charUTF8Length = 0;
-                        while ((charUTF8Length < textLength) && ((unsigned char)text[textLength - 1 - charUTF8Length] & 0b01000000) == 0) charUTF8Length++;
+                        while (((unsigned char)text[textLength - 1 - charUTF8Length] & 0b01000000) == 0) charUTF8Length++;
 
                         textLength -= (charUTF8Length + 1);
                         text[textLength] = '\0';
@@ -2461,7 +2318,7 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
         {
             if (CheckCollisionPointRec(mousePoint, bounds))
             {
-                state = STATE_FOCUSED;
+                state = GUI_STATE_FOCUSED;
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) pressed = true;
             }
         }
@@ -2470,11 +2327,11 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
 
     // Draw control
     //--------------------------------------------------------------------
-    if (state == STATE_PRESSED)
+    if (state == GUI_STATE_PRESSED)
     {
         GuiDrawRectangle(bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_PRESSED)), guiAlpha));
     }
-    else if (state == STATE_DISABLED)
+    else if (state == GUI_STATE_DISABLED)
     {
         GuiDrawRectangle(bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_DISABLED)), guiAlpha));
     }
@@ -2487,16 +2344,16 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
     //int lastSpaceWidth = 0;
     //int lastSpaceCursorPos = 0;
 
-    for (int i = 0, codepointSize = 0; text[i] != '\0'; i += codepointSize)
+    for (int i = 0, codepointLength = 0; text[i] != '\0'; i += codepointLength)
     {
-        int codepoint = GetCodepointNext(text + i, &codepointSize);
+        int codepoint = GetCodepoint(text + i, &codepointLength);
         int index = GetGlyphIndex(guiFont, codepoint);      // If requested codepoint is not found, we get '?' (0x3f)
         Rectangle atlasRec = guiFont.recs[index];
         GlyphInfo glyphInfo = guiFont.glyphs[index];        // Glyph measures
 
-        if ((codepointSize == 1) && (codepoint == '\n'))
+        if ((codepointLength == 1) && (codepoint == '\n'))
         {
-            cursorPos.y += (guiFont.baseSize*scaleFactor + GuiGetStyle(TEXTBOX, TEXT_LINES_SPACING));   // Line feed
+            cursorPos.y += (guiFont.baseSize*scaleFactor + GuiGetStyle(TEXTBOX, TEXT_LINES_PADDING));   // Line feed
             cursorPos.x = textAreaBounds.x;                 // Carriage return
         }
         else
@@ -2510,14 +2367,14 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
                 // Jump line if the end of the text box area has been reached
                 if ((cursorPos.x + (glyphWidth*scaleFactor)) > (textAreaBounds.x + textAreaBounds.width))
                 {
-                    cursorPos.y += (guiFont.baseSize*scaleFactor + GuiGetStyle(TEXTBOX, TEXT_LINES_SPACING));   // Line feed
+                    cursorPos.y += (guiFont.baseSize*scaleFactor + GuiGetStyle(TEXTBOX, TEXT_LINES_PADDING));   // Line feed
                     cursorPos.x = textAreaBounds.x;     // Carriage return
                 }
             }
             else if (wrapMode == 2)
             {
                 /*
-                if ((codepointSize == 1) && (codepoint == ' '))
+                if ((codepointLength == 1) && (codepoint == ' '))
                 {
                     lastSpacePos = i;
                     lastSpaceWidth = 0;
@@ -2559,7 +2416,7 @@ bool GuiTextBoxMulti(Rectangle bounds, char *text, int textSize, bool editMode)
 // NOTE: Other GuiSlider*() controls use this one
 float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight, float value, float minValue, float maxValue, int sliderWidth)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     int sliderValue = (int)(((value - minValue)/(maxValue - minValue))*(bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH)));
 
@@ -2579,7 +2436,7 @@ float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
@@ -2587,7 +2444,7 @@ float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight
         {
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
             {
-                state = STATE_PRESSED;
+                state = GUI_STATE_PRESSED;
 
                 // Get equivalent value and slider position from mousePoint.x
                 value = ((maxValue - minValue)*(mousePoint.x - (float)(bounds.x + sliderWidth/2)))/(float)(bounds.width - sliderWidth) + minValue;
@@ -2595,7 +2452,7 @@ float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight
                 if (sliderWidth > 0) slider.x = mousePoint.x - slider.width/2;  // Slider
                 else if (sliderWidth == 0) slider.width = (float)sliderValue;          // SliderBar
             }
-            else state = STATE_FOCUSED;
+            else state = GUI_STATE_FOCUSED;
         }
 
         if (value > maxValue) value = maxValue;
@@ -2616,11 +2473,11 @@ float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(bounds, GuiGetStyle(SLIDER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(SLIDER, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(SLIDER, (state != STATE_DISABLED)?  BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
+    GuiDrawRectangle(bounds, GuiGetStyle(SLIDER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(SLIDER, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(SLIDER, (state != GUI_STATE_DISABLED)?  BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
 
     // Draw slider internal bar (depends on state)
-    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BASE_COLOR_PRESSED)), guiAlpha));
-    else if (state == STATE_FOCUSED) GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, TEXT_COLOR_FOCUSED)), guiAlpha));
+    if ((state == GUI_STATE_NORMAL) || (state == GUI_STATE_PRESSED)) GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BASE_COLOR_PRESSED)), guiAlpha));
+    else if (state == GUI_STATE_FOCUSED) GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, TEXT_COLOR_FOCUSED)), guiAlpha));
 
     // Draw left/right text if provided
     if (textLeft != NULL)
@@ -2631,7 +2488,7 @@ float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight
         textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SLIDER, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(textLeft, textBounds, GUI_TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
     }
 
     if (textRight != NULL)
@@ -2642,7 +2499,7 @@ float GuiSliderPro(Rectangle bounds, const char *textLeft, const char *textRight
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(SLIDER, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(textRight, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(textRight, textBounds, GUI_TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
     }
     //--------------------------------------------------------------------
 
@@ -2664,7 +2521,7 @@ float GuiSliderBar(Rectangle bounds, const char *textLeft, const char *textRight
 // Progress Bar control extended, shows current progress value
 float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRight, float value, float minValue, float maxValue)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     Rectangle progress = { bounds.x + GuiGetStyle(PROGRESSBAR, BORDER_WIDTH),
                            bounds.y + GuiGetStyle(PROGRESSBAR, BORDER_WIDTH) + GuiGetStyle(PROGRESSBAR, PROGRESS_PADDING), 0,
@@ -2672,9 +2529,7 @@ float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRig
 
     // Update control
     //--------------------------------------------------------------------
-    if (value > maxValue) value = maxValue;
-
-    if (state != STATE_DISABLED) progress.width = ((float)(value/(maxValue - minValue))*(float)(bounds.width - 2*GuiGetStyle(PROGRESSBAR, BORDER_WIDTH)));
+    if (state != GUI_STATE_DISABLED) progress.width = ((float)(value/(maxValue - minValue))*(float)(bounds.width - 2*GuiGetStyle(PROGRESSBAR, BORDER_WIDTH)));
     //--------------------------------------------------------------------
 
     // Draw control
@@ -2682,8 +2537,8 @@ float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRig
     GuiDrawRectangle(bounds, GuiGetStyle(PROGRESSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(PROGRESSBAR, BORDER + (state*3))), guiAlpha), BLANK);
 
     // Draw slider internal progress bar (depends on state)
-    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(progress, 0, BLANK, Fade(GetColor(GuiGetStyle(PROGRESSBAR, BASE_COLOR_PRESSED)), guiAlpha));
-    else if (state == STATE_FOCUSED) GuiDrawRectangle(progress, 0, BLANK, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT_COLOR_FOCUSED)), guiAlpha));
+    if ((state == GUI_STATE_NORMAL) || (state == GUI_STATE_PRESSED)) GuiDrawRectangle(progress, 0, BLANK, Fade(GetColor(GuiGetStyle(PROGRESSBAR, BASE_COLOR_PRESSED)), guiAlpha));
+    else if (state == GUI_STATE_FOCUSED) GuiDrawRectangle(progress, 0, BLANK, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT_COLOR_FOCUSED)), guiAlpha));
 
     // Draw left/right text if provided
     if (textLeft != NULL)
@@ -2694,7 +2549,7 @@ float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRig
         textBounds.x = bounds.x - textBounds.width - GuiGetStyle(PROGRESSBAR, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(textLeft, textBounds, GUI_TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT + (state*3))), guiAlpha));
     }
 
     if (textRight != NULL)
@@ -2705,7 +2560,7 @@ float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRig
         textBounds.x = bounds.x + bounds.width + GuiGetStyle(PROGRESSBAR, TEXT_PADDING);
         textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(textRight, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(textRight, textBounds, GUI_TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT + (state*3))), guiAlpha));
     }
     //--------------------------------------------------------------------
 
@@ -2715,41 +2570,156 @@ float GuiProgressBar(Rectangle bounds, const char *textLeft, const char *textRig
 // Status Bar control
 void GuiStatusBar(Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(bounds, GuiGetStyle(STATUSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(STATUSBAR, (state != STATE_DISABLED)? BORDER_COLOR_NORMAL : BORDER_COLOR_DISABLED)), guiAlpha),
-                     Fade(GetColor(GuiGetStyle(STATUSBAR, (state != STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
-    GuiDrawText(text, GetTextBounds(STATUSBAR, bounds), GuiGetStyle(STATUSBAR, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(STATUSBAR, (state != STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)), guiAlpha));
+    GuiDrawRectangle(bounds, GuiGetStyle(STATUSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(STATUSBAR, (state != GUI_STATE_DISABLED)? BORDER_COLOR_NORMAL : BORDER_COLOR_DISABLED)), guiAlpha),
+                     Fade(GetColor(GuiGetStyle(STATUSBAR, (state != GUI_STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
+    GuiDrawText(text, GetTextBounds(STATUSBAR, bounds), GuiGetStyle(STATUSBAR, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(STATUSBAR, (state != GUI_STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)), guiAlpha));
     //--------------------------------------------------------------------
 }
 
 // Dummy rectangle control, intended for placeholding
 void GuiDummyRec(Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check button state
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
-            else state = STATE_FOCUSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = GUI_STATE_PRESSED;
+            else state = GUI_STATE_FOCUSED;
         }
     }
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(bounds, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state != STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
-    GuiDrawText(text, GetTextBounds(DEFAULT, bounds), TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(BUTTON, (state != STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)), guiAlpha));
+    GuiDrawRectangle(bounds, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state != GUI_STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
+    GuiDrawText(text, GetTextBounds(DEFAULT, bounds), GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(BUTTON, (state != GUI_STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)), guiAlpha));
     //------------------------------------------------------------------
+}
+
+// Scroll Bar control
+int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue)
+{
+    GuiControlState state = guiState;
+
+    // Is the scrollbar horizontal or vertical?
+    bool isVertical = (bounds.width > bounds.height)? false : true;
+
+    // The size (width or height depending on scrollbar type) of the spinner buttons
+    const int spinnerSize = GuiGetStyle(SCROLLBAR, ARROWS_VISIBLE)? (isVertical? (int)bounds.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) : (int)bounds.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH)) : 0;
+
+    // Arrow buttons [<] [>] [∧] [∨]
+    Rectangle arrowUpLeft = { 0 };
+    Rectangle arrowDownRight = { 0 };
+
+    // Actual area of the scrollbar excluding the arrow buttons
+    Rectangle scrollbar = { 0 };
+
+    // Slider bar that moves     --[///]-----
+    Rectangle slider = { 0 };
+
+    // Normalize value
+    if (value > maxValue) value = maxValue;
+    if (value < minValue) value = minValue;
+
+    const int range = maxValue - minValue;
+    int sliderSize = GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE);
+
+    // Calculate rectangles for all of the components
+    arrowUpLeft = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
+
+    if (isVertical)
+    {
+        arrowDownRight = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + bounds.height - spinnerSize - GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize};
+        scrollbar = RAYGUI_CLITERAL(Rectangle){ bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING), arrowUpLeft.y + arrowUpLeft.height, bounds.width - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING)), bounds.height - arrowUpLeft.height - arrowDownRight.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) };
+        sliderSize = (sliderSize >= scrollbar.height)? ((int)scrollbar.height - 2) : sliderSize;     // Make sure the slider won't get outside of the scrollbar
+        slider = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING), (float)scrollbar.y + (int)(((float)(value - minValue)/range)*(scrollbar.height - sliderSize)), (float)bounds.width - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING)), (float)sliderSize };
+    }
+    else
+    {
+        arrowDownRight = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + bounds.width - spinnerSize - GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize};
+        scrollbar = RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x + arrowUpLeft.width, bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING), bounds.width - arrowUpLeft.width - arrowDownRight.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH), bounds.height - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING))};
+        sliderSize = (sliderSize >= scrollbar.width)? ((int)scrollbar.width - 2) : sliderSize;       // Make sure the slider won't get outside of the scrollbar
+        slider = RAYGUI_CLITERAL(Rectangle){ (float)scrollbar.x + (int)(((float)(value - minValue)/range)*(scrollbar.width - sliderSize)), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING), (float)sliderSize, (float)bounds.height - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING)) };
+    }
+
+    // Update control
+    //--------------------------------------------------------------------
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
+    {
+        Vector2 mousePoint = GetMousePosition();
+
+        if (CheckCollisionPointRec(mousePoint, bounds))
+        {
+            state = GUI_STATE_FOCUSED;
+
+            // Handle mouse wheel
+            int wheel = (int)GetMouseWheelMove();
+            if (wheel != 0) value += wheel;
+
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            {
+                if (CheckCollisionPointRec(mousePoint, arrowUpLeft)) value -= range/GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
+                else if (CheckCollisionPointRec(mousePoint, arrowDownRight)) value += range/GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
+
+                state = GUI_STATE_PRESSED;
+            }
+            else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            {
+                if (!isVertical)
+                {
+                    Rectangle scrollArea = { arrowUpLeft.x + arrowUpLeft.width, arrowUpLeft.y, scrollbar.width, bounds.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH)};
+                    if (CheckCollisionPointRec(mousePoint, scrollArea)) value = (int)(((float)(mousePoint.x - scrollArea.x - slider.width/2)*range)/(scrollArea.width - slider.width) + minValue);
+                }
+                else
+                {
+                    Rectangle scrollArea = { arrowUpLeft.x, arrowUpLeft.y+arrowUpLeft.height, bounds.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH),  scrollbar.height};
+                    if (CheckCollisionPointRec(mousePoint, scrollArea)) value = (int)(((float)(mousePoint.y - scrollArea.y - slider.height/2)*range)/(scrollArea.height - slider.height) + minValue);
+                }
+            }
+        }
+
+        // Normalize value
+        if (value > maxValue) value = maxValue;
+        if (value < minValue) value = minValue;
+    }
+    //--------------------------------------------------------------------
+
+    // Draw control
+    //--------------------------------------------------------------------
+    GuiDrawRectangle(bounds, GuiGetStyle(SCROLLBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_DISABLED)), guiAlpha));   // Draw the background
+
+    GuiDrawRectangle(scrollbar, 0, BLANK, Fade(GetColor(GuiGetStyle(BUTTON, BASE_COLOR_NORMAL)), guiAlpha));     // Draw the scrollbar active area background
+    GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BORDER + state*3)), guiAlpha));         // Draw the slider bar
+
+    // Draw arrows (using icon if available)
+    if (GuiGetStyle(SCROLLBAR, ARROWS_VISIBLE))
+    {
+#if defined(RAYGUI_NO_ICONS)
+        GuiDrawText(isVertical? "^" : "<", RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
+                    GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(isVertical? "v" : ">", RAYGUI_CLITERAL(Rectangle){ arrowDownRight.x, arrowDownRight.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
+                    GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
+#else
+        GuiDrawText(isVertical? "#121#" : "#118#", RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
+                    GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // RAYGUI_ICON_ARROW_UP_FILL / RAYGUI_ICON_ARROW_LEFT_FILL
+        GuiDrawText(isVertical? "#120#" : "#119#", RAYGUI_CLITERAL(Rectangle){ arrowDownRight.x, arrowDownRight.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
+                    GUI_TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // RAYGUI_ICON_ARROW_DOWN_FILL / RAYGUI_ICON_ARROW_RIGHT_FILL
+#endif
+    }
+    //--------------------------------------------------------------------
+
+    return value;
 }
 
 // List View control
@@ -2758,7 +2728,7 @@ int GuiListView(Rectangle bounds, const char *text, int *scrollIndex, int active
     int itemCount = 0;
     const char **items = NULL;
 
-    if (text != NULL) items = GuiTextSplit(text, ';', &itemCount, NULL);
+    if (text != NULL) items = GuiTextSplit(text, &itemCount, NULL);
 
     return GuiListViewEx(bounds, items, itemCount, NULL, scrollIndex, active);
 }
@@ -2766,24 +2736,24 @@ int GuiListView(Rectangle bounds, const char *text, int *scrollIndex, int active
 // List View control with extended parameters
 int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, int *scrollIndex, int active)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     int itemFocused = (focus == NULL)? -1 : *focus;
     int itemSelected = active;
 
     // Check if we need a scroll bar
     bool useScrollBar = false;
-    if ((GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING))*count > bounds.height) useScrollBar = true;
+    if ((GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING))*count > bounds.height) useScrollBar = true;
 
     // Define base item rectangle [0]
     Rectangle itemBounds = { 0 };
-    itemBounds.x = bounds.x + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING);
-    itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    itemBounds.width = bounds.width - 2*GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) - GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    itemBounds.x = bounds.x + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING);
+    itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    itemBounds.width = bounds.width - 2*GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING) - GuiGetStyle(DEFAULT, BORDER_WIDTH);
     itemBounds.height = (float)GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
     if (useScrollBar) itemBounds.width -= GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH);
 
     // Get items on the list
-    int visibleItems = (int)bounds.height/(GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
+    int visibleItems = (int)bounds.height/(GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING));
     if (visibleItems > count) visibleItems = count;
 
     int startIndex = (scrollIndex == NULL)? 0 : *scrollIndex;
@@ -2792,14 +2762,14 @@ int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, in
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
         // Check mouse inside list view
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            state = STATE_FOCUSED;
+            state = GUI_STATE_FOCUSED;
 
             // Check focused and selected item
             for (int i = 0; i < visibleItems; i++)
@@ -2816,7 +2786,7 @@ int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, in
                 }
 
                 // Update item rectangle y position for next item
-                itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
+                itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING));
             }
 
             if (useScrollBar)
@@ -2834,7 +2804,7 @@ int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, in
         else itemFocused = -1;
 
         // Reset item rectangle y to [0]
-        itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
+        itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
     }
     //--------------------------------------------------------------------
 
@@ -2845,7 +2815,7 @@ int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, in
     // Draw visible items
     for (int i = 0; ((i < visibleItems) && (text != NULL)); i++)
     {
-        if (state == STATE_DISABLED)
+        if (state == GUI_STATE_DISABLED)
         {
             if ((startIndex + i) == itemSelected) GuiDrawRectangle(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_DISABLED)), guiAlpha), Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_DISABLED)), guiAlpha));
 
@@ -2873,7 +2843,7 @@ int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, in
         }
 
         // Update item rectangle y position for next item
-        itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
+        itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_PADDING));
     }
 
     if (useScrollBar)
@@ -2907,12 +2877,12 @@ int GuiListViewEx(Rectangle bounds, const char **text, int count, int *focus, in
 }
 
 // Color Panel control
-Color GuiColorPanel(Rectangle bounds, const char *text, Color color)
+Color GuiColorPanel(Rectangle bounds, Color color)
 {
     const Color colWhite = { 255, 255, 255, 255 };
     const Color colBlack = { 0, 0, 0, 255 };
 
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     Vector2 pickerSelector = { 0 };
 
     Vector3 vcolor = { (float)color.r/255.0f, (float)color.g/255.0f, (float)color.b/255.0f };
@@ -2930,7 +2900,7 @@ Color GuiColorPanel(Rectangle bounds, const char *text, Color color)
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
@@ -2938,7 +2908,7 @@ Color GuiColorPanel(Rectangle bounds, const char *text, Color color)
         {
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
             {
-                state = STATE_PRESSED;
+                state = GUI_STATE_PRESSED;
                 pickerSelector = mousePoint;
 
                 // Calculate color from picker
@@ -2959,14 +2929,14 @@ Color GuiColorPanel(Rectangle bounds, const char *text, Color color)
                                  (unsigned char)(255.0f*(float)color.a/255.0f) };
 
             }
-            else state = STATE_FOCUSED;
+            else state = GUI_STATE_FOCUSED;
         }
     }
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    if (state != STATE_DISABLED)
+    if (state != GUI_STATE_DISABLED)
     {
         DrawRectangleGradientEx(bounds, Fade(colWhite, guiAlpha), Fade(colWhite, guiAlpha), Fade(maxHueCol, guiAlpha), Fade(maxHueCol, guiAlpha));
         DrawRectangleGradientEx(bounds, Fade(colBlack, 0), Fade(colBlack, guiAlpha), Fade(colBlack, guiAlpha), Fade(colBlack, 0));
@@ -2988,18 +2958,18 @@ Color GuiColorPanel(Rectangle bounds, const char *text, Color color)
 
 // Color Bar Alpha control
 // NOTE: Returns alpha value normalized [0..1]
-float GuiColorBarAlpha(Rectangle bounds, const char *text, float alpha)
+float GuiColorBarAlpha(Rectangle bounds, float alpha)
 {
     #if !defined(RAYGUI_COLORBARALPHA_CHECKED_SIZE)
         #define RAYGUI_COLORBARALPHA_CHECKED_SIZE   10
     #endif
 
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     Rectangle selector = { (float)bounds.x + alpha*bounds.width - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.y - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT), (float)bounds.height + GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2 };
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
@@ -3008,14 +2978,14 @@ float GuiColorBarAlpha(Rectangle bounds, const char *text, float alpha)
         {
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
             {
-                state = STATE_PRESSED;
+                state = GUI_STATE_PRESSED;
 
                 alpha = (mousePoint.x - bounds.x)/bounds.width;
                 if (alpha <= 0.0f) alpha = 0.0f;
                 if (alpha >= 1.0f) alpha = 1.0f;
                 //selector.x = bounds.x + (int)(((alpha - 0)/(100 - 0))*(bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH))) - selector.width/2;
             }
-            else state = STATE_FOCUSED;
+            else state = GUI_STATE_FOCUSED;
         }
     }
     //--------------------------------------------------------------------
@@ -3024,7 +2994,7 @@ float GuiColorBarAlpha(Rectangle bounds, const char *text, float alpha)
     //--------------------------------------------------------------------
 
     // Draw alpha bar: checked background
-    if (state != STATE_DISABLED)
+    if (state != GUI_STATE_DISABLED)
     {
         int checksX = (int)bounds.width/RAYGUI_COLORBARALPHA_CHECKED_SIZE;
         int checksY = (int)bounds.height/RAYGUI_COLORBARALPHA_CHECKED_SIZE;
@@ -3057,14 +3027,14 @@ float GuiColorBarAlpha(Rectangle bounds, const char *text, float alpha)
 //      Color GuiColorBarSat() [WHITE->color]
 //      Color GuiColorBarValue() [BLACK->color], HSV/HSL
 //      float GuiColorBarLuminance() [BLACK->WHITE]
-float GuiColorBarHue(Rectangle bounds, const char *text, float hue)
+float GuiColorBarHue(Rectangle bounds, float hue)
 {
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     Rectangle selector = { (float)bounds.x - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)bounds.y + hue/360.0f*bounds.height - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.width + GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2, (float)GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT) };
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         Vector2 mousePoint = GetMousePosition();
 
@@ -3073,14 +3043,14 @@ float GuiColorBarHue(Rectangle bounds, const char *text, float hue)
         {
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
             {
-                state = STATE_PRESSED;
+                state = GUI_STATE_PRESSED;
 
                 hue = (mousePoint.y - bounds.y)*360/bounds.height;
                 if (hue <= 0.0f) hue = 0.0f;
                 if (hue >= 359.0f) hue = 359.0f;
 
             }
-            else state = STATE_FOCUSED;
+            else state = GUI_STATE_FOCUSED;
 
             /*if (IsKeyDown(KEY_UP))
             {
@@ -3098,15 +3068,15 @@ float GuiColorBarHue(Rectangle bounds, const char *text, float hue)
 
     // Draw control
     //--------------------------------------------------------------------
-    if (state != STATE_DISABLED)
+    if (state != GUI_STATE_DISABLED)
     {
         // Draw hue bar:color bars
-        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y), (int)bounds.width, (int)ceilf(bounds.height/6),  Fade(RAYGUI_CLITERAL(Color){ 255, 0, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 255, 255, 0, 255 }, guiAlpha));
-        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + bounds.height/6), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color){ 255, 255, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 0, 255, 0, 255 }, guiAlpha));
-        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 2*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color){ 0, 255, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 0, 255, 255, 255 }, guiAlpha));
-        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 3*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color){ 0, 255, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 0, 0, 255, 255 }, guiAlpha));
-        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 4*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color){ 0, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 255, 0, 255, 255 }, guiAlpha));
-        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 5*(bounds.height/6)), (int)bounds.width, (int)(bounds.height/6), Fade(RAYGUI_CLITERAL(Color){ 255, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 255, 0, 0, 255 }, guiAlpha));
+        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y), (int)bounds.width, (int)ceilf(bounds.height/6),  Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 255, 0, 255 }, guiAlpha));
+        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + bounds.height/6), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 255, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 0, 255 }, guiAlpha));
+        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 2*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 255, 255 }, guiAlpha));
+        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 3*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 }, guiAlpha));
+        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 4*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 }, guiAlpha));
+        DrawRectangleGradientV((int)bounds.x, (int)(bounds.y + 5*(bounds.height/6)), (int)bounds.width, (int)(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 }, guiAlpha));
     }
     else DrawRectangleGradientV((int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height, Fade(Fade(GetColor(GuiGetStyle(COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), guiAlpha), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
 
@@ -3125,15 +3095,15 @@ float GuiColorBarHue(Rectangle bounds, const char *text, float hue)
 //      float GuiColorBarAlpha(Rectangle bounds, float alpha)
 //      float GuiColorBarHue(Rectangle bounds, float value)
 // NOTE: bounds define GuiColorPanel() size
-Color GuiColorPicker(Rectangle bounds, const char *text, Color color)
+Color GuiColorPicker(Rectangle bounds, Color color)
 {
-    color = GuiColorPanel(bounds, NULL, color);
+    color = GuiColorPanel(bounds, color);
 
     Rectangle boundsHue = { (float)bounds.x + bounds.width + GuiGetStyle(COLORPICKER, HUEBAR_PADDING), (float)bounds.y, (float)GuiGetStyle(COLORPICKER, HUEBAR_WIDTH), (float)bounds.height };
     //Rectangle boundsAlpha = { bounds.x, bounds.y + bounds.height + GuiGetStyle(COLORPICKER, BARS_PADDING), bounds.width, GuiGetStyle(COLORPICKER, BARS_THICK) };
 
     Vector3 hsv = ConvertRGBtoHSV(RAYGUI_CLITERAL(Vector3){ color.r/255.0f, color.g/255.0f, color.b/255.0f });
-    hsv.x = GuiColorBarHue(boundsHue, NULL, hsv.x);
+    hsv.x = GuiColorBarHue(boundsHue, hsv.x);
     //color.a = (unsigned char)(GuiColorBarAlpha(boundsAlpha, (float)color.a/255.0f)*255.0f);
     Vector3 rgb = ConvertHSVtoRGB(hsv);
 
@@ -3155,32 +3125,32 @@ int GuiMessageBox(Rectangle bounds, const char *title, const char *message, cons
     int clicked = -1;    // Returns clicked button from buttons list, 0 refers to closed window button
 
     int buttonCount = 0;
-    const char **buttonsText = GuiTextSplit(buttons, ';', &buttonCount, NULL);
+    const char **buttonsText = GuiTextSplit(buttons, &buttonCount, NULL);
     Rectangle buttonBounds = { 0 };
     buttonBounds.x = bounds.x + RAYGUI_MESSAGEBOX_BUTTON_PADDING;
     buttonBounds.y = bounds.y + bounds.height - RAYGUI_MESSAGEBOX_BUTTON_HEIGHT - RAYGUI_MESSAGEBOX_BUTTON_PADDING;
     buttonBounds.width = (bounds.width - RAYGUI_MESSAGEBOX_BUTTON_PADDING*(buttonCount + 1))/buttonCount;
     buttonBounds.height = RAYGUI_MESSAGEBOX_BUTTON_HEIGHT;
 
-    int textWidth = GetTextWidth(message);
+    Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), 1);
 
     Rectangle textBounds = { 0 };
-    textBounds.x = bounds.x + bounds.width/2 - textWidth/2;
-    textBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + RAYGUI_MESSAGEBOX_BUTTON_PADDING;
-    textBounds.width = (float)textWidth;
-    textBounds.height = bounds.height - RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - 3*RAYGUI_MESSAGEBOX_BUTTON_PADDING - RAYGUI_MESSAGEBOX_BUTTON_HEIGHT;
+    textBounds.x = bounds.x + bounds.width/2 - textSize.x/2;
+    textBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + (bounds.height - RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - RAYGUI_MESSAGEBOX_BUTTON_HEIGHT - RAYGUI_MESSAGEBOX_BUTTON_PADDING)/2 - textSize.y/2;
+    textBounds.width = textSize.x;
+    textBounds.height = textSize.y;
 
     // Draw control
     //--------------------------------------------------------------------
     if (GuiWindowBox(bounds, title)) clicked = 0;
 
     int prevTextAlignment = GuiGetStyle(LABEL, TEXT_ALIGNMENT);
-    GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(LABEL, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
     GuiLabel(textBounds, message);
     GuiSetStyle(LABEL, TEXT_ALIGNMENT, prevTextAlignment);
 
     prevTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
 
     for (int i = 0; i < buttonCount; i++)
     {
@@ -3195,16 +3165,19 @@ int GuiMessageBox(Rectangle bounds, const char *title, const char *message, cons
 }
 
 // Text Input Box control, ask for text
-int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, const char *buttons, char *text, int textMaxSize, int *secretViewActive)
+int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, const char *buttons, char *text)
 {
     #if !defined(RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT)
         #define RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT      24
     #endif
     #if !defined(RAYGUI_TEXTINPUTBOX_BUTTON_PADDING)
-        #define RAYGUI_TEXTINPUTBOX_BUTTON_PADDING     12
+        #define RAYGUI_TEXTINPUTBOX_BUTTON_PADDING     10
     #endif
     #if !defined(RAYGUI_TEXTINPUTBOX_HEIGHT)
-        #define RAYGUI_TEXTINPUTBOX_HEIGHT             26
+        #define RAYGUI_TEXTINPUTBOX_HEIGHT             24
+    #endif
+    #if !defined(RAYGUI_TEXTINPUTBOX_MAX_TEXT_LENGTH)
+        #define RAYGUI_TEXTINPUTBOX_MAX_TEXT_LENGTH   256
     #endif
 
     // Used to enable text edit mode
@@ -3214,7 +3187,7 @@ int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, co
     int btnIndex = -1;
 
     int buttonCount = 0;
-    const char **buttonsText = GuiTextSplit(buttons, ';', &buttonCount, NULL);
+    const char **buttonsText = GuiTextSplit(buttons, &buttonCount, NULL);
     Rectangle buttonBounds = { 0 };
     buttonBounds.x = bounds.x + RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
     buttonBounds.y = bounds.y + bounds.height - RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT - RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
@@ -3226,18 +3199,18 @@ int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, co
     Rectangle textBounds = { 0 };
     if (message != NULL)
     {
-        int textSize = GetTextWidth(message);
+        Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), 1);
 
-        textBounds.x = bounds.x + bounds.width/2 - textSize/2;
-        textBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + messageInputHeight/4 - (float)GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        textBounds.width = (float)textSize;
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width/2 - textSize.x/2;
+        textBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + messageInputHeight/4 - textSize.y/2;
+        textBounds.width = textSize.x;
+        textBounds.height = textSize.y;
     }
 
     Rectangle textBoxBounds = { 0 };
     textBoxBounds.x = bounds.x + RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
     textBoxBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - RAYGUI_TEXTINPUTBOX_HEIGHT/2;
-    if (message == NULL) textBoxBounds.y = bounds.y + 24 + RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
+    if (message == NULL) textBoxBounds.y += messageInputHeight/2;
     else textBoxBounds.y += (messageInputHeight/2 + messageInputHeight/4);
     textBoxBounds.width = bounds.width - RAYGUI_TEXTINPUTBOX_BUTTON_PADDING*2;
     textBoxBounds.height = RAYGUI_TEXTINPUTBOX_HEIGHT;
@@ -3250,26 +3223,15 @@ int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, co
     if (message != NULL)
     {
         int prevTextAlignment = GuiGetStyle(LABEL, TEXT_ALIGNMENT);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+        GuiSetStyle(LABEL, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
         GuiLabel(textBounds, message);
         GuiSetStyle(LABEL, TEXT_ALIGNMENT, prevTextAlignment);
     }
 
-    if (secretViewActive != NULL)
-    {
-        static char stars[] = "****************";
-        if (GuiTextBox(RAYGUI_CLITERAL(Rectangle){ textBoxBounds.x, textBoxBounds.y, textBoxBounds.width - 4 - RAYGUI_TEXTINPUTBOX_HEIGHT, textBoxBounds.height },
-            ((*secretViewActive == 1) || textEditMode)? text : stars, textMaxSize, textEditMode)) textEditMode = !textEditMode;
-
-        *secretViewActive = GuiToggle(RAYGUI_CLITERAL(Rectangle){ textBoxBounds.x + textBoxBounds.width - RAYGUI_TEXTINPUTBOX_HEIGHT, textBoxBounds.y, RAYGUI_TEXTINPUTBOX_HEIGHT, RAYGUI_TEXTINPUTBOX_HEIGHT }, (*secretViewActive == 1)? "#44#" : "#45#", *secretViewActive);
-    }
-    else
-    {
-        if (GuiTextBox(textBoxBounds, text, textMaxSize, textEditMode)) textEditMode = !textEditMode;
-    }
+    if (GuiTextBox(textBoxBounds, text, RAYGUI_TEXTINPUTBOX_MAX_TEXT_LENGTH, textEditMode)) textEditMode = !textEditMode;
 
     int prevBtnTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER);
 
     for (int i = 0; i < buttonCount; i++)
     {
@@ -3287,14 +3249,14 @@ int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, co
 // NOTE: Returns grid mouse-hover selected cell
 // About drawing lines at subpixel spacing, simple put, not easy solution:
 // https://stackoverflow.com/questions/4435450/2d-opengl-drawing-lines-that-dont-exactly-fit-pixel-raster
-Vector2 GuiGrid(Rectangle bounds, const char *text, float spacing, int subdivs)
+Vector2 GuiGrid(Rectangle bounds, float spacing, int subdivs)
 {
     // Grid lines alpha amount
     #if !defined(RAYGUI_GRID_ALPHA)
         #define RAYGUI_GRID_ALPHA    0.15f
     #endif
 
-    GuiState state = guiState;
+    GuiControlState state = guiState;
     Vector2 mousePoint = GetMousePosition();
     Vector2 currentCell = { -1, -1 };
 
@@ -3303,25 +3265,22 @@ Vector2 GuiGrid(Rectangle bounds, const char *text, float spacing, int subdivs)
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != GUI_STATE_DISABLED) && !guiLocked)
     {
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
-            // NOTE: Cell values must be the upper left of the cell the mouse is in
-            currentCell.x = floorf((mousePoint.x - bounds.x)/spacing);
-            currentCell.y = floorf((mousePoint.y - bounds.y)/spacing);
+            // NOTE: Cell values must be rounded to int
+            currentCell.x = (int)((mousePoint.x - bounds.x)/spacing);
+            currentCell.y = (int)((mousePoint.y - bounds.y)/spacing);
         }
     }
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-
-    // TODO: Draw background panel?
-
     switch (state)
     {
-        case STATE_NORMAL:
+        case GUI_STATE_NORMAL:
         {
             if (subdivs > 0)
             {
@@ -3345,20 +3304,6 @@ Vector2 GuiGrid(Rectangle bounds, const char *text, float spacing, int subdivs)
 
     return currentCell;
 }
-
-//----------------------------------------------------------------------------------
-// Tooltip management functions
-// NOTE: Tooltips requires some global variables: tooltipPtr
-//----------------------------------------------------------------------------------
-// Enable gui tooltips (global state)
-void GuiEnableTooltip(void) { guiTooltip = true; }
-
-// Disable gui tooltips (global state)
-void GuiDisableTooltip(void) { guiTooltip = false; }
-
-// Set tooltip string
-void GuiSetTooltip(const char *tooltip) { guiTooltipPtr = tooltip; }
-
 
 //----------------------------------------------------------------------------------
 // Styles loading functions
@@ -3474,13 +3419,13 @@ void GuiLoadStyle(const char *fileName)
         {
             short controlId = 0;
             short propertyId = 0;
-            unsigned int propertyValue = 0;
+            int propertyValue = 0;
 
             for (int i = 0; i < propertyCount; i++)
             {
                 fread(&controlId, 1, sizeof(short), rgsFile);
                 fread(&propertyId, 1, sizeof(short), rgsFile);
-                fread(&propertyValue, 1, sizeof(unsigned int), rgsFile);
+                fread(&propertyValue, 1, sizeof(int), rgsFile);
 
                 if (controlId == 0) // DEFAULT control
                 {
@@ -3599,23 +3544,23 @@ void GuiLoadStyleDefault(void)
     GuiSetStyle(DEFAULT, TEXT_COLOR_DISABLED, 0xaeb7b8ff);
     GuiSetStyle(DEFAULT, BORDER_WIDTH, 1);                       // WARNING: Some controls use other values
     GuiSetStyle(DEFAULT, TEXT_PADDING, 0);                       // WARNING: Some controls use other values
-    GuiSetStyle(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER); // WARNING: Some controls use other values
+    GuiSetStyle(DEFAULT, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_CENTER); // WARNING: Some controls use other values
 
     // Initialize control-specific property values
     // NOTE: Those properties are in default list but require specific values by control type
-    GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(LABEL, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
     GuiSetStyle(BUTTON, BORDER_WIDTH, 2);
     GuiSetStyle(SLIDER, TEXT_PADDING, 4);
     GuiSetStyle(CHECKBOX, TEXT_PADDING, 4);
-    GuiSetStyle(CHECKBOX, TEXT_ALIGNMENT, TEXT_ALIGN_RIGHT);
+    GuiSetStyle(CHECKBOX, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_RIGHT);
     GuiSetStyle(TEXTBOX, TEXT_PADDING, 4);
-    GuiSetStyle(TEXTBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    GuiSetStyle(VALUEBOX, TEXT_PADDING, 0);
-    GuiSetStyle(VALUEBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    GuiSetStyle(SPINNER, TEXT_PADDING, 0);
-    GuiSetStyle(SPINNER, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(TEXTBOX, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
+    GuiSetStyle(VALUEBOX, TEXT_PADDING, 4);
+    GuiSetStyle(VALUEBOX, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
+    GuiSetStyle(SPINNER, TEXT_PADDING, 4);
+    GuiSetStyle(SPINNER, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
     GuiSetStyle(STATUSBAR, TEXT_PADDING, 8);
-    GuiSetStyle(STATUSBAR, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(STATUSBAR, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
 
     // Initialize extended property values
     // NOTE: By default, extended property values are initialized to 0
@@ -3629,13 +3574,15 @@ void GuiLoadStyleDefault(void)
     GuiSetStyle(PROGRESSBAR, PROGRESS_PADDING, 1);
     GuiSetStyle(CHECKBOX, CHECK_PADDING, 1);
     GuiSetStyle(COMBOBOX, COMBO_BUTTON_WIDTH, 32);
-    GuiSetStyle(COMBOBOX, COMBO_BUTTON_SPACING, 2);
+    GuiSetStyle(COMBOBOX, COMBO_BUTTON_PADDING, 2);
     GuiSetStyle(DROPDOWNBOX, ARROW_PADDING, 16);
-    GuiSetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING, 2);
-    GuiSetStyle(TEXTBOX, TEXT_LINES_SPACING, 4);
+    GuiSetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_PADDING, 2);
+    GuiSetStyle(TEXTBOX, TEXT_LINES_PADDING, 4);
     GuiSetStyle(TEXTBOX, TEXT_INNER_PADDING, 4);
+    GuiSetStyle(TEXTBOX, COLOR_SELECTED_FG, 0xf0fffeff);
+    GuiSetStyle(TEXTBOX, COLOR_SELECTED_BG, 0x839affe0);
     GuiSetStyle(SPINNER, SPIN_BUTTON_WIDTH, 24);
-    GuiSetStyle(SPINNER, SPIN_BUTTON_SPACING, 2);
+    GuiSetStyle(SPINNER, SPIN_BUTTON_PADDING, 2);
     GuiSetStyle(SCROLLBAR, BORDER_WIDTH, 0);
     GuiSetStyle(SCROLLBAR, ARROWS_VISIBLE, 0);
     GuiSetStyle(SCROLLBAR, ARROWS_SIZE, 6);
@@ -3643,8 +3590,8 @@ void GuiLoadStyleDefault(void)
     GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, 16);
     GuiSetStyle(SCROLLBAR, SCROLL_PADDING, 0);
     GuiSetStyle(SCROLLBAR, SCROLL_SPEED, 12);
-    GuiSetStyle(LISTVIEW, LIST_ITEMS_HEIGHT, 28);
-    GuiSetStyle(LISTVIEW, LIST_ITEMS_SPACING, 2);
+    GuiSetStyle(LISTVIEW, LIST_ITEMS_HEIGHT, 24);
+    GuiSetStyle(LISTVIEW, LIST_ITEMS_PADDING, 2);
     GuiSetStyle(LISTVIEW, SCROLLBAR_WIDTH, 12);
     GuiSetStyle(LISTVIEW, SCROLLBAR_SIDE, SCROLLBAR_RIGHT_SIDE);
     GuiSetStyle(COLORPICKER, COLOR_SELECTOR_SIZE, 8);
@@ -3653,18 +3600,7 @@ void GuiLoadStyleDefault(void)
     GuiSetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT, 8);
     GuiSetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW, 2);
 
-    if (guiFont.texture.id != GetFontDefault().texture.id)
-    {
-        // Unload previous font texture
-        UnloadTexture(guiFont.texture);
-
-        // Setup default raylib font
-        guiFont = GetFontDefault();
-
-        // Setup default raylib font rectangle
-        Rectangle whiteChar = { 41, 46, 2, 8 };
-        SetShapesTexture(guiFont.texture, whiteChar);
-    }
+    guiFont = GetFontDefault();     // Initialize default font
 }
 
 // Get text with icon id prepended
@@ -3676,33 +3612,27 @@ const char *GuiIconText(int iconId, const char *text)
     return NULL;
 #else
     static char buffer[1024] = { 0 };
-    static char iconBuffer[6] = { 0 };
+    memset(buffer, 0, 1024);
+
+    sprintf(buffer, "#%03i#", iconId);
 
     if (text != NULL)
     {
-        memset(buffer, 0, 1024);
-        sprintf(buffer, "#%03i#", iconId);
-
         for (int i = 5; i < 1024; i++)
         {
             buffer[i] = text[i - 5];
             if (text[i - 5] == '\0') break;
         }
-
-        return buffer;
     }
-    else
-    {
-        sprintf(iconBuffer, "#%03i#", iconId & 0x1ff);
 
-        return iconBuffer;
-    }
+    return buffer;
 #endif
 }
 
 #if !defined(RAYGUI_NO_ICONS)
+
 // Get full icons data pointer
-unsigned int *GuiGetIcons(void) { return guiIconsPtr; }
+unsigned int *GuiGetIcons(void) { return guiIcons; }
 
 // Load raygui icons file (.rgi)
 // NOTE: In case nameIds are required, they can be requested with loadIconsName,
@@ -3768,8 +3698,8 @@ char **GuiLoadIcons(const char *fileName, bool loadIconsName)
             }
             else fseek(rgiFile, iconCount*RAYGUI_ICON_MAX_NAME_LENGTH, SEEK_CUR);
 
-            // Read icons data directly over internal icons array
-            fread(guiIconsPtr, iconCount*(iconSize*iconSize/32), sizeof(unsigned int), rgiFile);
+            // Read icons data directly over guiIcons data array
+            fread(guiIcons, iconCount*(iconSize*iconSize/32), sizeof(unsigned int), rgiFile);
         }
 
         fclose(rgiFile);
@@ -3781,13 +3711,13 @@ char **GuiLoadIcons(const char *fileName, bool loadIconsName)
 // Draw selected icon using rectangles pixel-by-pixel
 void GuiDrawIcon(int iconId, int posX, int posY, int pixelSize, Color color)
 {
-    #define BIT_CHECK(a,b) ((a) & (1u<<(b)))
+    #define BIT_CHECK(a,b) ((a) & (1<<(b)))
 
     for (int i = 0, y = 0; i < RAYGUI_ICON_SIZE*RAYGUI_ICON_SIZE/32; i++)
     {
         for (int k = 0; k < 32; k++)
         {
-            if (BIT_CHECK(guiIconsPtr[iconId*RAYGUI_ICON_DATA_ELEMENTS + i], k))
+            if (BIT_CHECK(guiIcons[iconId*RAYGUI_ICON_DATA_ELEMENTS + i], k))
             {
             #if !defined(RAYGUI_STANDALONE)
                 DrawRectangle(posX + (k%RAYGUI_ICON_SIZE)*pixelSize, posY + y*pixelSize, pixelSize, pixelSize, color);
@@ -3799,77 +3729,69 @@ void GuiDrawIcon(int iconId, int posX, int posY, int pixelSize, Color color)
     }
 }
 
-// Set icon drawing size
-void GuiSetIconScale(int scale)
+// Get icon bit data
+// NOTE: Bit data array grouped as unsigned int (ICON_SIZE*ICON_SIZE/32 elements)
+unsigned int *GuiGetIconData(int iconId)
 {
-    if (scale >= 1) guiIconScale = scale;
+    static unsigned int iconData[RAYGUI_ICON_DATA_ELEMENTS] = { 0 };
+    memset(iconData, 0, RAYGUI_ICON_DATA_ELEMENTS*sizeof(unsigned int));
+
+    if (iconId < RAYGUI_ICON_MAX_ICONS) memcpy(iconData, &guiIcons[iconId*RAYGUI_ICON_DATA_ELEMENTS], RAYGUI_ICON_DATA_ELEMENTS*sizeof(unsigned int));
+
+    return iconData;
 }
 
+// Set icon bit data
+// NOTE: Data must be provided as unsigned int array (ICON_SIZE*ICON_SIZE/32 elements)
+void GuiSetIconData(int iconId, unsigned int *data)
+{
+    if (iconId < RAYGUI_ICON_MAX_ICONS) memcpy(&guiIcons[iconId*RAYGUI_ICON_DATA_ELEMENTS], data, RAYGUI_ICON_DATA_ELEMENTS*sizeof(unsigned int));
+}
+
+// Set icon pixel value
+void GuiSetIconPixel(int iconId, int x, int y)
+{
+    #define BIT_SET(a,b)   ((a) |= (1<<(b)))
+
+    // This logic works for any RAYGUI_ICON_SIZE pixels icons,
+    // For example, in case of 16x16 pixels, every 2 lines fit in one unsigned int data element
+    BIT_SET(guiIcons[iconId*RAYGUI_ICON_DATA_ELEMENTS + y/(sizeof(unsigned int)*8/RAYGUI_ICON_SIZE)], x + (y%(sizeof(unsigned int)*8/RAYGUI_ICON_SIZE)*RAYGUI_ICON_SIZE));
+}
+
+// Clear icon pixel value
+void GuiClearIconPixel(int iconId, int x, int y)
+{
+    #define BIT_CLEAR(a,b) ((a) &= ~((1)<<(b)))
+
+    // This logic works for any RAYGUI_ICON_SIZE pixels icons,
+    // For example, in case of 16x16 pixels, every 2 lines fit in one unsigned int data element
+    BIT_CLEAR(guiIcons[iconId*RAYGUI_ICON_DATA_ELEMENTS + y/(sizeof(unsigned int)*8/RAYGUI_ICON_SIZE)], x + (y%(sizeof(unsigned int)*8/RAYGUI_ICON_SIZE)*RAYGUI_ICON_SIZE));
+}
+
+// Check icon pixel value
+bool GuiCheckIconPixel(int iconId, int x, int y)
+{
+    #define BIT_CHECK(a,b) ((a) & (1<<(b)))
+
+    return (BIT_CHECK(guiIcons[iconId*8 + y/2], x + (y%2*16)));
+}
 #endif      // !RAYGUI_NO_ICONS
 
 //----------------------------------------------------------------------------------
 // Module specific Functions Definition
 //----------------------------------------------------------------------------------
-// Gui get text width considering icon
+// Gui get text width using default font
+// NOTE: Icon is not considered here
 static int GetTextWidth(const char *text)
 {
-    #if !defined(ICON_TEXT_PADDING)
-        #define ICON_TEXT_PADDING   4
-    #endif
-
-    Vector2 textSize = { 0 };
-    int textIconOffset = 0;
+    Vector2 size = { 0 };
 
     if ((text != NULL) && (text[0] != '\0'))
     {
-        if (text[0] == '#')
-        {
-            for (int i = 1; (text[i] != '\0') && (i < 5); i++)
-            {
-                if (text[i] == '#')
-                {
-                    textIconOffset = i;
-                    break;
-                }
-            }
-        }
-
-        text += textIconOffset;
-
-        // Make sure guiFont is set, GuiGetStyle() initializes it lazynessly
-        float fontSize = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-
-        // Custom MeasureText() implementation
-        if ((guiFont.texture.id > 0) && (text != NULL))
-        {
-            // Get size in bytes of text, considering end of line and line break
-            int size = 0;
-            for (int i = 0; i < MAX_LINE_BUFFER_SIZE; i++)
-            {
-                if ((text[i] != '\0') && (text[i] != '\n')) size++;
-                else break;
-            }
-
-            float scaleFactor = fontSize/(float)guiFont.baseSize;
-            textSize.y = (float)guiFont.baseSize*scaleFactor;
-            float glyphWidth = 0.0f;
-
-            for (int i = 0, codepointSize = 0; i < size; i += codepointSize)
-            {
-                int codepoint = GetCodepointNext(&text[i], &codepointSize);
-                int codepointIndex = GetGlyphIndex(guiFont, codepoint);
-
-                if (guiFont.glyphs[codepointIndex].advanceX == 0) glyphWidth = ((float)guiFont.recs[codepointIndex].width*scaleFactor + (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
-                else glyphWidth = ((float)guiFont.glyphs[codepointIndex].advanceX*scaleFactor + GuiGetStyle(DEFAULT, TEXT_SPACING));
-
-                textSize.x += glyphWidth;
-            }
-        }
-
-        if (textIconOffset > 0) textSize.x += (RAYGUI_ICON_SIZE - ICON_TEXT_PADDING);
+        size = MeasureTextEx(guiFont, text, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
     }
 
-    return (int)textSize.x;
+    return (int)size.x;
 }
 
 // Get text bounds considering control bounds
@@ -3879,21 +3801,19 @@ static Rectangle GetTextBounds(int control, Rectangle bounds)
 
     textBounds.x = bounds.x + GuiGetStyle(control, BORDER_WIDTH);
     textBounds.y = bounds.y + GuiGetStyle(control, BORDER_WIDTH);
-    textBounds.width = bounds.width - 2*GuiGetStyle(control, BORDER_WIDTH) - 2*GuiGetStyle(control, TEXT_PADDING);
+    textBounds.width = bounds.width - 2*GuiGetStyle(control, BORDER_WIDTH);
     textBounds.height = bounds.height - 2*GuiGetStyle(control, BORDER_WIDTH);
 
     // Consider TEXT_PADDING properly, depends on control type and TEXT_ALIGNMENT
     switch (control)
     {
-        case COMBOBOX: textBounds.width -= (GuiGetStyle(control, COMBO_BUTTON_WIDTH) + GuiGetStyle(control, COMBO_BUTTON_SPACING)); break;
-        //case VALUEBOX: break;   // NOTE: ValueBox text value always centered, text padding applies to label
+        case COMBOBOX: bounds.width -= (GuiGetStyle(control, COMBO_BUTTON_WIDTH) + GuiGetStyle(control, COMBO_BUTTON_PADDING)); break;
+        case VALUEBOX: break;   // NOTE: ValueBox text value always centered, text padding applies to label
         default:
         {
-            if (GuiGetStyle(control, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT) textBounds.x -= GuiGetStyle(control, TEXT_PADDING);
+            if (GuiGetStyle(control, TEXT_ALIGNMENT) == GUI_TEXT_ALIGN_RIGHT) textBounds.x -= GuiGetStyle(control, TEXT_PADDING);
             else textBounds.x += GuiGetStyle(control, TEXT_PADDING);
-            textBounds.width -= 2 * GuiGetStyle(control, TEXT_PADDING);
-        }
-        break;
+        } break;
     }
 
     // TODO: Special cases (no label): COMBOBOX, DROPDOWNBOX, LISTVIEW (scrollbar?)
@@ -3933,159 +3853,78 @@ static const char *GetTextIcon(const char *text, int *iconId)
     return text;
 }
 
-// Get text divided into lines (by line-breaks '\n')
-const char **GetTextLines(const char *text, int *count)
-{
-    #define RAYGUI_MAX_TEXT_LINES   128
-
-    static const char *lines[RAYGUI_MAX_TEXT_LINES] = { 0 };
-    for (int i = 0; i < RAYGUI_MAX_TEXT_LINES; i++) lines[i] = NULL;    // Init NULL pointers to substrings
-
-    int textSize = (int)strlen(text);
-
-    lines[0] = text;
-    int len = 0;
-    *count = 1;
-    int lineSize = 0;   // Stores current line size, not returned
-
-    for (int i = 0, k = 0; (i < textSize) && (*count < RAYGUI_MAX_TEXT_LINES); i++)
-    {
-        if (text[i] == '\n')
-        {
-            lineSize = len;
-            k++;
-            lines[k] = &text[i + 1];     // WARNING: next value is valid?
-            len = 0;
-            *count += 1;
-        }
-        else len++;
-    }
-
-    //lines[*count - 1].size = len;
-
-    return lines;
-}
-
 // Gui draw text using default font
 static void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint)
 {
     #define TEXT_VALIGN_PIXEL_OFFSET(h)  ((int)h%2)     // Vertical alignment for pixel perfect
-
-    #if !defined(ICON_TEXT_PADDING)
-        #define ICON_TEXT_PADDING   4
+    
+    #if !defined(RAYGUI_ICON_TEXT_PADDING)
+        #define RAYGUI_ICON_TEXT_PADDING   4
     #endif
 
-    // We process the text lines one by one
     if ((text != NULL) && (text[0] != '\0'))
     {
-        // Get text lines ('\n' delimiter) to process lines individually
-        // NOTE: We can't use GuiTextSplit() because it can be already use before calling
-        // GuiDrawText() and static buffer would be overriden :(
-        int lineCount = 0;
-        const char **lines = GetTextLines(text, &lineCount);
+        int iconId = 0;
+        text = GetTextIcon(text, &iconId);              // Check text for icon and move cursor
 
-        //Rectangle textBounds = GetTextBounds(LABEL, bounds);
-        float totalHeight = (float)(lineCount*GuiGetStyle(DEFAULT, TEXT_SIZE) + (lineCount - 1)*GuiGetStyle(DEFAULT, TEXT_SIZE)/2);
-        float posOffsetY = 0;
+        // Get text position depending on alignment and iconId
+        //---------------------------------------------------------------------------------
+        
 
-        for (int i = 0; i < lineCount; i++)
+        Vector2 position = { bounds.x, bounds.y };
+
+        // NOTE: We get text size after icon has been processed
+        int textWidth = GetTextWidth(text);
+        int textHeight = GuiGetStyle(DEFAULT, TEXT_SIZE);
+
+        // If text requires an icon, add size to measure
+        if (iconId >= 0)
         {
-            int iconId = 0;
-            lines[i] = GetTextIcon(lines[i], &iconId);      // Check text for icon and move cursor
+            textWidth += RAYGUI_ICON_SIZE;
 
-            // Get text position depending on alignment and iconId
-            //---------------------------------------------------------------------------------
-            Vector2 position = { bounds.x, bounds.y };
-
-            // TODO: We get text size after icon has been processed
-            // WARNING: GetTextWidth() also processes text icon to get width! -> Really needed?
-            int textSizeX = GetTextWidth(lines[i]);
-
-            // If text requires an icon, add size to measure
-            if (iconId >= 0)
-            {
-                textSizeX += RAYGUI_ICON_SIZE*guiIconScale;
-
-                // WARNING: If only icon provided, text could be pointing to EOF character: '\0'
-                if ((lines[i] != NULL) && (lines[i][0] != '\0')) textSizeX += ICON_TEXT_PADDING;
-            }
-
-            // Check guiTextAlign global variables
-            switch (alignment)
-            {
-                case TEXT_ALIGN_LEFT:
-                {
-                    position.x = bounds.x;
-                    position.y = bounds.y + posOffsetY + bounds.height/2 - totalHeight/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height);
-                } break;
-                case TEXT_ALIGN_CENTER:
-                {
-                    position.x = bounds.x +  bounds.width/2 - textSizeX/2;
-                    position.y = bounds.y + posOffsetY + bounds.height/2 - totalHeight/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height);
-                } break;
-                case TEXT_ALIGN_RIGHT:
-                {
-                    position.x = bounds.x + bounds.width - textSizeX;
-                    position.y = bounds.y + posOffsetY + bounds.height/2 - totalHeight/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height);
-                } break;
-                default: break;
-            }
-
-            // NOTE: Make sure we get pixel-perfect coordinates,
-            // In case of decimals we got weird text positioning
-            position.x = (float)((int)position.x);
-            position.y = (float)((int)position.y);
-            //---------------------------------------------------------------------------------
-
-            // Draw text (with icon if available)
-            //---------------------------------------------------------------------------------
-#if !defined(RAYGUI_NO_ICONS)
-            if (iconId >= 0)
-            {
-                // NOTE: We consider icon height, probably different than text size
-                GuiDrawIcon(iconId, (int)position.x, (int)(bounds.y + bounds.height/2 - RAYGUI_ICON_SIZE*guiIconScale/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height)), guiIconScale, tint);
-                position.x += (RAYGUI_ICON_SIZE*guiIconScale + ICON_TEXT_PADDING);
-            }
-#endif
-            //DrawTextEx(guiFont, text, position, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), (float)GuiGetStyle(DEFAULT, TEXT_SPACING), tint);
-
-            // Get size in bytes of text, 
-            // considering end of line and line break
-            int size = 0;
-            for (int c = 0; (lines[i][c] != '\0') && (lines[i][c] != '\n'); c++, size++){ }
-            float scaleFactor = (float)GuiGetStyle(DEFAULT, TEXT_SIZE)/guiFont.baseSize;
-
-            int textOffsetY = 0;
-            float textOffsetX = 0.0f;
-            for (int c = 0, codepointSize = 0; c < size; c += codepointSize)
-            {
-                int codepoint = GetCodepointNext(&lines[i][c], &codepointSize);
-                int index = GetGlyphIndex(guiFont, codepoint);
-
-                // NOTE: Normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
-                // but we need to draw all of the bad bytes using the '?' symbol moving one byte
-                if (codepoint == 0x3f) codepointSize = 1;
-
-                if (codepoint == '\n') break;   // WARNING: Lines are already processed manually, no need to keep drawing after this codepoint
-                else
-                {
-                    if ((codepoint != ' ') && (codepoint != '\t'))
-                    {
-                        // TODO: Draw only required text glyphs fitting the bounds.width, '...' can be appended at the end of the text
-                        if (textOffsetX < bounds.width)
-                        {
-                            DrawTextCodepoint(guiFont, codepoint, RAYGUI_CLITERAL(Vector2){ position.x + textOffsetX, position.y + textOffsetY }, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), tint);
-                        }
-                    }
-
-                    if (guiFont.glyphs[index].advanceX == 0) textOffsetX += ((float)guiFont.recs[index].width*scaleFactor + (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
-                    else textOffsetX += ((float)guiFont.glyphs[index].advanceX*scaleFactor + (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
-                }
-            }
-
-            posOffsetY += (float)GuiGetStyle(DEFAULT, TEXT_SIZE)*1.5f;    // TODO: GuiGetStyle(DEFAULT, TEXT_LINE_SPACING)?
-            //---------------------------------------------------------------------------------
+            // WARNING: If only icon provided, text could be pointing to EOF character: '\0'
+            if ((text != NULL) && (text[0] != '\0')) textWidth += RAYGUI_ICON_TEXT_PADDING;
         }
+
+        // Check guiTextAlign global variables
+        switch (alignment)
+        {
+            case GUI_TEXT_ALIGN_LEFT:
+            {
+                position.x = bounds.x;
+                position.y = bounds.y + bounds.height/2 - textHeight/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height);
+            } break;
+            case GUI_TEXT_ALIGN_CENTER:
+            {
+                position.x = bounds.x + bounds.width/2 - textWidth/2;
+                position.y = bounds.y + bounds.height/2 - textHeight/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height);
+            } break;
+            case GUI_TEXT_ALIGN_RIGHT:
+            {
+                position.x = bounds.x + bounds.width - textWidth;
+                position.y = bounds.y + bounds.height/2 - textHeight/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height);
+            } break;
+            default: break;
+        }
+
+        // NOTE: Make sure we get pixel-perfect coordinates,
+        // In case of decimals we got weird text positioning
+        position.x = (float)((int)position.x);
+        position.y = (float)((int)position.y);
+        //---------------------------------------------------------------------------------
+
+        // Draw text (with icon if available)
+        //---------------------------------------------------------------------------------
+#if !defined(RAYGUI_NO_ICONS)
+        if (iconId >= 0)
+        {
+            // NOTE: We consider icon height, probably different than text size
+            GuiDrawIcon(iconId, (int)position.x, (int)(bounds.y + bounds.height/2 - RAYGUI_ICON_SIZE/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height)), 1, tint);
+            position.x += (RAYGUI_ICON_SIZE + RAYGUI_ICON_TEXT_PADDING);
+        }
+#endif
+        DrawTextEx(guiFont, text, position, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), (float)GuiGetStyle(DEFAULT, TEXT_SPACING), tint);
+        //---------------------------------------------------------------------------------
     }
 }
 
@@ -4108,50 +3947,26 @@ static void GuiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, 
     }
 }
 
-// Draw tooltip using control bounds
-static void GuiTooltip(Rectangle controlRec)
-{
-    if (!guiLocked && guiTooltip && (guiTooltipPtr != NULL))
-    {
-        Vector2 textSize = MeasureTextEx(GuiGetFont(), guiTooltipPtr, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
-
-        if ((controlRec.x + textSize.x + 16) > GetScreenWidth()) controlRec.x -= (textSize.x + 16 - controlRec.width);
-
-        GuiPanel((Rectangle){ controlRec.x, controlRec.y + controlRec.height + 4, textSize.x + 16, GuiGetStyle(DEFAULT, TEXT_SIZE) + 8.f }, NULL);
-
-        int textPadding = GuiGetStyle(LABEL, TEXT_PADDING);
-        int textAlignment = GuiGetStyle(LABEL, TEXT_ALIGNMENT);
-        GuiSetStyle(LABEL, TEXT_PADDING, 0);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-        GuiLabel((Rectangle){ controlRec.x, controlRec.y + controlRec.height + 4, textSize.x + 16, GuiGetStyle(DEFAULT, TEXT_SIZE) + 8.f }, guiTooltipPtr);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, textAlignment);
-        GuiSetStyle(LABEL, TEXT_PADDING, textPadding);
-    }
-}
-
 // Split controls text into multiple strings
 // Also check for multiple columns (required by GuiToggleGroup())
-static const char **GuiTextSplit(const char *text, char delimiter, int *count, int *textRow)
+static const char **GuiTextSplit(const char *text, int *count, int *textRow)
 {
     // NOTE: Current implementation returns a copy of the provided string with '\0' (string end delimiter)
     // inserted between strings defined by "delimiter" parameter. No memory is dynamically allocated,
     // all used memory is static... it has some limitations:
-    //      1. Maximum number of possible split strings is set by RAYGUI_TEXTSPLIT_MAX_ITEMS
+    //      1. Maximum number of possible split strings is set by RAYGUI_TEXTSPLIT_MAX_ELEMENTS
     //      2. Maximum size of text to split is RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE
     // NOTE: Those definitions could be externally provided if required
 
-    // WARNING: HACK: TODO: Review!
-    // textRow is an externally provided array of integers that stores row number for every splitted string
-
-    #if !defined(RAYGUI_TEXTSPLIT_MAX_ITEMS)
-        #define RAYGUI_TEXTSPLIT_MAX_ITEMS          128
+    #if !defined(RAYGUI_TEXTSPLIT_MAX_ELEMENTS)
+        #define RAYGUI_TEXTSPLIT_MAX_ELEMENTS        128
     #endif
     #if !defined(RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE)
-        #define RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE     1024
+        #define RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE      1024
     #endif
 
-    static const char *result[RAYGUI_TEXTSPLIT_MAX_ITEMS] = { NULL };   // String pointers array (points to buffer data)
-    static char buffer[RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE] = { 0 };         // Buffer data (text input copy with '\0' added)
+    static const char *result[RAYGUI_TEXTSPLIT_MAX_ELEMENTS] = { NULL };
+    static char buffer[RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE] = { 0 };
     memset(buffer, 0, RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE);
 
     result[0] = buffer;
@@ -4164,7 +3979,7 @@ static const char **GuiTextSplit(const char *text, char delimiter, int *count, i
     {
         buffer[i] = text[i];
         if (buffer[i] == '\0') break;
-        else if ((buffer[i] == delimiter) || (buffer[i] == '\n'))
+        else if ((buffer[i] == ';') || (buffer[i] == '\n'))
         {
             result[counter] = buffer + i + 1;
 
@@ -4177,7 +3992,7 @@ static const char **GuiTextSplit(const char *text, char delimiter, int *count, i
             buffer[i] = '\0';   // Set an end of string at this point
 
             counter++;
-            if (counter == RAYGUI_TEXTSPLIT_MAX_ITEMS) break;
+            if (counter == RAYGUI_TEXTSPLIT_MAX_ELEMENTS) break;
         }
     }
 
@@ -4310,130 +4125,6 @@ static Vector3 ConvertHSVtoRGB(Vector3 hsv)
     return rgb;
 }
 
-// Scroll bar control (used by GuiScrollPanel())
-int GuiScrollBar(Rectangle bounds, int value, int minValue, int maxValue)
-{
-    GuiState state = guiState;
-
-    // Is the scrollbar horizontal or vertical?
-    bool isVertical = (bounds.width > bounds.height)? false : true;
-
-    // The size (width or height depending on scrollbar type) of the spinner buttons
-    const int spinnerSize = GuiGetStyle(SCROLLBAR, ARROWS_VISIBLE)? 
-        (isVertical? (int)bounds.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) : 
-        (int)bounds.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH)) : 0;
-
-    // Arrow buttons [<] [>] [∧] [∨]
-    Rectangle arrowUpLeft = { 0 };
-    Rectangle arrowDownRight = { 0 };
-
-    // Actual area of the scrollbar excluding the arrow buttons
-    Rectangle scrollbar = { 0 };
-
-    // Slider bar that moves     --[///]-----
-    Rectangle slider = { 0 };
-
-    // Normalize value
-    if (value > maxValue) value = maxValue;
-    if (value < minValue) value = minValue;
-
-    const int range = maxValue - minValue;
-    int sliderSize = GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE);
-
-    // Calculate rectangles for all of the components
-    arrowUpLeft = RAYGUI_CLITERAL(Rectangle){ 
-        (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), 
-        (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), 
-        (float)spinnerSize, (float)spinnerSize };
-
-    if (isVertical)
-    {
-        arrowDownRight = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + bounds.height - spinnerSize - GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
-        scrollbar = RAYGUI_CLITERAL(Rectangle){ bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING), arrowUpLeft.y + arrowUpLeft.height, bounds.width - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING)), bounds.height - arrowUpLeft.height - arrowDownRight.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) };
-        sliderSize = (sliderSize >= scrollbar.height)? ((int)scrollbar.height - 2) : sliderSize;     // Make sure the slider won't get outside of the scrollbar
-        slider = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING), (float)scrollbar.y + (int)(((float)(value - minValue)/range)*(scrollbar.height - sliderSize)), (float)bounds.width - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING)), (float)sliderSize };
-    }
-    else    // horizontal
-    {
-        arrowDownRight = RAYGUI_CLITERAL(Rectangle){ (float)bounds.x + bounds.width - spinnerSize - GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
-        scrollbar = RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x + arrowUpLeft.width, bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING), bounds.width - arrowUpLeft.width - arrowDownRight.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH), bounds.height - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING)) };
-        sliderSize = (sliderSize >= scrollbar.width)? ((int)scrollbar.width - 2) : sliderSize;       // Make sure the slider won't get outside of the scrollbar
-        slider = RAYGUI_CLITERAL(Rectangle){ (float)scrollbar.x + (int)(((float)(value - minValue)/range)*(scrollbar.width - sliderSize)), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING), (float)sliderSize, (float)bounds.height - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING)) };
-    }
-
-    // Update control
-    //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
-    {
-        Vector2 mousePoint = GetMousePosition();
-
-        if (CheckCollisionPointRec(mousePoint, bounds))
-        {
-            state = STATE_FOCUSED;
-
-            // Handle mouse wheel
-            int wheel = (int)GetMouseWheelMove();
-            if (wheel != 0) value += wheel;
-
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-            {
-                if (CheckCollisionPointRec(mousePoint, arrowUpLeft)) value -= range/GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
-                else if (CheckCollisionPointRec(mousePoint, arrowDownRight)) value += range/GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
-
-                state = STATE_PRESSED;
-            }
-            else if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-            {
-                if (!isVertical)
-                {
-                    Rectangle scrollArea = { arrowUpLeft.x + arrowUpLeft.width, arrowUpLeft.y, scrollbar.width, bounds.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) };
-                    if (CheckCollisionPointRec(mousePoint, scrollArea)) value = (int)(((float)(mousePoint.x - scrollArea.x - slider.width/2)*range)/(scrollArea.width - slider.width) + minValue);
-                }
-                else
-                {
-                    Rectangle scrollArea = { arrowUpLeft.x, arrowUpLeft.y+arrowUpLeft.height, bounds.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH),  scrollbar.height };
-                    if (CheckCollisionPointRec(mousePoint, scrollArea)) value = (int)(((float)(mousePoint.y - scrollArea.y - slider.height/2)*range)/(scrollArea.height - slider.height) + minValue);
-                }
-            }
-        }
-
-        // Normalize value
-        if (value > maxValue) value = maxValue;
-        if (value < minValue) value = minValue;
-    }
-    //--------------------------------------------------------------------
-
-    // Draw control
-    //--------------------------------------------------------------------
-    GuiDrawRectangle(bounds, GuiGetStyle(SCROLLBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_DISABLED)), guiAlpha));   // Draw the background
-
-    GuiDrawRectangle(scrollbar, 0, BLANK, Fade(GetColor(GuiGetStyle(BUTTON, BASE_COLOR_NORMAL)), guiAlpha));     // Draw the scrollbar active area background
-    GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BORDER + state*3)), guiAlpha));         // Draw the slider bar
-
-    // Draw arrows (using icon if available)
-    if (GuiGetStyle(SCROLLBAR, ARROWS_VISIBLE))
-    {
-#if defined(RAYGUI_NO_ICONS)
-        GuiDrawText(isVertical? "^" : "<", 
-            RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
-        GuiDrawText(isVertical? "v" : ">", 
-            RAYGUI_CLITERAL(Rectangle){ arrowDownRight.x, arrowDownRight.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
-#else
-        GuiDrawText(isVertical? "#121#" : "#118#", 
-            RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // ICON_ARROW_UP_FILL / ICON_ARROW_LEFT_FILL
-        GuiDrawText(isVertical? "#120#" : "#119#", 
-            RAYGUI_CLITERAL(Rectangle){ arrowDownRight.x, arrowDownRight.y, isVertical? bounds.width : bounds.height, isVertical? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // ICON_ARROW_DOWN_FILL / ICON_ARROW_RIGHT_FILL
-#endif
-    }
-    //--------------------------------------------------------------------
-
-    return value;
-}
-
 #if defined(RAYGUI_STANDALONE)
 // Returns a Color struct from hexadecimal value
 static Color GetColor(int hexValue)
@@ -4507,17 +4198,17 @@ const char **TextSplit(const char *text, char delimiter, int *count)
     // NOTE: Current implementation returns a copy of the provided string with '\0' (string end delimiter)
     // inserted between strings defined by "delimiter" parameter. No memory is dynamically allocated,
     // all used memory is static... it has some limitations:
-    //      1. Maximum number of possible split strings is set by RAYGUI_TEXTSPLIT_MAX_ITEMS
+    //      1. Maximum number of possible split strings is set by RAYGUI_TEXTSPLIT_MAX_ELEMENTS
     //      2. Maximum size of text to split is RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE
-
-    #if !defined(RAYGUI_TEXTSPLIT_MAX_ITEMS)
-        #define RAYGUI_TEXTSPLIT_MAX_ITEMS        128
+    
+    #if !defined(RAYGUI_TEXTSPLIT_MAX_ELEMENTS)
+        #define RAYGUI_TEXTSPLIT_MAX_ELEMENTS        128
     #endif
     #if !defined(RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE)
         #define RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE      1024
     #endif
 
-    static const char *result[RAYGUI_TEXTSPLIT_MAX_ITEMS] = { NULL };
+    static const char *result[RAYGUI_TEXTSPLIT_MAX_ELEMENTS] = { NULL };
     static char buffer[RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE] = { 0 };
     memset(buffer, 0, RAYGUI_TEXTSPLIT_MAX_TEXT_SIZE);
 
@@ -4539,7 +4230,7 @@ const char **TextSplit(const char *text, char delimiter, int *count)
                 result[counter] = buffer + i + 1;
                 counter++;
 
-                if (counter == RAYGUI_TEXTSPLIT_MAX_ITEMS) break;
+                if (counter == RAYGUI_TEXTSPLIT_MAX_ELEMENTS) break;
             }
         }
     }
@@ -4609,39 +4300,107 @@ static const char *CodepointToUTF8(int codepoint, int *byteSize)
 // Total number of bytes processed are returned as a parameter
 // NOTE: the standard says U+FFFD should be returned in case of errors
 // but that character is not supported by the default font in raylib
-static int GetCodepointNext(const char *text, int *codepointSize)
+static int GetCodepoint(const char *text, int *bytesProcessed)
 {
-    const char *ptr = text;
-    int codepoint = 0x3f;       // Codepoint (defaults to '?')
-    *codepointSize = 0;
+/*
+    UTF-8 specs from https://www.ietf.org/rfc/rfc3629.txt
 
-    // Get current codepoint and bytes processed
-    if (0xf0 == (0xf8 & ptr[0]))
+    Char. number range  |        UTF-8 octet sequence
+      (hexadecimal)    |              (binary)
+    --------------------+---------------------------------------------
+    0000 0000-0000 007F | 0xxxxxxx
+    0000 0080-0000 07FF | 110xxxxx 10xxxxxx
+    0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+    0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+*/
+    // NOTE: on decode errors we return as soon as possible
+
+    int code = 0x3f;   // Codepoint (defaults to '?')
+    int octet = (unsigned char)(text[0]); // The first UTF8 octet
+    *bytesProcessed = 1;
+
+    if (octet <= 0x7f)
     {
-        // 4 byte UTF-8 codepoint
-        codepoint = ((0x07 & ptr[0]) << 18) | ((0x3f & ptr[1]) << 12) | ((0x3f & ptr[2]) << 6) | (0x3f & ptr[3]);
-        *codepointSize = 4;
+        // Only one octet (ASCII range x00-7F)
+        code = text[0];
     }
-    else if (0xe0 == (0xf0 & ptr[0]))
+    else if ((octet & 0xe0) == 0xc0)
     {
-        // 3 byte UTF-8 codepoint */
-        codepoint = ((0x0f & ptr[0]) << 12) | ((0x3f & ptr[1]) << 6) | (0x3f & ptr[2]);
-        *codepointSize = 3;
+        // Two octets
+
+        // [0]xC2-DF    [1]UTF8-tail(x80-BF)
+        unsigned char octet1 = text[1];
+
+        if ((octet1 == '\0') || ((octet1 >> 6) != 2)) { *bytesProcessed = 2; return code; } // Unexpected sequence
+
+        if ((octet >= 0xc2) && (octet <= 0xdf))
+        {
+            code = ((octet & 0x1f) << 6) | (octet1 & 0x3f);
+            *bytesProcessed = 2;
+        }
     }
-    else if (0xc0 == (0xe0 & ptr[0]))
+    else if ((octet & 0xf0) == 0xe0)
     {
-        // 2 byte UTF-8 codepoint
-        codepoint = ((0x1f & ptr[0]) << 6) | (0x3f & ptr[1]);
-        *codepointSize = 2;
+        // Three octets
+        unsigned char octet1 = text[1];
+        unsigned char octet2 = '\0';
+
+        if ((octet1 == '\0') || ((octet1 >> 6) != 2)) { *bytesProcessed = 2; return code; } // Unexpected sequence
+
+        octet2 = text[2];
+
+        if ((octet2 == '\0') || ((octet2 >> 6) != 2)) { *bytesProcessed = 3; return code; } // Unexpected sequence
+
+        // [0]xE0    [1]xA0-BF       [2]UTF8-tail(x80-BF)
+        // [0]xE1-EC [1]UTF8-tail    [2]UTF8-tail(x80-BF)
+        // [0]xED    [1]x80-9F       [2]UTF8-tail(x80-BF)
+        // [0]xEE-EF [1]UTF8-tail    [2]UTF8-tail(x80-BF)
+
+        if (((octet == 0xe0) && !((octet1 >= 0xa0) && (octet1 <= 0xbf))) ||
+            ((octet == 0xed) && !((octet1 >= 0x80) && (octet1 <= 0x9f)))) { *bytesProcessed = 2; return code; }
+
+        if ((octet >= 0xe0) && (0 <= 0xef))
+        {
+            code = ((octet & 0xf) << 12) | ((octet1 & 0x3f) << 6) | (octet2 & 0x3f);
+            *bytesProcessed = 3;
+        }
     }
-    else
+    else if ((octet & 0xf8) == 0xf0)
     {
-        // 1 byte UTF-8 codepoint
-        codepoint = ptr[0];
-        *codepointSize = 1;
+        // Four octets
+        if (octet > 0xf4) return code;
+
+        unsigned char octet1 = text[1];
+        unsigned char octet2 = '\0';
+        unsigned char octet3 = '\0';
+
+        if ((octet1 == '\0') || ((octet1 >> 6) != 2)) { *bytesProcessed = 2; return code; }  // Unexpected sequence
+
+        octet2 = text[2];
+
+        if ((octet2 == '\0') || ((octet2 >> 6) != 2)) { *bytesProcessed = 3; return code; }  // Unexpected sequence
+
+        octet3 = text[3];
+
+        if ((octet3 == '\0') || ((octet3 >> 6) != 2)) { *bytesProcessed = 4; return code; }  // Unexpected sequence
+
+        // [0]xF0       [1]x90-BF       [2]UTF8-tail  [3]UTF8-tail
+        // [0]xF1-F3    [1]UTF8-tail    [2]UTF8-tail  [3]UTF8-tail
+        // [0]xF4       [1]x80-8F       [2]UTF8-tail  [3]UTF8-tail
+
+        if (((octet == 0xf0) && !((octet1 >= 0x90) && (octet1 <= 0xbf))) ||
+            ((octet == 0xf4) && !((octet1 >= 0x80) && (octet1 <= 0x8f)))) { *bytesProcessed = 2; return code; } // Unexpected sequence
+
+        if (octet >= 0xf0)
+        {
+            code = ((octet & 0x7) << 18) | ((octet1 & 0x3f) << 12) | ((octet2 & 0x3f) << 6) | (octet3 & 0x3f);
+            *bytesProcessed = 4;
+        }
     }
 
-    return codepoint;
+    if (code > 0x10ffff) code = 0x3f;     // Codepoints after U+10ffff are invalid
+
+    return code;
 }
 #endif      // RAYGUI_STANDALONE
 

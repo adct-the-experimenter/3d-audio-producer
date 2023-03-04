@@ -322,7 +322,7 @@ void GuiFileDialog(GuiFileDialogState *state)
         // List view elements are aligned left
         int prevTextAlignment = GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT);
         int prevElementsHeight = GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
-        GuiSetStyle(LISTVIEW, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+        GuiSetStyle(LISTVIEW, TEXT_ALIGNMENT, GUI_TEXT_ALIGN_LEFT);
         GuiSetStyle(LISTVIEW, LIST_ITEMS_HEIGHT, 24);
 # if defined(USE_CUSTOM_LISTVIEW_FILEINFO)
         state->filesListActive = GuiListViewFiles((Rectangle){ state->position.x + 8, state->position.y + 48 + 20, state->windowBounds.width - 16, state->windowBounds.height - 60 - 16 - 68 }, fileInfo, state->dirFiles.count, &state->itemFocused, &state->filesListScrollIndex, state->filesListActive);

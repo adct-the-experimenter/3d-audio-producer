@@ -307,7 +307,7 @@ void Timeline::DrawTimelinePlotEditorGUI()
 		//prompt for timeline name
 
         int isSecret = 0;
-		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput, 256, &isSecret);
+		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
 
 		//if ok clicked
 		if (result == 1)
@@ -392,7 +392,7 @@ void Timeline::ShowPropertiesBox(float x, float y, int timeline_index, int timel
 	
 	Rectangle draw_rect = (Rectangle){x,y,200,100};
 	Rectangle rect_msg = (Rectangle){x,y,200,40};
-	GuiPanel(draw_rect, "Props box");
+	//GuiPanel(draw_rect, "Props box");
 	
 	std::string playback_marker_str = "";
 	
