@@ -17,8 +17,6 @@ Features from binaural-audio-editor will be ported to 3d audio producer.
 
 - raylib 4.2
 
-- libsndfile http://www.mega-nerd.com/libsndfile/
-
 - Boost Math Quaternion headers and Boost ASIO serial https://www.boost.org/users/history/version_1_70_0.html
 
 - PugiXML https://github.com/zeux/pugixml/
@@ -163,6 +161,11 @@ archive(.e.g .zip, .gz, etc.)
 
 ### Saving a project
 1. Click on 'Save Project' button.
+
+## Important Details to Know
+- 3D Audio Producer works with a copy of the audio data for audio files that are uploaded to sound bank.
+The sound format that his copy of audio data uses is a signed 32-bit integer format.
+This is done to prevent corruption of audio files.
 
 ## Feedback 
 
