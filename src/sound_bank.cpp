@@ -36,6 +36,8 @@ static GuiFileDialogState fileDialogState;
 #define DR_WAV_IMPLEMENTATION
 #include "backends/dr_wav.h"
 
+#include <fstream>
+
 SoundBank::SoundBank()
 {
 	SoundBank::InitDataDirectory("");
@@ -137,7 +139,7 @@ std::array <std::string,10> &SoundBank::GetAccountLookupTable(){return account_l
 #define	BUFFER_LEN	1024
 #define	MAX_CHANNELS	2
 
-bool ReadAndCopyDataFromInputFile_WAV(std::vector<int32_t> *audio_data_input_copy_ptr,std::string inputSoundFilePath)
+bool ReadAndCopyDataFromInputFile_WAV(AudioData* audio_data_ptr,std::string inputSoundFilePath)
 {
 	//The code taken from example code in dr_wav.h uses a version of the API that 
 	//converts the audio data to a consistent format 
@@ -148,19 +150,31 @@ bool ReadAndCopyDataFromInputFile_WAV(std::vector<int32_t> *audio_data_input_cop
     unsigned int channels;
     unsigned int sampleRate;
     drwav_uint64 totalPCMFrameCount;
-    float* pSampleData = drwav_open_file_and_read_pcm_frames_f32("my_song.wav", &channels, &sampleRate, &totalPCMFrameCount, NULL);
+    
+    drwav_int32* pSampleData = drwav_open_file_and_read_pcm_frames_s32(inputSoundFilePath.c_str(), &channels, &sampleRate, &totalPCMFrameCount, NULL);
     if (pSampleData == NULL) {
         // Error opening and reading WAV file.
+        return false;
     }
 
-    //To Do: copy audio data to vector
+    audio_data_ptr->channels = channels;
+    audio_data_ptr->sampleRate = sampleRate;
+    audio_data_ptr->total_frames = totalPCMFrameCount;
+    
+    audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
+
+    //copy audio samples to vector
+    for(drflac_uint64 i = 0; i < totalPCMFrameCount; i++)
+    {
+		audio_data_ptr->audio_samples[i] = pSampleData[i];
+	}
 
     drwav_free(pSampleData, NULL);
-
 	
+	return true;
 }
 
-bool ReadAndCopyDataFromInputFile_FLAC(std::vector<int32_t> *audio_data_input_copy_ptr,std::string inputSoundFilePath)
+bool ReadAndCopyDataFromInputFile_FLAC(AudioData* audio_data_ptr,std::string inputSoundFilePath)
 {
 	
 	unsigned int channels;
@@ -168,35 +182,79 @@ bool ReadAndCopyDataFromInputFile_FLAC(std::vector<int32_t> *audio_data_input_co
     drflac_uint64 totalPCMFrameCount;
     
     //decode audio data
-    drflac_int32* pSampleData = drflac_open_file_and_read_pcm_frames_s32("MySong.flac", &channels, &sampleRate, &totalPCMFrameCount, NULL);
+    drflac_int32* pSampleData = drflac_open_file_and_read_pcm_frames_s32(inputSoundFilePath.c_str(), &channels, &sampleRate, &totalPCMFrameCount, NULL);
     if (pSampleData == NULL) {
         // Failed to open and decode FLAC file.
+        return false;
     }
+    
+    audio_data_ptr->channels = channels;
+    audio_data_ptr->sampleRate = sampleRate;
+    audio_data_ptr->total_frames = totalPCMFrameCount;
+    
+    audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
 
-    //To Do: copy audio data to vector
+    //copy audio samples to vector
+    for(drflac_uint64 i = 0; i < totalPCMFrameCount; i++)
+    {
+		audio_data_ptr->audio_samples[i] = pSampleData[i];
+	}
 
     drflac_free(pSampleData, NULL);
-	
+    
+    return true;
 }
 
-bool WriteAudioDataToWAVFile(std::vector<int32_t> *audio_data_input_copy_ptr,std::string outputSoundFilePath){
+bool WriteAudioDataToWAVFile(AudioData* audio_data_ptr,std::string outputSoundFilePath){
 	
-	//
+	//initialize wav format
 	drwav_data_format format;
     format.container = drwav_container_riff;     // <-- drwav_container_riff = normal WAV files, drwav_container_w64 = Sony Wave64.
     format.format = DR_WAVE_FORMAT_PCM;          // <-- Any of the DR_WAVE_FORMAT_* codes.
-    format.channels = 1;
-    format.sampleRate = 44100;
+    format.channels = audio_data_ptr->channels;
+    format.sampleRate = audio_data_ptr->sampleRate;
     format.bitsPerSample = 32; //32 bit
+       
     
-    //To Do : copy audio data stored in vector to wav.
-    drwav wav;
+	// fstream is Stream class to both
+	// read and write from/to files.
+	// file is object of fstream class
+	std::fstream file;
+
+	// opening file "Gfg.txt"
+	// in out(write) mode
+	// ios::out Open for output operations.
+	file.open(outputSoundFilePath.c_str(),std::ios::out);
+
+	// If no file is created, then
+	// show the error message.
+	if(!file)
+	{
+	   std::cout << "Error in creating file!!!\n";
+	   return false;
+	}
+
+	// closing the file.
+	file.close();
     
     //initialize output file
-    drwav_init_file_write(&wav, outputSoundFilePath.c_str(), &format, NULL);
+    drwav wav;
+    
+    if (!drwav_init_file_write(&wav, outputSoundFilePath.c_str(), &format, NULL)) {
+        printf("Failed to open file.\n");
+        return false;
+    }
+    
 	
 	//write to output file
-    //drwav_uint64 framesWritten = drwav_write_pcm_frames(pWav, frameCount, pSamples);
+	drflac_int32* pSampleData = (drflac_int32*)audio_data_ptr->audio_samples.data();
+	uint64_t sample_count = audio_data_ptr->total_frames;
+    
+    drwav_uint64 framesWritten = drwav_write_pcm_frames(&wav, sample_count, pSampleData);
+    
+    drwav_uninit(&wav);
+    
+    return true;
 }
 
 bool ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr,std::string inputSoundFilePath,SF_INFO& input_sfinfo)
@@ -238,7 +296,6 @@ bool ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr
 }
 
 
-
 bool CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy_ptr, AudioStreamContainer* audio_data_stream_ptr,std::string streamSoundFilePath,SF_INFO& input_sfinfo)
 {
 	
@@ -272,33 +329,42 @@ bool CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy
 
 void SoundBank::LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t account_num)
 {
-	//object to hold audio data for streaming
-	AudioStreamContainer audio_data_stream;
-	
 	//Hold data for left channel and right channel
-	std::vector <double> audio_data_input_copy;
-	
-	//audio format info
-	SF_INFO input_sfinfo;
+	AudioData audio_data;
 		
 	std::cout << "Input Sound file path:" << filepath << std::endl;
 	
 	std::cout << "Stream sound file path: " << m_sound_accounts[account_num].stream_file_path << std::endl;
 	
-	bool readDone = true;
-	bool copyDone = true;
+	bool readDone = false;
+	bool writeDone = false;
+		
+	//if file type is .wav
+	if(filepath.substr(filepath.size() - 4, 4) == ".wav")
+	{
+		readDone = ReadAndCopyDataFromInputFile_WAV(&audio_data,filepath);
+	}
+	//else if file type is .flac
+	else if(filepath.substr(filepath.size() - 5, 5) == ".flac")
+	{
+		readDone = ReadAndCopyDataFromInputFile_FLAC(&audio_data,filepath);
+	}
+	//else unsupported file type.
+	else{
+		std::cout << "Error unsupported file type in audio file " << filepath << 
+		". Supported filetypes are .wav , .flac \n";
+	}
 	
-	readDone = ReadAndCopyDataFromInputFile(&audio_data_input_copy,filepath,input_sfinfo);
+	writeDone = WriteAudioDataToWAVFile(&audio_data,m_sound_accounts[account_num].stream_file_path);
 	
-	copyDone = CopyInputDataIntoAudioDataStream(&audio_data_input_copy,&audio_data_stream, 
-									m_sound_accounts[account_num].stream_file_path,
-									input_sfinfo);
+	//writeDone = CopyInputDataIntoAudioDataStream(&audio_data_input_copy,&audio_data_stream, 
+	//								m_sound_accounts[account_num].stream_file_path,
+	//								input_sfinfo);
 									
-	m_sound_accounts[account_num].active = readDone && copyDone;
+	m_sound_accounts[account_num].active = readDone && writeDone;
 	
 	//clear data stored
-	audio_data_stream.ClearStreamDataStored();
-	audio_data_input_copy.clear();
+	audio_data.audio_samples.clear();
 }
 
 void SoundBank::LoadSaveData(SoundBankSaveData& data)
