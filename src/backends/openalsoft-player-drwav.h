@@ -11,8 +11,6 @@
 
 #include "time.h"
 
-#include "sndfile.h"
-
 #include <cassert>
 #include <string>
 #include <cstdint>
@@ -23,15 +21,17 @@
 #include "AL/alc.h" //header for OpenAL Soft
 #include "AL/alext.h" //header for OpenAL Soft
 
+#include "backends/dr_wav.h"
+
 #define NUM_BUFFERS 4
 #define BUFFER_TIME_MS 200 // 200 milliseconds 
 #define MAX_CHANNELS 2
 
-class OpenALSoftPlayer
+class OpenALSoftPlayer_DRWAV
 {
 public:
-	OpenALSoftPlayer();
-	~OpenALSoftPlayer();
+	OpenALSoftPlayer_DRWAV();
+	~OpenALSoftPlayer_DRWAV();
 	
 	//Initialize OpenAL Soft system
 	bool InitOpenALSoft(ALCdevice* thisAudioDevice, ALCcontext* thisAudioContext);
@@ -105,14 +105,12 @@ private:
 	uint32_t buffer_size;
 
     /* The format of the output stream */
-    ALenum format;
+    ALenum al_format;
 	ALsizei sample_rate;
 	
-	//libsndfile file handle for input file
-	SNDFILE	*infile;
 	
-	//has info on file loaded
-	SF_INFO sfinfo;
+	//drwav object holding input file data and info about its format
+	drwav inputfile_wav;
 	
 	int bit_size;
 	

@@ -16,7 +16,7 @@ struct AudioData {
 	unsigned int channels; //number of channels
     unsigned int sampleRate; //sample rate
     uint64_t total_frames; //total number of samples
-    std::vector<int32_t> audio_samples; //the audio samples
+    std::vector <float> audio_samples; //the audio samples
     
 };
 

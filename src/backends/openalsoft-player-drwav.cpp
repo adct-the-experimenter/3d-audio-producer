@@ -1,4 +1,4 @@
-#include "openalsoft-player.h"
+#include "openalsoft-player-drwav.h"
 
 /*
  * Code Adapted from OpenAL Audio Stream Example
@@ -29,15 +29,15 @@
 //macro for debug
 //#define DEBUG_PLAYER
 
-OpenALSoftPlayer::OpenALSoftPlayer()
+OpenALSoftPlayer_DRWAV::OpenALSoftPlayer_DRWAV()
 {
-    infile = nullptr;
+    //inputfile_audio_samples.clear();
     bit_size = 0;
     buffer_size = 0;
     buffer_index = 0;
 }
 
-OpenALSoftPlayer::~OpenALSoftPlayer()
+OpenALSoftPlayer_DRWAV::~OpenALSoftPlayer_DRWAV()
 {
 	ClosePlayerFile();
 
@@ -49,17 +49,16 @@ OpenALSoftPlayer::~OpenALSoftPlayer()
 	
 	
 	buffer_size = 0;
-	infile = nullptr;
 }
 
-void OpenALSoftPlayer::InitBuffersForStreaming()
+void OpenALSoftPlayer_DRWAV::InitBuffersForStreaming()
 {
 	// Generate the buffers
     alGenBuffers(NUM_BUFFERS, buffers);
     assert(alGetError() == AL_NO_ERROR && "Could not create buffers");
 }
 
-bool OpenALSoftPlayer::InitOpenALSoft(ALCdevice* thisAudioDevice, ALCcontext* thisAudioContext)
+bool OpenALSoftPlayer_DRWAV::InitOpenALSoft(ALCdevice* thisAudioDevice, ALCcontext* thisAudioContext)
 {
 	//use default audio device
 	thisAudioDevice = alcOpenDevice(NULL);
@@ -97,10 +96,10 @@ bool OpenALSoftPlayer::InitOpenALSoft(ALCdevice* thisAudioDevice, ALCcontext* th
 	return true;
 }
 
-void OpenALSoftPlayer::SetReferenceToAudioDevice(ALCdevice* thisAudioDevice){audioDevicePtr = thisAudioDevice;}
-void OpenALSoftPlayer::SetReferenceToAudioContext(ALCcontext* thisContext){alContextPtr = thisContext;}
+void OpenALSoftPlayer_DRWAV::SetReferenceToAudioDevice(ALCdevice* thisAudioDevice){audioDevicePtr = thisAudioDevice;}
+void OpenALSoftPlayer_DRWAV::SetReferenceToAudioContext(ALCcontext* thisContext){alContextPtr = thisContext;}
 
-void OpenALSoftPlayer::InitSource(ALuint* source)
+void OpenALSoftPlayer_DRWAV::InitSource(ALuint* source)
 {
 	alGenSources(1, source);
     assert(alGetError() == AL_NO_ERROR && "Could not create source");
@@ -113,39 +112,49 @@ void OpenALSoftPlayer::InitSource(ALuint* source)
 	assert(alGetError() == AL_NO_ERROR && "Could not set source parameters");
 }
 
-void OpenALSoftPlayer::CloseOpenALSoft(ALCdevice* thisAudioDevice, ALCcontext* thisAudioContext)
+void OpenALSoftPlayer_DRWAV::CloseOpenALSoft(ALCdevice* thisAudioDevice, ALCcontext* thisAudioContext)
 {
 	std::cout << "Close OpenAL Soft called!\n";
 	alcDestroyContext(thisAudioContext);	//delete context
 	alcCloseDevice(thisAudioDevice);	//close device
 }
 
-int OpenALSoftPlayer::OpenPlayerFile(const char *filename)
+int OpenALSoftPlayer_DRWAV::OpenPlayerFile(const char *filename)
 {
-    uint32_t frame_size;
-    
-    OpenALSoftPlayer::ClosePlayerFile();
+	uint32_t frame_size;
 
-	/* The SF_INFO struct must be initialized before using it.*/
-	memset (&sfinfo, 0, sizeof (sfinfo)) ;
+	OpenALSoftPlayer_DRWAV::ClosePlayerFile();
 
-    /* Open the file and get the first stream from it */
-	if (! (infile = sf_open (filename, SFM_READ, &sfinfo)))
-	{
-		std::cout << "Unable to open file" << filename << "\n";
-		std::string error;
-		error.append(sf_strerror(NULL));
-		std::cout << error << std::endl;
+	/* Open the file and get the first stream from it */
+	unsigned int channels;
+	unsigned int sampleRate;
+	drwav_uint64 totalPCMFrameCount;
+
+	//open samples and convert to float 32 bit
+	float* pSampleData = drwav_open_file_and_read_pcm_frames_f32(filename, &channels, &sampleRate, &totalPCMFrameCount, NULL);
+	if (pSampleData == NULL) {
+		// Error opening and reading WAV file.
+		std::cout << "Error! Unable to open file" << filename << "\n";
 		return 0;
-	 }
+	}
+	
+	drwav_free(pSampleData, NULL);
+	
+	if (!drwav_init_file_with_metadata(&inputfile_wav, filename, 0, NULL)) {
+		//error opening and initializing wav object
+		std::cout << "Error! Failed to initialize wav object from file " << filename << "\n";
+		return 0;
+	}
+	
+	
 	 
 	 #ifdef DEBUG_PLAYER
 	 std::cout << "File opened successfully for streaming.\n";
 	 #endif
 	 
-    /* Get the stream format, and figure out the OpenAL format */
-    
-    if (sfinfo.channels > MAX_CHANNELS)
+	/* Get the stream format, and figure out the OpenAL format */
+
+	if (inputfile_wav.channels > MAX_CHANNELS)
 	{	std::cout << "Not able to process more than "; 
 		std::cout << std::to_string(MAX_CHANNELS); 
 		std::cout << "%d channels.\n";
@@ -156,34 +165,14 @@ int OpenALSoftPlayer::OpenPlayerFile(const char *filename)
 
 	//check for number of channels
 	//if audio sample has only 1 channel
-	if(sfinfo.channels == 1)
+	if(inputfile_wav.channels == 1)
 	{
-		//if audio sample format is 8-bit, set ALenum format variable to mono 8-bit
-		if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_S8 ||
-				(sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_U8){format = AL_FORMAT_MONO8;}
-		//if audio sample format is 16-bit, set ALenum format variable to mono 8-bit
-		else if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_16){format = AL_FORMAT_MONO16;}
-		//else notify that sample format is unsupported
-		else
-		{
-			std::cout << "Unsupported sample format for mono. Must be 8-bit or 16-bit";
-			return 0;
-		}
+		al_format = AL_FORMAT_MONO_FLOAT32;
 	}
 	//else if audio sample has 2 channels
-	else if(sfinfo.channels == 2)
+	else if(inputfile_wav.channels == 2)
 	{
-		//if audio sample format is 8-bit, set ALenum format variable to stereo 8-bit
-		if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_S8 ||
-			(sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_U8){format = AL_FORMAT_STEREO8; }
-		//if audio sample format is 16-bit, set ALenum format variable to stereo 8-bit
-		else if( (sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_PCM_16){format = AL_FORMAT_STEREO16;}
-		//else notify that sample format is unsupported
-		else
-		{
-			std::cout << "Unsupported sample format for stereo. Must be 8-bit or 16-bit.";
-			return 0;
-		}
+		al_format = AL_FORMAT_STEREO_FLOAT32;
 	}
 	//else notify that channel count is unsupported
 	else
@@ -191,48 +180,32 @@ int OpenALSoftPlayer::OpenPlayerFile(const char *filename)
 		std::cout << "Unsupported channel count. Must be 1 or 2 channels.\n";
 		return 0;
 	}
-	
-    sample_rate = sfinfo.samplerate;
-	
-	#ifdef DEBUG_PLAYER
-	//bit size is the size of a double because that is format for stream.wav
-	std::cout << "bit type: " << (sfinfo.format & SF_FORMAT_SUBMASK) << std::endl;
-	#endif
-	
-	//get audio bit size 
-	switch(sfinfo.format & SF_FORMAT_SUBMASK)
-	{
-		case SF_FORMAT_PCM_S8:{bit_size = sizeof(int8_t); break;}
-		case SF_FORMAT_PCM_U8 :{bit_size = sizeof(uint8_t);break;}
-		case SF_FORMAT_PCM_16:{bit_size = sizeof(int16_t); break;}
-		case SF_FORMAT_PCM_32:{bit_size = sizeof(int32_t); break;}
-		case SF_FORMAT_FLOAT:{bit_size = sizeof(float); break;}
-		case SF_FORMAT_DOUBLE:{bit_size = sizeof(double); break;}
-	}
-	
-	frame_size = sfinfo.channels * bit_size;
 
-    /* Set the buffer size, given the desired millisecond length. */
-    buffer_size = (uint64_t)sample_rate * (double(BUFFER_TIME_MS))/1000 * frame_size;
-    
-    #ifdef DEBUG_PLAYER
-    std::cout << "buffer size:" << buffer_size << std::endl;
-    #endif
-    
-    return 1;
+	sample_rate = inputfile_wav.sampleRate;
+
+
+	//set audio bit size to 32-bit float
+	bit_size = sizeof(float);
+
+	frame_size = inputfile_wav.channels * bit_size;
+
+	/* Set the buffer size, given the desired millisecond length. */
+	buffer_size = (uint64_t)sample_rate * (double(BUFFER_TIME_MS))/1000 * frame_size;
+
+	#ifdef DEBUG_PLAYER
+	std::cout << "buffer size:" << buffer_size << std::endl;
+	#endif
+
+	return 1;
 }
 
-void OpenALSoftPlayer::ClosePlayerFile()
+void OpenALSoftPlayer_DRWAV::ClosePlayerFile()
 {
-	if(infile != nullptr)
-	{
-		sf_close (infile);
-	}
-	
+	drwav_uninit(&inputfile_wav);
 }
 
 /* Prebuffers some audio from the file, and starts playing the source */
-int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
+int OpenALSoftPlayer_DRWAV::StartPlayerBuffering(ALuint* source, double& current_time)
 {
 	//std::cout << "In start player!\n";
 	
@@ -246,10 +219,11 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
     if(buffer_size == 0){return 0;}
     
     //convert time into sample number
-    sf_count_t current_sample_number = current_time * sfinfo.samplerate;
+    uint64_t current_sample_number = current_time * inputfile_wav.sampleRate;
     
     //move file to current sample number
-    sf_seek(infile, current_sample_number, SEEK_SET);
+    //sf_seek(infile, current_sample_number, SEEK_SET);
+    drwav_seek_to_pcm_frame(&inputfile_wav, current_sample_number);
 	
     /* Fill the buffer queue */
     for(buffer_index = 0; buffer_index < NUM_BUFFERS;buffer_index++)
@@ -260,125 +234,34 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
 		
 		//read data differently depending on bit size set in OpenPlayerFile
 		
-		//if data is 8-bit
-		if(bit_size == 1)
-		{
-			std::vector<int> data;
-			std::vector<int> read_buf(buffer_size);
-			size_t read_size = 0;
-			while((read_size = sf_read_int(infile, read_buf.data(), read_buf.size())) != 0)
-			{
-				data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-			}
-
-			int slen = data.size() * sizeof(int); //get size of data in bytes
-			
-			#ifdef DEBUG_PLAYER
-			std::cout << "Number of samples in data buffer : " << slen << "\n";
-			#endif
-			
-			//if sample buffer is null or size of buffer data is zero, notify of error
-			if(slen == 0)
-			{
-				#ifdef DEBUG_PLAYER
-				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
-				#endif
-				break;
-			}
-
-			// Buffer the audio data into buffer array
-		
-			//set buffer data
-			alBufferData(buffers[buffer_index], format, &data.front(), slen, sfinfo.samplerate);
-		}
-		
-		//if data is 16-bit
-		else if(bit_size == 2)
-		{
-			std::vector<uint16_t> data;
-			std::vector<int16_t> read_buf(buffer_size);
-			size_t read_size = 0;
-			while((read_size = sf_read_short(infile, read_buf.data(), read_buf.size())) != 0)
-			{
-				data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-			}
-
-			int slen = data.size() * sizeof(uint16_t); //get size of data in bytes
-			
-			#ifdef DEBUG_PLAYER
-			std::cout << "Number of samples in data buffer : " << slen << "\n";
-			#endif
-			
-			//if sample buffer is null or size of buffer data is zero, notify of error
-			if(slen == 0)
-			{
-				#ifdef DEBUG_PLAYER
-				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
-				#endif
-				break;
-			}
-
-			// Buffer the audio data into buffer array
-		
-			//set buffer data
-			alBufferData(buffers[buffer_index], format, &data.front(), slen, sfinfo.samplerate);
-		}
-		//else if data is 32-bit float
-		else if(bit_size == 4)
+		//if data is 32-bit float
+		if(bit_size == 4)
 		{
 			std::vector<float> data;
-			std::vector<float> read_buf(buffer_size);
-			size_t read_size = 0;
-			while((read_size = sf_read_float(infile, read_buf.data(), read_buf.size())) != 0)
-			{
-				data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-			}
+			data.resize(buffer_size);
+			
+			//read 1 chunk of data, save it to data buffer
+			uint64_t pcmFrameCount_drwav = drwav_read_pcm_frames_f32(&inputfile_wav, buffer_size, data.data());
 
 			int slen = data.size() * sizeof(float); //get size of data in bytes
-
-			std::cout << "Number of samples in data buffer : " << slen << "\n";
-			//if sample buffer is null or size of buffer data is zero, notify of error
-			if(slen == 0)
-			{
-				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
-				break;
-			}
-
-			// Buffer the audio data into buffer array
-		
-			//set buffer data
-			alBufferData(buffers[buffer_index], format, &data.front(), slen, sfinfo.samplerate);
-		}
-		//else if data is 64-bit double
-		else if(bit_size == 8)
-		{
-			std::vector<double> data;
-			std::vector<double> read_buf(buffer_size);
-			size_t read_size = 0;
-			while((read_size = sf_read_double(infile, read_buf.data(), read_buf.size())) != 0)
-			{
-				data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-			}
-
-			int slen = data.size() * sizeof(double); //get size of data in bytes
 			
 			#ifdef DEBUG_PLAYER
-			std::cout << "Number of samples in data buffer : " << slen << "\n";
+			std::cout << "StartPlayerBuffering, number of samples in data buffer : " << slen << "\n";
 			#endif
+			
 			//if sample buffer is null or size of buffer data is zero, notify of error
 			if(slen == 0)
 			{
-				#ifdef DEBUG_PLAYER
 				std::cout << "Failed to read anymore audio from file. Sample length is 0! \n";
-				#endif
 				break;
 			}
 
 			// Buffer the audio data into buffer array
 		
 			//set buffer data
-			alBufferData(buffers[buffer_index], format, &data.front(), slen, sfinfo.samplerate);
+			alBufferData(buffers[buffer_index], al_format, &data.front(), slen, inputfile_wav.sampleRate);
 		}
+		
         
     }
     
@@ -394,7 +277,7 @@ int OpenALSoftPlayer::StartPlayerBuffering(ALuint* source, double& current_time)
     return PlayerStatus::GOOD_START_BUFFERING;
 }
 
-int OpenALSoftPlayer::StartPlayingBuffer(ALuint* source)
+int OpenALSoftPlayer_DRWAV::StartPlayingBuffer(ALuint* source)
 {
 	//Start playback assume buffer queued
     alSourcePlay(*source);
@@ -407,13 +290,14 @@ int OpenALSoftPlayer::StartPlayingBuffer(ALuint* source)
     return PlayerStatus::GOOD_PLAYING_STATUS;
 }
 
-int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
+int OpenALSoftPlayer_DRWAV::UpdatePlayerBuffer(ALuint* source,double& current_time)
 {
 	 //convert time into sample number
-	sf_count_t current_sample_number = current_time * sfinfo.samplerate;
+	uint64_t current_sample_number = current_time * inputfile_wav.sampleRate;
 	
 	//move file to current sample number
-	sf_seek(infile, current_sample_number, SEEK_SET);
+	//sf_seek(infile, current_sample_number, SEEK_SET);
+	drwav_seek_to_pcm_frame(&inputfile_wav, current_sample_number);
 	
 	//std::cout << "In update player! \n";
     ALint processed, state;
@@ -443,113 +327,21 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
          //read data differently depending on the bit size set in OpenPlayerFile
          switch(bit_size)
          {
-			 //if 8-bit
-			 case 1:
-			 {
-				  //setup data for buffer
-				std::vector<int> data;
-				std::vector<int> read_buf(buffer_size);
-				size_t read_size = 0;
-				while((read_size = sf_read_int(infile, read_buf.data(), read_buf.size())) != 0)
-				{
-					data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-				}
-
-				slen = data.size() * sizeof(int); //get size of data in bytes
-				
-				#ifdef DEBUG_PLAYER
-				std::cout << "Size of data in bytes: " << slen << "\n";
-				#endif
-				
-				//if sample buffer is null or size of buffer data is zero, notify of error
-				if(slen == 0)
-				{
-					#ifdef DEBUG_PLAYER
-					std::cout << "Failed to read anymore audio from file.\n";
-					#endif
-					
-					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
-				}
-
-				#ifdef DEBUG_PLAYER
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				std::cout << "Duration of sound:" << seconds << "s. \n";
-				#endif
-				
-				if(slen > 0)
-				{
-					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
-					alSourceQueueBuffers(*source, 1, &bufid);
-				}
-				if(alGetError() != AL_NO_ERROR)
-				{
-					fprintf(stderr, "Error buffering data\n");
-					return PlayerStatus::ERROR_BUFFERING_DATA;
-				}
-				break;
-			 }
-			 
-			 //if 16-bit
-			 case 2:
-			 {
-				 //setup data for buffer
-				std::vector<uint16_t> data;
-				std::vector<int16_t> read_buf(buffer_size);
-				size_t read_size = 0;
-				while((read_size = sf_read_short(infile, read_buf.data(), read_buf.size())) != 0)
-				{
-					data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-				}
-
-				slen = data.size() * sizeof(uint16_t); //get size of data in bytes
-				
-				#ifdef DEBUG_PLAYER
-				std::cout << "Size of data in bytes: " << slen << "\n";
-				#endif
-				
-				//if sample buffer is null or size of buffer data is zero, notify of error
-				if(slen == 0)
-				{
-					#ifdef DEBUG_PLAYER
-					std::cout << "Failed to read anymore audio from file.\n";
-					#endif
-					
-					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
-				}
-
-				#ifdef DEBUG_PLAYER
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				std::cout << "Duration of sound:" << seconds << "s. \n";
-				#endif
-				
-				if(slen > 0)
-				{
-					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
-					alSourceQueueBuffers(*source, 1, &bufid);
-				}
-				if(alGetError() != AL_NO_ERROR)
-				{
-					fprintf(stderr, "Error buffering data\n");
-					return PlayerStatus::ERROR_BUFFERING_DATA;
-				}
-				break;
-			 }
 			 
 			 //if 32-bit float
 			 case 4:
 			 {
-				  //setup data for buffer
+				//setup data for buffer
 				std::vector<float> data;
-				std::vector<float> read_buf(buffer_size);
-				size_t read_size = 0;
-				while((read_size = sf_read_float(infile, read_buf.data(), read_buf.size())) != 0)
-				{
-					data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-				}
-
+				data.resize(buffer_size);
+				
+				//read 1 chunk of data, save it to data buffer
+				uint64_t pcmFrameCount_drwav = drwav_read_pcm_frames_f32(&inputfile_wav, buffer_size, data.data());
+				
 				slen = data.size() * sizeof(float); //get size of data in bytes
 				
 				#ifdef DEBUG_PLAYER
+				std::cout << "Number of pcm frames read" << pcmFrameCount_drwav << "\n";
 				std::cout << "Size of data in bytes: " << slen << "\n";
 				#endif
 				
@@ -564,13 +356,13 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				}
 
 				#ifdef DEBUG_PLAYER
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
+				double seconds = (1.0 * inputfile_wav.totalPCMFrameCount) / inputfile_wav.sampleRate;
 				std::cout << "Duration of sound:" << seconds << "s. \n";
 				#endif
 				
 				if(slen > 0)
 				{
-					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
+					alBufferData(bufid, al_format, &data.front(), slen, inputfile_wav.sampleRate);
 					alSourceQueueBuffers(*source, 1, &bufid);
 				}
 				if(alGetError() != AL_NO_ERROR)
@@ -581,55 +373,13 @@ int OpenALSoftPlayer::UpdatePlayerBuffer(ALuint* source,double& current_time)
 				break;
 			 }
 			 
-			 //if 64-bit double
-			 case 8:
-			 {
-				   //setup data for buffer
-				std::vector<double> data;
-				std::vector<double> read_buf(buffer_size);
-				size_t read_size = 0;
-				while((read_size = sf_read_double(infile, read_buf.data(), read_buf.size())) != 0)
-				{
-					data.insert(data.end(), read_buf.begin(), read_buf.begin() + read_size);
-				}
-
-				slen = data.size() * sizeof(double); //get size of data in bytes
-				
-				#ifdef DEBUG_PLAYER
-				std::cout << "Size of data in bytes: " << slen << "\n";
-				#endif
-				
-				//if sample buffer is null or size of buffer data is zero, notify of error
-				if(slen == 0)
-				{
-					std::cout << "Failed to read anymore audio from file.\n";
-					return PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE;
-				}
-
-				#ifdef DEBUG_PLAYER
-				double seconds = (1.0 * sfinfo.frames) / sfinfo.samplerate ;
-				std::cout << "Duration of sound:" << seconds << "s. \n";
-				#endif
-				
-				if(slen > 0)
-				{
-					alBufferData(bufid, format, &data.front(), slen, sfinfo.samplerate);
-					alSourceQueueBuffers(*source, 1, &bufid);
-				}
-				if(alGetError() != AL_NO_ERROR)
-				{
-					fprintf(stderr, "Error buffering data\n");
-					return PlayerStatus::ERROR_BUFFERING_DATA;
-				}
-				break;
-			 }
 		 }
     }
     
     return PlayerStatus::GOOD_UPDATE_BUFFER_STATUS;
 }
 
-int OpenALSoftPlayer::PlayUpdatedPlayerBuffer(ALuint* source)
+int OpenALSoftPlayer_DRWAV::PlayUpdatedPlayerBuffer(ALuint* source)
 {
 	ALint state;
 	
@@ -658,7 +408,7 @@ int OpenALSoftPlayer::PlayUpdatedPlayerBuffer(ALuint* source)
     return GOOD_PLAYING_STATUS;
 }
 
-int OpenALSoftPlayer::PlayMultipleUpdatedPlayerBuffers(std::vector <ALuint*> *sources_vec)
+int OpenALSoftPlayer_DRWAV::PlayMultipleUpdatedPlayerBuffers(std::vector <ALuint*> *sources_vec)
 {	
 	//vector containing queued status of each source
 	std::vector <ALint> queued_source_vector;
@@ -731,7 +481,7 @@ int OpenALSoftPlayer::PlayMultipleUpdatedPlayerBuffers(std::vector <ALuint*> *so
 }
 
 
-void OpenALSoftPlayer::PlaySource(ALuint* thisSource)
+void OpenALSoftPlayer_DRWAV::PlaySource(ALuint* thisSource)
 {
 	alSourcePlay(*thisSource);
 	if(alGetError() != AL_NO_ERROR)
@@ -740,7 +490,7 @@ void OpenALSoftPlayer::PlaySource(ALuint* thisSource)
     }
 }
 
-void OpenALSoftPlayer::PlayMultipleSources(std::vector <ALuint*> *sources_vec)
+void OpenALSoftPlayer_DRWAV::PlayMultipleSources(std::vector <ALuint*> *sources_vec)
 {
 	ALsizei n = sources_vec->size();
 	const ALuint *sNames = sources_vec->at(0);
@@ -751,12 +501,12 @@ void OpenALSoftPlayer::PlayMultipleSources(std::vector <ALuint*> *sources_vec)
     }
 }
 
-void OpenALSoftPlayer::PauseSource(ALuint* thisSource)
+void OpenALSoftPlayer_DRWAV::PauseSource(ALuint* thisSource)
 {
 	alSourcePause(*thisSource);
 }
 
-void OpenALSoftPlayer::PauseMultipleSources(std::vector <ALuint*> *sources_vec)
+void OpenALSoftPlayer_DRWAV::PauseMultipleSources(std::vector <ALuint*> *sources_vec)
 {
 	ALsizei n = sources_vec->size();
 	const ALuint *sNames = sources_vec->at(0);
@@ -764,12 +514,12 @@ void OpenALSoftPlayer::PauseMultipleSources(std::vector <ALuint*> *sources_vec)
 }
 
 
-void OpenALSoftPlayer::RewindSource(ALuint* thisSource)
+void OpenALSoftPlayer_DRWAV::RewindSource(ALuint* thisSource)
 {
 	alSourceRewind(*thisSource);
 }
 
-void OpenALSoftPlayer::RewindMultipleSources(std::vector <ALuint*> *sources_vec)
+void OpenALSoftPlayer_DRWAV::RewindMultipleSources(std::vector <ALuint*> *sources_vec)
 {
 	ALsizei n = sources_vec->size();
 	const ALuint *sNames = sources_vec->at(0);
@@ -777,19 +527,19 @@ void OpenALSoftPlayer::RewindMultipleSources(std::vector <ALuint*> *sources_vec)
 }
 	
 
-void OpenALSoftPlayer::StopSource(ALuint* thisSource)
+void OpenALSoftPlayer_DRWAV::StopSource(ALuint* thisSource)
 {
 	alSourceStop(*thisSource);
 }
 
-void OpenALSoftPlayer::StopMultipleSources(std::vector <ALuint*> *sources_vec)
+void OpenALSoftPlayer_DRWAV::StopMultipleSources(std::vector <ALuint*> *sources_vec)
 {
 	ALsizei n = sources_vec->size();
 	const ALuint *sNames = sources_vec->at(0);
 	alSourceStopv(n,sNames);
 }
 
-void OpenALSoftPlayer::ClearQueue(ALuint* thisSource)
+void OpenALSoftPlayer_DRWAV::ClearQueue(ALuint* thisSource)
 {
 	alSourcei(*thisSource, AL_BUFFER, 0);
 }

@@ -533,7 +533,7 @@ void ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(int i
 	
 	switch(buffering_audio_players_vec[index].UpdatePlayerBuffer(sourceToManipulatePtr,current_time))
 	{
-		case OpenALSoftPlayer::PlayerStatus::PLAYBACK_FINISHED:
+		case OpenALSoftPlayer_DRWAV::PlayerStatus::PLAYBACK_FINISHED:
 		{
 			std::cout << "Playback finished! \n";
 			
@@ -541,7 +541,7 @@ void ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(int i
 			buffer_players_states[index].state_type = BufferPlayerStateType::PLAYING_TO_NONE;
 			break;
 		}
-		case OpenALSoftPlayer::PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE:
+		case OpenALSoftPlayer_DRWAV::PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE:
 		{
 			std::cout << "No more audio to read! \n";
 			
@@ -550,7 +550,7 @@ void ImmediateModeSoundPlayer::Play_IndividualBufferPlayer_ComplexPlayback(int i
 			
 			break;
 		}
-		case OpenALSoftPlayer::PlayerStatus::GOOD_UPDATE_BUFFER_STATUS:
+		case OpenALSoftPlayer_DRWAV::PlayerStatus::GOOD_UPDATE_BUFFER_STATUS:
 		{						
 			break;
 		}
@@ -695,7 +695,7 @@ void ImmediateModeSoundPlayer::al_nssleep(unsigned long nsec)
     while(nanosleep(&ts, &rem) == -1 && errno == EINTR){ts = rem;}
 }
 
-void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer& audioPlayer)
+void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer_DRWAV& audioPlayer)
 {
 	if(sourceToManipulatePtr != nullptr)
 	{
@@ -724,7 +724,7 @@ void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr
 			{
 				switch(audioPlayer.UpdatePlayerBuffer(sourceToManipulatePtr,m_current_time))
 				{
-					case OpenALSoftPlayer::PlayerStatus::PLAYBACK_FINISHED:
+					case OpenALSoftPlayer_DRWAV::PlayerStatus::PLAYBACK_FINISHED:
 					{
 						std::cout << "Playback finished! \n";
 						
@@ -733,7 +733,7 @@ void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr
 						return;
 						break;
 					}
-					case OpenALSoftPlayer::PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE:
+					case OpenALSoftPlayer_DRWAV::PlayerStatus::FAILED_TO_READ_ANYMORE_AUDIO_FROM_FILE:
 					{
 						std::cout << "No more audio to read! \n";
 						
@@ -742,7 +742,7 @@ void ImmediateModeSoundPlayer::LoadBufferStreaming(ALuint* sourceToManipulatePtr
 						return;
 						break;
 					}
-					case OpenALSoftPlayer::PlayerStatus::GOOD_UPDATE_BUFFER_STATUS:
+					case OpenALSoftPlayer_DRWAV::PlayerStatus::GOOD_UPDATE_BUFFER_STATUS:
 					{						
 						break;
 					}

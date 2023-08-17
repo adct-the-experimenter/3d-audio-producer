@@ -151,9 +151,10 @@ bool ReadAndCopyDataFromInputFile_WAV(AudioData* audio_data_ptr,std::string inpu
     unsigned int sampleRate;
     drwav_uint64 totalPCMFrameCount;
     
-    drwav_int32* pSampleData = drwav_open_file_and_read_pcm_frames_s32(inputSoundFilePath.c_str(), &channels, &sampleRate, &totalPCMFrameCount, NULL);
+    float* pSampleData = drwav_open_file_and_read_pcm_frames_f32(inputSoundFilePath.c_str(), &channels, &sampleRate, &totalPCMFrameCount, NULL);
     if (pSampleData == NULL) {
         // Error opening and reading WAV file.
+        std::cout << "Error! Could not open input file " << inputSoundFilePath << " in sound bank.\n"; 
         return false;
     }
 
@@ -161,9 +162,8 @@ bool ReadAndCopyDataFromInputFile_WAV(AudioData* audio_data_ptr,std::string inpu
     audio_data_ptr->sampleRate = sampleRate;
     audio_data_ptr->total_frames = totalPCMFrameCount;
     
-    audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
-
     //copy audio samples to vector
+    audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
     for(drflac_uint64 i = 0; i < totalPCMFrameCount; i++)
     {
 		audio_data_ptr->audio_samples[i] = pSampleData[i];
@@ -182,7 +182,7 @@ bool ReadAndCopyDataFromInputFile_FLAC(AudioData* audio_data_ptr,std::string inp
     drflac_uint64 totalPCMFrameCount;
     
     //decode audio data
-    drflac_int32* pSampleData = drflac_open_file_and_read_pcm_frames_s32(inputSoundFilePath.c_str(), &channels, &sampleRate, &totalPCMFrameCount, NULL);
+    float* pSampleData = drflac_open_file_and_read_pcm_frames_f32(inputSoundFilePath.c_str(), &channels, &sampleRate, &totalPCMFrameCount, NULL);
     if (pSampleData == NULL) {
         // Failed to open and decode FLAC file.
         return false;
@@ -192,9 +192,10 @@ bool ReadAndCopyDataFromInputFile_FLAC(AudioData* audio_data_ptr,std::string inp
     audio_data_ptr->sampleRate = sampleRate;
     audio_data_ptr->total_frames = totalPCMFrameCount;
     
-    audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
+    
 
     //copy audio samples to vector
+    audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
     for(drflac_uint64 i = 0; i < totalPCMFrameCount; i++)
     {
 		audio_data_ptr->audio_samples[i] = pSampleData[i];
