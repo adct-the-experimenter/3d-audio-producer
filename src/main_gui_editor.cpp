@@ -26,6 +26,8 @@
 #define GUI_FILE_DIALOG_IMPLEMENTATION
 #include "raygui/gui_file_dialog.h"
 
+#include "imgui.h"
+#include "backends/rlImGui.h"
 
 //#include "setup-serial-dialog.h"
 
@@ -35,28 +37,28 @@ bool init_listener_once = false;
 
 //Gui items to initialize
 
-static CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
-static EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
-static EditListenerDialog edit_lt_dialog("Edit Listener");
-static ImmediateModeSoundPlayer im_sound_player;
+CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
+EditListenerDialog edit_lt_dialog("Edit Listener");
+ImmediateModeSoundPlayer im_sound_player;
 
-static HRTFTestDialog hrtf_test_dialog;
-static ChangeHRTFDialog change_hrtf_dialog;
+HRTFTestDialog hrtf_test_dialog;
+ChangeHRTFDialog change_hrtf_dialog;
 
 //dialogs for manipulating effect zones
-static CreateEchoZoneDialog create_echo_zone_dialog;
-static EditMultipleEchoZonesDialog edit_echo_zone_dialog;
+CreateEchoZoneDialog create_echo_zone_dialog;
+EditMultipleEchoZonesDialog edit_echo_zone_dialog;
 
-static CreateStandardReverbZoneDialog create_sr_zone_dialog;
-static EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
+CreateStandardReverbZoneDialog create_sr_zone_dialog;
+EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
-static CreateEAXReverbZoneDialog create_er_zone_dialog;
-static EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
+CreateEAXReverbZoneDialog create_er_zone_dialog;
+EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
 
 //dialog for saving and loading project file
-static GuiFileDialogState fileDialogState;
+GuiFileDialogState fileDialogState;
 enum class ProjectFileState : std::uint8_t{NONE=0, NEW, SAVE, LOAD};
-static ProjectFileState proj_file_state;
+ProjectFileState proj_file_state;
 
 //timeline
 static Timeline timeline_window;
@@ -69,7 +71,7 @@ bool global_dialog_in_use = false;
 //******************************************************//
 //bool to indicate if project is initialized, 
 //used to disable functionality that requires project to be initialized
-static bool project_init = false;
+bool project_init = false;
 
 //string used for storing project directory path
 std::string project_dir_path = "";
@@ -93,8 +95,6 @@ MainGuiEditor::~MainGuiEditor()
 	effects_manager_ptr->FreeEffects();
 	
 }
-
-
 
 #include <cstdio>
 #include <cstdlib>
@@ -187,26 +187,16 @@ void MainGuiEditor::initListener()
 	}
 }
 
-
-void MainGuiEditor::Draw3DModels()
+void MainGuiEditor::InitGUIWindow()
 {
-	//draw 3d model of listener
-	listener->DrawModel();
-	
-	//draw 3d models of sound producers
-	
-	if(sound_producer_vector.size() > 0)
-	{
-		for(size_t i = 0; i < sound_producer_vector.size(); i++)
-		{
-			//draw model of sound producer
-			sound_producer_vector[i]->DrawModel();
-		}
-	}
-	
-	effects_manager_ptr->Draw3DModels();
-	
+	viewtexture_3dscene = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 }
+
+void MainGuiEditor::Init3DSceneWindow()
+{
+	viewtexture_gui = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+}
+
 
 float distanceToMove = 0.1f;
 bool disableHotkeys = false;
@@ -219,39 +209,39 @@ bool picker_ray_launched = false;
 
 //represents the index of sound producer chosen
 //signed integer used so that -1 can be used.
-static std::int32_t soundproducer_picked = -1;
+std::int32_t soundproducer_picked = -1;
 
 //represent index of effect zone picked
-static int effect_zone_picked = -1;
+int effect_zone_picked = -1;
 
 //represent type of effect zone picked
-static EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
+EffectsManager::EffectZoneType effect_zone_type_picked = EffectsManager::EffectZoneType::NONE;
 
 //shortcut keys
-static bool editKeyPressed = false;
-static bool deleteKeyPressed = false;
+bool editKeyPressed = false;
+bool deleteKeyPressed = false;
 
-static bool frameAddKeyPressed = false;
-static bool playbackMarker_add_start_key_pressed = false;
-static bool playbackMarker_add_pause_key_pressed = false;
-static bool playbackMarker_add_resume_key_pressed = false;
-static bool playbackMarker_add_end_key_pressed = false;
+bool frameAddKeyPressed = false;
+bool playbackMarker_add_start_key_pressed = false;
+bool playbackMarker_add_pause_key_pressed = false;
+bool playbackMarker_add_resume_key_pressed = false;
+bool playbackMarker_add_end_key_pressed = false;
 
-static bool showPropertiesBoxKeyPressed = false;
+bool showPropertiesBoxKeyPressed = false;
 
 //listener movement variables
-static float listener_speed = 10.0f;
+float listener_speed = 10.0f;
 
-static float listener_velocity_x = 0;
-static float listener_velocity_y = 0;
-static float listener_velocity_z = 0;
+float listener_velocity_x = 0;
+float listener_velocity_y = 0;
+float listener_velocity_z = 0;
 
 //sound producer movement variables
-static float soundproducer_speed = 10.0f;
+float soundproducer_speed = 10.0f;
 
-static float soundproducer_velocity_x = 0;
-static float soundproducer_velocity_y = 0;
-static float soundproducer_velocity_z = 0;
+float soundproducer_velocity_x = 0;
+float soundproducer_velocity_y = 0;
+float soundproducer_velocity_z = 0;
 
 void MainGuiEditor::HandleEvents()
 {
@@ -557,24 +547,112 @@ void MainGuiEditor::logic()
 		
 }
 
-void MainGuiEditor::DrawGUI_Items()
+
+void MainGuiEditor::UpdateTextureGUIWindow()
 {
-	//draw project file buttons
-	MainGuiEditor::draw_project_file_dialog();
+	if (IsWindowResized())
+	{
+		UnloadRenderTexture(viewtexture_gui);
+		viewtexture_gui = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+	}
 	
-	if(!project_init){return;} //skip if project is not initialized
+	//start drawing to texture
+	BeginTextureMode(viewtexture_gui);
+	
+	ClearBackground(BLUE);
+	
+	//draw gui elements
+	
+	
+	
+	//draw project file buttons
+	//MainGuiEditor::draw_project_file_dialog();
+	
+	//if(!project_init){return;} //skip if project is not initialized
 	
 	//draw sound bank
-	MainGuiEditor::draw_sound_bank();
+	//MainGuiEditor::draw_sound_bank();
 	
 	//draw HRTF edit menu
-	MainGuiEditor::draw_hrtf_menu();
+	//MainGuiEditor::draw_hrtf_menu();
 	
 	//draw object creation/edit menu
-	MainGuiEditor::draw_object_creation_menu();
+	//MainGuiEditor::draw_object_creation_menu();
 	
 	//draw timeline 
-	MainGuiEditor::draw_timeline_menu();
+	//MainGuiEditor::draw_timeline_menu();
+	
+	//end drawing to texture
+	EndTextureMode();
+	
+}
+
+void MainGuiEditor::UpdateTexture3DSceneWindow()
+{
+	if (IsWindowResized())
+	{
+		UnloadRenderTexture(viewtexture_3dscene);
+		viewtexture_3dscene = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+	}
+	
+	//start drawing to texture of 3d scene window
+	BeginTextureMode(viewtexture_3dscene);
+	
+	ClearBackground(SKYBLUE);
+	
+	//draw 3d elements
+	BeginMode3D(*this->GetPointerToCamera());
+
+	//draw 3d model of listener
+	listener->DrawModel();
+	
+	//draw 3d models of sound producers
+	
+	if(sound_producer_vector.size() > 0)
+	{
+		for(size_t i = 0; i < sound_producer_vector.size(); i++)
+		{
+			//draw model of sound producer
+			sound_producer_vector[i]->DrawModel();
+		}
+	}
+	
+	effects_manager_ptr->Draw3DModels();
+	
+
+	//stop drawing 3d elements
+	EndMode3D();
+	
+	//stop drawing to texture
+	EndTextureMode();
+	
+}	
+
+void MainGuiEditor::DrawGUIWindow()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
+
+	bool Open = true;
+
+	if (ImGui::Begin("GUI Operations", &Open, ImGuiWindowFlags_NoScrollbar))
+	{
+		bool open_demo = true;
+		ImGui::ShowDemoWindow(&open_demo);
+		
+		ImVec2 size = ImGui::GetContentRegionAvail();
+
+		Rectangle viewRect = { 0 };
+		viewRect.x = viewtexture_3dscene.texture.width / 2 - size.x / 2;
+		viewRect.y = viewtexture_3dscene.texture.height / 2 - size.y / 2;
+		viewRect.width = size.x;
+		viewRect.height = -size.y;
+
+		rlImGuiImageRect(&viewtexture_gui.texture, (int)size.x, (int)size.y, viewRect);	
+	}
+	
+	ImGui::End();
+	ImGui::PopStyleVar();
 }
 
 bool dropDownObjectTypeMode = false;
@@ -1196,6 +1274,34 @@ void MainGuiEditor::draw_project_file_dialog()
 	GuiFileDialog(&fileDialogState);
 }
 
+void MainGuiEditor::Draw3DSceneWindow()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
+	
+	bool Open = true;
+	
+	
+	if (ImGui::Begin("3D View", &Open, ImGuiWindowFlags_NoScrollbar))
+	{
+		bool Focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+
+		ImVec2 size = ImGui::GetContentRegionAvail();
+
+		Rectangle viewRect = { 0 };
+		viewRect.x = viewtexture_3dscene.texture.width / 2 - size.x / 2;
+		viewRect.y = viewtexture_3dscene.texture.height / 2 - size.y / 2;
+		viewRect.width = size.x;
+		viewRect.height = -size.y;
+
+		// draw the view
+		rlImGuiImageRect(&viewtexture_3dscene.texture, (int)size.x, (int)size.y, viewRect);
+	}
+	ImGui::End();
+	ImGui::PopStyleVar();
+	
+}
+
 void MainGuiEditor::InitCamera()
 {
     main_camera = { {0} };
@@ -1211,6 +1317,16 @@ void MainGuiEditor::InitCamera()
 Camera3D* MainGuiEditor::GetPointerToCamera()
 {
 	return &main_camera;
+}
+
+void MainGuiEditor::CloseGUIWindow()
+{
+	UnloadRenderTexture(viewtexture_gui);
+}
+
+void MainGuiEditor::Close3DSceneWindow()
+{
+	UnloadRenderTexture(viewtexture_3dscene);
 }
 
 void MainGuiEditor::UnloadAll()

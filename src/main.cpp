@@ -29,6 +29,9 @@ int main(int argc, char* args[])
 	
 	editor.InitCamera();
 	
+	editor.Init3DSceneWindow();
+	editor.InitGUIWindow();
+	
 	bool quit = false;
 	
 	while (!quit)
@@ -42,6 +45,9 @@ int main(int argc, char* args[])
 		// run Application loop
 		ApplicationLoop();
 	}
+	
+	editor.Close3DSceneWindow();
+	editor.CloseGUIWindow();
 	
 	CloseRaylibSystem();
 	
@@ -57,23 +63,21 @@ void ApplicationLoop()
 	UpdateCamera(editor.GetPointerToCamera());
 	editor.logic();
 	
+	editor.UpdateTexture3DSceneWindow();
+	editor.UpdateTextureGUIWindow();
+	
 	//draw
 	BeginDrawing();
-	
 	
 	ClearBackground(RAYWHITE);
 	// starts the ImGui content mode. Make all ImGui calls after this
 	rlImGuiBegin();
 	
-	//draw 3d elements
-	BeginMode3D(*editor.GetPointerToCamera());
-	
-	editor.Draw3DModels();
-	
-	EndMode3D();
+	//draw 3d scene view
+	editor.Draw3DSceneWindow();
 	
 	//draw GUI elements
-	editor.DrawGUI_Items();
+	editor.DrawGUIWindow();
 	
 	// ends the ImGui content mode. Make all ImGui calls before this
 	rlImGuiEnd();

@@ -43,9 +43,22 @@ public:
     void HandleEvents();
     
     void logic();
-        
-    void DrawGUI_Items();
-    void Draw3DModels();
+    
+    //functions to initialize windows.
+    void InitGUIWindow();
+    void Init3DSceneWindow();
+    
+    //functions to update textures of windows.
+    void UpdateTextureGUIWindow();
+    void UpdateTexture3DSceneWindow();
+    
+    //functions to render textures to windows. Call after update texture.
+    void DrawGUIWindow();
+    void Draw3DSceneWindow();
+    
+    //functions to close windows and free resources
+    void CloseGUIWindow();
+    void Close3DSceneWindow();
     
     Camera3D* GetPointerToCamera();
     
@@ -56,6 +69,7 @@ private:
 	std::vector < std::unique_ptr <SoundProducer> > sound_producer_vector; //vector to hold sound producers
 	
 	OpenAlSoftAudioEngine audio_engine; //class abstraction to handle playing binaural 3D audio
+	
 	
 	//camera
 	Camera3D main_camera;
@@ -69,6 +83,9 @@ private:
 	std::unique_ptr <EffectsManager> effects_manager_ptr;
 	
 //GUI draw and handling calls
+
+	RenderTexture viewtexture_3dscene;
+	RenderTexture viewtexture_gui;
 	
 	void draw_object_creation_menu();
 	void draw_sound_bank();
