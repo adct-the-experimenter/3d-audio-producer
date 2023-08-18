@@ -43,7 +43,7 @@ endif()
 set ( PROJECT_INCLUDE_DIR ./src)
 
 #for where to find header files for source and library
-include_directories(/usr/include /usr/local/include ./include ./src/timeline-track-editor/include ${PROJECT_INCLUDE_DIR} )
+include_directories(/usr/include /usr/local/include ./include ./src/timeline-track-editor/include ${PROJECT_INCLUDE_DIR} src/backends/imgui)
 
 set(SOURCES src/main.cpp
 			src/global_variables.cpp
@@ -65,6 +65,12 @@ set(SOURCES src/main.cpp
 
 			src/openalsoftaudioengine.cpp src/soundproducer.cpp src/listener.cpp
 			src/backends/openalsoft-player-drwav.cpp
+			src/backends/rlImGui.cpp 
+			src/backends/imgui/imgui.cpp src/backends/imgui/imgui_demo.cpp
+			src/backends/imgui/imgui_draw.cpp src/backends/imgui/imgui_tables.cpp
+			src/backends/imgui/imgui_widgets.cpp
+
+
 			 )
 
 #get_cmake_property(_variableNames VARIABLES)

@@ -26,6 +26,8 @@
 
 #include "dialog_var.h"
 
+#include "backends/rlImGui.h"
+
 static GuiFileDialogState fileDialogState;
 
 //for .flac audio file decoding

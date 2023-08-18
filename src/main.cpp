@@ -2,6 +2,8 @@
 #include "raylib.h"
 #include "main_gui_editor.h"
 
+#include "backends/rlImGui.h" //for DearImGUI backend
+
 MainGuiEditor editor;
 
 const std::int16_t screenWidth = 850;
@@ -12,7 +14,7 @@ void CloseRaylibSystem();
 
 void ApplicationLoop();
 
-static std::string release_ver = "4.0.0";
+static std::string release_ver = "5.0.0";
 static std::string release_title = "3D Audio Producer v " + release_ver; 
 
 int main(int argc, char* args[])
@@ -57,8 +59,11 @@ void ApplicationLoop()
 	
 	//draw
 	BeginDrawing();
-
+	
+	
 	ClearBackground(RAYWHITE);
+	// starts the ImGui content mode. Make all ImGui calls after this
+	rlImGuiBegin();
 	
 	//draw 3d elements
 	BeginMode3D(*editor.GetPointerToCamera());
@@ -70,7 +75,8 @@ void ApplicationLoop()
 	//draw GUI elements
 	editor.DrawGUI_Items();
 	
-	
+	// ends the ImGui content mode. Make all ImGui calls before this
+	rlImGuiEnd();
 	
 	EndDrawing();
 }
@@ -91,11 +97,15 @@ void InitRaylibSystem()
     
     //disable escape key as close window key
     SetExitKey(0);
+    
+    // sets up ImGui with ether a dark or light default theme
+    rlImGuiSetup(true); 	
 
 }
 
 void CloseRaylibSystem()
 {
+	//cleans up imgui
+	rlImGuiShutdown();
     CloseWindow();        // Close window and OpenGL context
-    
 }
