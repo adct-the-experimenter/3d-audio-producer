@@ -2,7 +2,7 @@
 #define IM_SOUND_PLAYER
 
 #include "sound_bank.h"
-#include "openalsoft-player.h"
+#include "backends/openalsoft-player-drwav.h"
 #include "soundproducer-registry.h"
 
 #include "effects-manager.h"
@@ -109,11 +109,11 @@ private:
 	
 	//function to load buffer for
 	//must call open streaming files before this.
-	void LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer& audioPlayer);
+	void LoadBufferStreaming(ALuint* sourceToManipulatePtr,OpenALSoftPlayer_DRWAV& audioPlayer);
 	
-	OpenALSoftPlayer mainAudioPlayer;
+	OpenALSoftPlayer_DRWAV mainAudioPlayer;
 	
-	std::vector <OpenALSoftPlayer> buffering_audio_players_vec;
+	std::vector <OpenALSoftPlayer_DRWAV> buffering_audio_players_vec;
 	
 	double m_current_time;
 	

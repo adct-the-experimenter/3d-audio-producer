@@ -27,7 +27,7 @@ find_library(pugixml_LIBRARIES NAMES pugixml)
 
 #For the shared library:
 
-set ( PROJECT_LINK_LIBS  raylib openal sndfile ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${pugixml_LIBRARIES})
+set ( PROJECT_LINK_LIBS  raylib openal ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${pugixml_LIBRARIES})
 #where to find library files .so 
 link_directories( /usr/lib /usr/local/lib ) 
 
@@ -57,31 +57,14 @@ set(SOURCES src/main.cpp
 			src/reverb-zone.cpp
 			src/effect-zone.cpp
 			src/effects-manager.cpp
-			#src/soundproducer-track-manager.cpp
-			#src/soundproducer-track.cpp
-			#src/listener-track.cpp
 			src/soundproducer-registry.cpp
 			src/immediate_mode_sound_player.cpp src/sound_bank.cpp
 			src/CreateSoundProducerDialog.cpp src/EditMultipleSoundProducersDialog.cpp 
 			src/Change-HRTF-Dialog.cpp src/HRTF-Test-Dialog.cpp 
 			src/EditListenerDialog.cpp
-			#src/setup-serial-dialog.cpp
-			#src/listener-external.cpp
-			src/openalsoftaudioengine.cpp src/soundproducer.cpp src/listener.cpp
-			#src/external-orientation-device-serial.cpp
 
-			#src/timeline-track-editor/src/timeline-frame.cpp
-			#src/timeline-track-editor/src/timeline-window.cpp
-			#src/timeline-track-editor/src/playback-controls.cpp
-			#src/timeline-track-editor/src/stereo-audio-track.cpp
-			#src/timeline-track-editor/src/mono-audio-track.cpp
-			#src/timeline-track-editor/src/audio-track.cpp
-			#src/timeline-track-editor/src/audio-graph.cpp
-			src/timeline-track-editor/src/audio-stream-container.cpp
-			src/timeline-track-editor/src/openalsoft-player.cpp
-			#src/timeline-track-editor/src/double-track.cpp
-			#src/timeline-track-editor/src/editor-graph.cpp
-			#src/timeline-track-editor/src/track.cpp
+			src/openalsoftaudioengine.cpp src/soundproducer.cpp src/listener.cpp
+			src/backends/openalsoft-player-drwav.cpp
 			 )
 
 #get_cmake_property(_variableNames VARIABLES)
