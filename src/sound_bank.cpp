@@ -249,82 +249,13 @@ bool WriteAudioDataToWAVFile(AudioData* audio_data_ptr,std::string outputSoundFi
 	drflac_int32* pSampleData = (drflac_int32*)audio_data_ptr->audio_samples.data();
 	uint64_t sample_count = audio_data_ptr->total_frames;
     
-    drwav_uint64 framesWritten = drwav_write_pcm_frames(&wav, sample_count, pSampleData);
+    drwav_write_pcm_frames(&wav, sample_count, pSampleData);
     
     drwav_uninit(&wav);
     
     return true;
 }
 
-bool ReadAndCopyDataFromInputFile(std::vector<double> *audio_data_input_copy_ptr,std::string inputSoundFilePath,SF_INFO& input_sfinfo)
-{
-	SNDFILE *inputFile;
-	
-	//Read data from file
-	if (! (inputFile = sf_open (inputSoundFilePath.c_str(), SFM_READ, &input_sfinfo)))
-	{	
-		// Open failed, so print an error message.
-		std::cout << "Not able to open input file " <<  inputSoundFilePath << std::endl;
-		/* Print the error message from libsndfile. */
-		puts (sf_strerror (NULL)) ;
-		return false;
-	} 
-		
-	if (input_sfinfo.channels > MAX_CHANNELS)
-	{
-		std::cout << "Not able to process more than" <<  MAX_CHANNELS << "channels.\n";
-		return false;
-	}
-	
-	std::cout << "Successfully loaded " << inputSoundFilePath << " saving data..." << std::endl;
-	
-	//read input data
-	std::vector<double> read_buf(BUFFER_LEN);
-	size_t read_size = 0;
-	
-	
-	while( (read_size = sf_read_double(inputFile, read_buf.data(), read_buf.size()) ) != 0)
-	{
-		audio_data_input_copy_ptr->insert(audio_data_input_copy_ptr->end(), read_buf.begin(), read_buf.begin() + read_size);
-	}
-	
-	/* Close input and stream files. */
-	sf_close(inputFile);
-	
-	return true;
-}
-
-
-bool CopyInputDataIntoAudioDataStream(std::vector<double> *audio_data_input_copy_ptr, AudioStreamContainer* audio_data_stream_ptr,std::string streamSoundFilePath,SF_INFO& input_sfinfo)
-{
-	
-	//copy input audio data references to audio data stream
-	audio_data_stream_ptr->ResizeAudioStream(audio_data_input_copy_ptr->size());
-	for(size_t i=0; i < audio_data_stream_ptr->GetSize(); i++)
-	{
-		double* ref_at_i = &(audio_data_input_copy_ptr->at(i));
-		audio_data_stream_ptr->SetPointerToDataAtThisSampleIndex(ref_at_i,i);
-	}
-	
-	double slen;
-	slen = audio_data_stream_ptr->GetSize() * sizeof(uint16_t);
-	
-	std::cout << "Size of data in bytes: " << slen << "\n";
-	//if sample buffer is null or size of buffer data is zero, notify of error
-	if(slen == 0)
-	{
-		std::string messageString;
-		messageString.append("Failed to read audio from file.\n");
-		return false;
-	}
-	
-	double seconds = (1.0 * input_sfinfo.frames) / input_sfinfo.samplerate ;
-	std::cout << "Duration of sound:" << seconds << "s. \n";
-	
-	audio_data_stream_ptr->WriteStreamContentsToFile(streamSoundFilePath, input_sfinfo.format, input_sfinfo.channels, input_sfinfo.samplerate,int(BUFFER_LEN));
-	
-	return true;
-}
 
 void SoundBank::LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t account_num)
 {
@@ -355,11 +286,7 @@ void SoundBank::LoadAudioDataFromFileToAccount(std::string filepath,std::uint8_t
 	}
 	
 	writeDone = WriteAudioDataToWAVFile(&audio_data,m_sound_accounts[account_num].stream_file_path);
-	
-	//writeDone = CopyInputDataIntoAudioDataStream(&audio_data_input_copy,&audio_data_stream, 
-	//								m_sound_accounts[account_num].stream_file_path,
-	//								input_sfinfo);
-									
+										
 	m_sound_accounts[account_num].active = readDone && writeDone;
 	
 	//clear data stored

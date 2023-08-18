@@ -27,7 +27,7 @@ find_library(pugixml_LIBRARIES NAMES pugixml)
 
 #For the shared library:
 
-set ( PROJECT_LINK_LIBS  raylib openal sndfile ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${pugixml_LIBRARIES})
+set ( PROJECT_LINK_LIBS  raylib openal ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${pugixml_LIBRARIES})
 #where to find library files .so 
 link_directories( /usr/lib /usr/local/lib ) 
 
@@ -64,8 +64,6 @@ set(SOURCES src/main.cpp
 			src/EditListenerDialog.cpp
 
 			src/openalsoftaudioengine.cpp src/soundproducer.cpp src/listener.cpp
-			src/timeline-track-editor/src/audio-stream-container.cpp
-			src/timeline-track-editor/src/openalsoft-player.cpp
 			src/backends/openalsoft-player-drwav.cpp
 			 )
 

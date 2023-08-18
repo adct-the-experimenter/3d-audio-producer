@@ -12,7 +12,7 @@ void CloseRaylibSystem();
 
 void ApplicationLoop();
 
-static std::string release_ver = "3.0.0";
+static std::string release_ver = "4.0.0";
 static std::string release_title = "3D Audio Producer v " + release_ver; 
 
 int main(int argc, char* args[])
