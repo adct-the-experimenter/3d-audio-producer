@@ -164,7 +164,7 @@ bool ReadAndCopyDataFromInputFile_WAV(AudioData* audio_data_ptr,std::string inpu
     
     //copy audio samples to vector
     audio_data_ptr->audio_samples.resize(audio_data_ptr->total_frames);
-    for(drflac_uint64 i = 0; i < totalPCMFrameCount; i++)
+    for(drwav_uint64 i = 0; i < totalPCMFrameCount; i++)
     {
 		audio_data_ptr->audio_samples[i] = pSampleData[i];
 	}
@@ -211,21 +211,19 @@ bool WriteAudioDataToWAVFile(AudioData* audio_data_ptr,std::string outputSoundFi
 	//initialize wav format
 	drwav_data_format format;
     format.container = drwav_container_riff;     // <-- drwav_container_riff = normal WAV files, drwav_container_w64 = Sony Wave64.
-    format.format = DR_WAVE_FORMAT_PCM;          // <-- Any of the DR_WAVE_FORMAT_* codes.
+    format.format = DR_WAVE_FORMAT_IEEE_FLOAT; // IEEE FLOAT 32-bit
     format.channels = audio_data_ptr->channels;
     format.sampleRate = audio_data_ptr->sampleRate;
     format.bitsPerSample = 32; //32 bit
        
     
 	// fstream is Stream class to both
-	// read and write from/to files.
-	// file is object of fstream class
 	std::fstream file;
 
-	// opening file "Gfg.txt"
-	// in out(write) mode
+	// opening output file, creating it if it doesn't exist, overwriting file if it does.
+	// in out(write) and truncate mode
 	// ios::out Open for output operations.
-	file.open(outputSoundFilePath.c_str(),std::ios::out);
+	file.open(outputSoundFilePath.c_str(),std::fstream::out | std::fstream::trunc);
 
 	// If no file is created, then
 	// show the error message.
