@@ -87,12 +87,14 @@ bool IsFileFLAC(std::string filepath)
 void SoundBank::DrawGui_Item()
 {
 	//draw rectangle
-	
-	float leftX = GetScreenWidth() - 200;
+
 	
 	if (ImGui::Begin("Sound Bank", &Open, ImGuiWindowFlags_AlwaysVerticalScrollbar))
 	{
+		
 		soundbank_menu_in_use = ImGui::IsWindowHovered();
+		
+		ImGui::Text("Name \t Account Number \t File");
 		
 		//for each account from start to last account number
 		for(std::uint8_t i = 0; i < m_sound_accounts.size(); i++)
@@ -109,7 +111,8 @@ void SoundBank::DrawGui_Item()
 			
 			ImGui::SameLine();
 			
-			if( ImGui::Button("File") )
+			std::string file_button_label = "f" + std::to_string(i);
+			if( ImGui::SmallButton(file_button_label.c_str()) )
 			{
 				//call file dialog
 				current_file_button_edit = i; //set index of account being edited
@@ -122,7 +125,7 @@ void SoundBank::DrawGui_Item()
 						
 		}
 		
-		
+		//if file dialog has a file selected
 		if (sound_fileDialog_loader.HasSelected())
 		{
 			std::string filepath = sound_fileDialog_loader.GetSelected().string();

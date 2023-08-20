@@ -616,7 +616,7 @@ void MainGuiEditor::UpdateTexture3DSceneWindow()
 	
 }	
 
-#define SHOW_IMGUI_DEBUG_MENU
+//#define SHOW_IMGUI_DEBUG_MENU
 
 void MainGuiEditor::DrawGUIWindow()
 {
@@ -1025,18 +1025,8 @@ void MainGuiEditor::draw_object_creation_menu()
 
 
 void MainGuiEditor::draw_sound_bank()
-{
-	//draw on right side of screen
-	
-	float leftX = GetScreenWidth() - 200;
-	
-	GuiDrawRectangle((Rectangle){leftX,50,200,350}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
-	GuiDrawText("Sound Bank", (Rectangle){leftX,50,125,20}, 1, BLACK);
-	GuiDrawText("Sound Name", (Rectangle){leftX,70,125,20}, 1, BLACK);
-	GuiDrawText("File", (Rectangle){leftX + 75,70,125,20}, 1, BLACK);
-	
-	m_sound_bank.DrawGui_Item();
-	
+{	
+	m_sound_bank.DrawGui_Item();	
 }
 
 static bool show_timeline_toggle_bool = false;
@@ -1300,7 +1290,6 @@ void MainGuiEditor::Draw3DSceneWindow()
 	
 	if (ImGui::Begin("3D View", &Open, ImGuiWindowFlags_NoScrollbar))
 	{
-		bool Focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
 
 		ImVec2 size = ImGui::GetContentRegionAvail();
 
