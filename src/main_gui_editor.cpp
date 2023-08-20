@@ -28,37 +28,44 @@
 
 #include "imgui.h"
 #include "backends/rlImGui.h"
+#include "backends/imfilebrowser.h"
+
 
 //#include "setup-serial-dialog.h"
 
+//#define SHOW_IMGUI_DEBUG_MENU
 
 
 bool init_listener_once = false;
 
 //Gui items to initialize
 
-CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
-EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
-EditListenerDialog edit_lt_dialog("Edit Listener");
-ImmediateModeSoundPlayer im_sound_player;
+static CreateSoundProducerDialog create_sp_dialog("Create Sound Producer");
+static EditMultipleSoundProducersDialog edit_sp_dialog("Edit Sound Producer");
+static EditListenerDialog edit_lt_dialog("Edit Listener");
+static ImmediateModeSoundPlayer im_sound_player;
 
-HRTFTestDialog hrtf_test_dialog;
-ChangeHRTFDialog change_hrtf_dialog;
+static HRTFTestDialog hrtf_test_dialog;
+static ChangeHRTFDialog change_hrtf_dialog;
 
 //dialogs for manipulating effect zones
-CreateEchoZoneDialog create_echo_zone_dialog;
-EditMultipleEchoZonesDialog edit_echo_zone_dialog;
+static CreateEchoZoneDialog create_echo_zone_dialog;
+static EditMultipleEchoZonesDialog edit_echo_zone_dialog;
 
-CreateStandardReverbZoneDialog create_sr_zone_dialog;
-EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
+static CreateStandardReverbZoneDialog create_sr_zone_dialog;
+static EditMultipleStandardReverbZonesDialog edit_sr_zone_dialog;
 
-CreateEAXReverbZoneDialog create_er_zone_dialog;
-EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
+static CreateEAXReverbZoneDialog create_er_zone_dialog;
+static EditMultipleEAXReverbZonesDialog edit_er_zone_dialog;
 
 //dialog for saving and loading project file
-GuiFileDialogState fileDialogState;
+
+// create a file browser instance
+static ImGui::FileBrowser proj_fileDialog_loader(0);
+static ImGui::FileBrowser proj_fileDialog_creator(ImGuiFileBrowserFlags_CreateNewDir | ImGuiFileBrowserFlags_EnterNewFilename);
+
 enum class ProjectFileState : std::uint8_t{NONE=0, NEW, SAVE, LOAD};
-ProjectFileState proj_file_state;
+static ProjectFileState proj_file_state;
 
 //timeline
 static Timeline timeline_window;
@@ -71,14 +78,14 @@ bool global_dialog_in_use = false;
 //******************************************************//
 //bool to indicate if project is initialized, 
 //used to disable functionality that requires project to be initialized
-bool project_init = false;
+static bool project_init = false;
 
 //string used for storing project directory path
-std::string project_dir_path = "";
-std::string project_file_path = "";
-std::string project_data_dir_path = "";
-std::string project_audio_data_dir_path = "";
-std::string project_timeline_data_dir_path = "";
+static std::string project_dir_path = "";
+static std::string project_file_path = "";
+static std::string project_data_dir_path = "";
+static std::string project_audio_data_dir_path = "";
+static std::string project_timeline_data_dir_path = "";
 
 
 MainGuiEditor::MainGuiEditor()
@@ -145,10 +152,6 @@ bool MainGuiEditor::OnInit()
 		
 		//intialize sound producer registry
 		soundproducer_registry.SetReferenceToSoundProducerVector(&sound_producer_vector);
-		
-		//initialize file dialog
-		fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
-		fileDialogState.windowBounds = {200, 200, 440, 310};
 		
 		//initialize save system
 		save_system_ptr = std::unique_ptr <SaveSystem> (new SaveSystem());
@@ -257,7 +260,10 @@ void MainGuiEditor::HandleEvents()
 	else{disableHotkeys = false;}
 	
 	//if any of these are true, do not continue to key input
-	if(disableHotkeys || dialogInUse || fileDialogState.windowActive || global_dialog_in_use){return;}
+	if(disableHotkeys || dialogInUse || 
+	proj_fileDialog_creator.IsOpened() || 
+	proj_fileDialog_loader.IsOpened() || 
+	global_dialog_in_use){return;}
 	
 	
 	//if w key pressed
@@ -365,13 +371,12 @@ void MainGuiEditor::HandleEvents()
 		if(IsKeyDown(KEY_S))
 		{
 			proj_file_state = ProjectFileState::SAVE;
-			fileDialogState.windowActive = true; //activate file dialog
 		}
 		//if o key down
 		else if(IsKeyDown(KEY_O))
 		{
 			proj_file_state = ProjectFileState::LOAD;
-			fileDialogState.windowActive = true; //activate file dialog
+			proj_fileDialog_loader.Open(); //activate file dialog
 		}
 	}
 		
@@ -559,28 +564,7 @@ void MainGuiEditor::UpdateTextureGUIWindow()
 	//start drawing to texture
 	BeginTextureMode(viewtexture_gui);
 	
-	ClearBackground(BLUE);
-	
-	//draw gui elements
-	
-	
-	
-	//draw project file buttons
-	//MainGuiEditor::draw_project_file_dialog();
-	
-	//if(!project_init){return;} //skip if project is not initialized
-	
-	//draw sound bank
-	//MainGuiEditor::draw_sound_bank();
-	
-	//draw HRTF edit menu
-	//MainGuiEditor::draw_hrtf_menu();
-	
-	//draw object creation/edit menu
-	//MainGuiEditor::draw_object_creation_menu();
-	
-	//draw timeline 
-	//MainGuiEditor::draw_timeline_menu();
+	ClearBackground(GRAY);
 	
 	//end drawing to texture
 	EndTextureMode();
@@ -598,7 +582,7 @@ void MainGuiEditor::UpdateTexture3DSceneWindow()
 	//start drawing to texture of 3d scene window
 	BeginTextureMode(viewtexture_3dscene);
 	
-	ClearBackground(SKYBLUE);
+	ClearBackground(WHITE);
 	
 	//draw 3d elements
 	BeginMode3D(*this->GetPointerToCamera());
@@ -634,13 +618,36 @@ void MainGuiEditor::DrawGUIWindow()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
 
 	bool Open = true;
-
+	
 	if (ImGui::Begin("GUI Operations", &Open, ImGuiWindowFlags_NoScrollbar))
 	{
+		#ifdef SHOW_IMGUI_DEBUG_MENU
 		bool open_demo = true;
 		ImGui::ShowDemoWindow(&open_demo);
+		#endif
 		
 		ImVec2 size = ImGui::GetContentRegionAvail();
+		
+		//draw project file buttons
+		MainGuiEditor::draw_project_file_dialog();
+		
+		//render if project is initialized
+		if(project_init)
+		{
+			//draw sound bank
+			//MainGuiEditor::draw_sound_bank();
+
+			//draw HRTF edit menu
+			//MainGuiEditor::draw_hrtf_menu();
+
+			//draw object creation/edit menu
+			//MainGuiEditor::draw_object_creation_menu();
+
+			//draw timeline 
+			//MainGuiEditor::draw_timeline_menu();
+			
+		} 
+		
 
 		Rectangle viewRect = { 0 };
 		viewRect.x = viewtexture_3dscene.texture.width / 2 - size.x / 2;
@@ -1197,69 +1204,78 @@ void MainGuiEditor::draw_hrtf_menu()
 
 void MainGuiEditor::draw_project_file_dialog()
 {
-	GuiDrawRectangle((Rectangle){20,0,150,100}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
-	GuiDrawText("Project", (Rectangle){20,10,125,20}, 1, BLACK);
-	
-	//draw new project button
-	if( GuiButton( (Rectangle){ 25, 0, 90, 30 },  "New Project" ) )
-	{
-		proj_file_state = ProjectFileState::NEW;
-		fileDialogState.windowActive = true; //activate file dialog
-	}
-	
-	//draw load project button
-	if( GuiButton( (Rectangle){ 25, 35, 90, 30 }, "Load Project" ) )
-	{
-		proj_file_state = ProjectFileState::LOAD;
-		fileDialogState.windowActive = true; //activate file dialog
-	}
-	
-	//draw save project button if project initialized
-	if( project_init && GuiButton( (Rectangle){ 25, 70, 90, 30 }, "Save Project" ) )
-	{
-		proj_file_state = ProjectFileState::SAVE;
-		fileDialogState.windowActive = false; //do not activate file dialog
-		MainGuiEditor::SaveProject(project_file_path);
-		proj_file_state = ProjectFileState::NONE;
-	}
-	
-	
-	if (fileDialogState.windowActive){ GuiLock();}
-	
+	//draw menu bar
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+			if (ImGui::MenuItem("New")) 
+			{
+				proj_file_state = ProjectFileState::NEW;
+				
+				proj_fileDialog_creator.SetTitle("Create new project");
+				proj_fileDialog_creator.SetTypeFilters({ ".xml" });
+				proj_fileDialog_creator.Open();
+			}
+			if (ImGui::MenuItem("Open")) 
+			{
+				proj_file_state = ProjectFileState::LOAD;
+				//fileDialogState.windowActive = true; //activate file dialog
+				
+				proj_fileDialog_loader.SetTitle("Open project");
+				proj_fileDialog_loader.SetTypeFilters({ ".xml" });
+				proj_fileDialog_loader.Open();
+			}
+			if (project_init && ImGui::MenuItem("Save")) 
+			{
+				proj_file_state = ProjectFileState::SAVE;
+				//fileDialogState.windowActive = false; //do not activate file dialog
+				MainGuiEditor::SaveProject(project_file_path);
+				proj_file_state = ProjectFileState::NONE;
+			}
+			
+            ImGui::EndMenu();
+        }
+        
+        ImGui::EndMainMenuBar();
+    }
+		
 	if(proj_file_state == ProjectFileState::NEW)
 	{
-		if (fileDialogState.SelectFilePressed && fileDialogState.itemFocused == -1)
+		if (proj_fileDialog_creator.HasSelected() )
 		{
-			std::string name = std::string(fileDialogState.fileNameTextBoxInputCopy);
-			std::string top_dir = std::string(fileDialogState.dirPathText);
-						
+			std::string full_filename = proj_fileDialog_creator.GetSelected().string();
+			std::string top_dir = proj_fileDialog_creator.GetPwd().string();
+			
+			int end_dir_name_pos = top_dir.length() + 1;
+			int num_char_copy = full_filename.length() - end_dir_name_pos;
+			
+			std::string name = full_filename.substr(end_dir_name_pos,num_char_copy);
+			
 			//make new project
 			MainGuiEditor::CreateNewProject(name,top_dir);
-			
-			
+			proj_fileDialog_creator.ClearSelected();
 		}
 		
-		fileDialogState.SelectFilePressed = false;
 	}
 	else if(proj_file_state == ProjectFileState::LOAD)
 	{
-		if (fileDialogState.SelectFilePressed)
+		if (proj_fileDialog_loader.HasSelected())
 		{			
 			// Load project file (if supported extension)
-			if (IsFileExtension(fileDialogState.fileNameText, ".xml") )
-			{
-				char projectFile[512] = { 0 };
-				
-				strcpy(projectFile, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-				std::string filepath = std::string(projectFile);
-				
+			std::string filepath = proj_fileDialog_loader.GetSelected().string();
+			
+			//if file is of type xml
+			if (filepath.substr(filepath.size() - 4, 4) == ".xml" )
+			{				
 				std::cout << "load filepath in main gui editor: " << filepath << std::endl;
 				
 				//load project
 				MainGuiEditor::LoadProject(filepath);
 			}
 
-			fileDialogState.SelectFilePressed = false;
+			//fileDialogState.SelectFilePressed = false;
+			proj_fileDialog_loader.ClearSelected();
 		}
 		
 	}
@@ -1268,10 +1284,8 @@ void MainGuiEditor::draw_project_file_dialog()
 		//do nothing, no file dialog operation needed
 	}
 	
-	GuiUnlock();
-	
-	// call GuiFileDialog menu
-	GuiFileDialog(&fileDialogState);
+	proj_fileDialog_creator.Display();
+	proj_fileDialog_loader.Display();
 }
 
 void MainGuiEditor::Draw3DSceneWindow()
@@ -1280,7 +1294,6 @@ void MainGuiEditor::Draw3DSceneWindow()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
 	
 	bool Open = true;
-	
 	
 	if (ImGui::Begin("3D View", &Open, ImGuiWindowFlags_NoScrollbar))
 	{

@@ -3,4 +3,5 @@
 
 extern bool global_dialog_in_use;
 
+
 #endif

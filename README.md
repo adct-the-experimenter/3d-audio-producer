@@ -32,6 +32,8 @@ Features from binaural-audio-editor will be ported to 3d audio producer.
 7. make
 8. ./3d-audio-producer
 
+* Make sure to have C++17 support to use filesystem feature.
+
 ## Controls
 
 
