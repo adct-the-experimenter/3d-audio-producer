@@ -73,6 +73,9 @@ static Timeline timeline_window;
 //bool to indicate if dialog is in use.
 bool global_dialog_in_use = false;
 
+//bool to indicate if sound bank menu is in use.
+bool soundbank_menu_in_use = false;
+
 //******************************************************//
 // Project file path
 //******************************************************//
@@ -263,7 +266,8 @@ void MainGuiEditor::HandleEvents()
 	if(disableHotkeys || dialogInUse || 
 	proj_fileDialog_creator.IsOpened() || 
 	proj_fileDialog_loader.IsOpened() || 
-	global_dialog_in_use){return;}
+	global_dialog_in_use ||
+	soundbank_menu_in_use){return;}
 	
 	
 	//if w key pressed
@@ -612,6 +616,8 @@ void MainGuiEditor::UpdateTexture3DSceneWindow()
 	
 }	
 
+#define SHOW_IMGUI_DEBUG_MENU
+
 void MainGuiEditor::DrawGUIWindow()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -635,7 +641,7 @@ void MainGuiEditor::DrawGUIWindow()
 		if(project_init)
 		{
 			//draw sound bank
-			//MainGuiEditor::draw_sound_bank();
+			MainGuiEditor::draw_sound_bank();
 
 			//draw HRTF edit menu
 			//MainGuiEditor::draw_hrtf_menu();
@@ -1220,7 +1226,6 @@ void MainGuiEditor::draw_project_file_dialog()
 			if (ImGui::MenuItem("Open")) 
 			{
 				proj_file_state = ProjectFileState::LOAD;
-				//fileDialogState.windowActive = true; //activate file dialog
 				
 				proj_fileDialog_loader.SetTitle("Open project");
 				proj_fileDialog_loader.SetTypeFilters({ ".xml" });
@@ -1229,7 +1234,6 @@ void MainGuiEditor::draw_project_file_dialog()
 			if (project_init && ImGui::MenuItem("Save")) 
 			{
 				proj_file_state = ProjectFileState::SAVE;
-				//fileDialogState.windowActive = false; //do not activate file dialog
 				MainGuiEditor::SaveProject(project_file_path);
 				proj_file_state = ProjectFileState::NONE;
 			}
@@ -1274,7 +1278,6 @@ void MainGuiEditor::draw_project_file_dialog()
 				MainGuiEditor::LoadProject(filepath);
 			}
 
-			//fileDialogState.SelectFilePressed = false;
 			proj_fileDialog_loader.ClearSelected();
 		}
 		

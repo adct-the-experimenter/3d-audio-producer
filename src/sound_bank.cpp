@@ -27,9 +27,11 @@
 
 #include "dialog_var.h"
 
+#include "imgui.h"
 #include "backends/rlImGui.h"
+#include "backends/imfilebrowser.h"
 
-static GuiFileDialogState fileDialogState;
+//static GuiFileDialogState fileDialogState;
 
 //for .flac audio file decoding
 #define DR_FLAC_IMPLEMENTATION
@@ -43,11 +45,7 @@ static GuiFileDialogState fileDialogState;
 
 SoundBank::SoundBank()
 {
-	SoundBank::InitDataDirectory("");
-	
-	fileDialogState  = InitGuiFileDialog(GetWorkingDirectory());
-	fileDialogState.windowBounds = {200, 200, 440, 310};
-	
+	SoundBank::InitDataDirectory("");	
 }
 
 struct TextBoxParam
@@ -62,6 +60,29 @@ std::array <std::string,10> filepath_textboxes;
 char fileNameToLoad[512] = { 0 };
 std::uint8_t current_file_button_edit = 0;
 
+static bool Open = true;
+
+static ImGui::FileBrowser sound_fileDialog_loader(0);
+
+bool IsFileWav(std::string filepath)
+{
+	if(filepath.substr(filepath.size() - 4, 4) == ".wav" )
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+bool IsFileFLAC(std::string filepath)
+{
+	if(filepath.substr(filepath.size() - 5, 5) == ".flac" )
+	{
+		return true;
+	}
+	
+	return false;
+}
 
 void SoundBank::DrawGui_Item()
 {
@@ -69,62 +90,59 @@ void SoundBank::DrawGui_Item()
 	
 	float leftX = GetScreenWidth() - 200;
 	
-	//for each account from start to last account number
-	for(std::uint8_t i = 0; i < m_sound_accounts.size(); i++)
+	if (ImGui::Begin("Sound Bank", &Open, ImGuiWindowFlags_AlwaysVerticalScrollbar))
 	{
-		//draw account number
-		char num[3];
-		strncpy ( num, std::to_string(i).c_str(), sizeof(num) );
-		GuiTextBox((Rectangle){leftX,100.f + i*30,20,25}, &num[0], 20, false);
-		//draw textbox with name of sound and account number
-		if( GuiTextBox((Rectangle){leftX + 25,100.f + i*30,100,25},
-						name_textboxes[i].char_name, 20, name_textboxes[i].name_box_pressed
-					) )
+		soundbank_menu_in_use = ImGui::IsWindowHovered();
+		
+		//for each account from start to last account number
+		for(std::uint8_t i = 0; i < m_sound_accounts.size(); i++)
 		{
-			name_textboxes[i].name_box_pressed = !name_textboxes[i].name_box_pressed;
-			SoundBank::ChangeSoundNameForAccount( i , std::string(name_textboxes[i].char_name) );
-		}
 			
-	}
-	
-	
-	if (fileDialogState.SelectFilePressed)
-	{
-		// Load image file (if supported extension)
-		if (IsFileExtension(fileDialogState.fileNameText, ".wav") || IsFileExtension(fileDialogState.fileNameText, ".flac"))
+			//draw textbox with name of sound and account number
+			std::string label_str = std::to_string(i); //account number
+			if(ImGui::InputText(label_str.c_str(), name_textboxes[i].char_name, 32))
+			{
+				//if text box input is changed
+				name_textboxes[i].name_box_pressed = !name_textboxes[i].name_box_pressed;
+				SoundBank::ChangeSoundNameForAccount( i , std::string(name_textboxes[i].char_name) );
+			}
+			
+			ImGui::SameLine();
+			
+			if( ImGui::Button("File") )
+			{
+				//call file dialog
+				current_file_button_edit = i; //set index of account being edited
+				
+				sound_fileDialog_loader.SetTitle("Open sound file.");
+				sound_fileDialog_loader.SetTypeFilters({ ".wav", ".flac" });
+				sound_fileDialog_loader.Open();
+				global_dialog_in_use = true;
+			}
+						
+		}
+		
+		
+		if (sound_fileDialog_loader.HasSelected())
 		{
-			strcpy(fileNameToLoad, TextFormat("%s/%s", fileDialogState.dirPathText, fileDialogState.fileNameText));
-			std::string filepath = std::string(fileNameToLoad);
-			//filepath_textboxes[current_file_button_edit] = filepath;
-			//m_sound_bank_save_data.sound_account_data[current_file_button_edit].stream_file_path = filepath;
+			std::string filepath = sound_fileDialog_loader.GetSelected().string();
 			
-			//std::cout << "filepath in main gui editor: " << filepath << std::endl;
-			//load audio data
-			SoundBank::LoadAudioDataFromFileToAccount(filepath,current_file_button_edit);
-		}
+			// Load sound file (if supported extension)
+			if (IsFileWav(filepath) || IsFileFLAC(filepath))
+			{
+				//std::cout << "filepath in main gui editor: " << filepath << std::endl;
+				//load audio data
+				SoundBank::LoadAudioDataFromFileToAccount(filepath,current_file_button_edit);
+			}
 
-		fileDialogState.SelectFilePressed = false;
-		global_dialog_in_use = false;
-	}
-	
-	if (fileDialogState.windowActive){ GuiLock(); global_dialog_in_use = true;}
-	
-	for(std::uint8_t i = 0; i < 10; i++)
-	{
-		//draw open file button
-		if( GuiButton( (Rectangle){ leftX + 125,100.f + i*30,50,25 }, filepath_textboxes[i].c_str() ) )
-		{
-			current_file_button_edit = i;
-			fileDialogState.windowActive = true; //activate file dialog
-			break; //stop loop
+			sound_fileDialog_loader.ClearSelected();
+			global_dialog_in_use = false;
 		}
+		
+		sound_fileDialog_loader.Display();
 	}
-	
-	GuiUnlock();
-	
-	//if clicked on call GuiFileDialog menu
-	GuiFileDialog(&fileDialogState);
-	
+		
+	ImGui::End();
 	
 }
 
