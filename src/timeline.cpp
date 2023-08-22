@@ -1,5 +1,9 @@
 #include "timeline.h"
 
+#include "imgui.h"
+#include "backends/rlImGui.h"
+#include "backends/imfilebrowser.h"
+
 #include "raygui/raygui.h"
 
 //define gui drop down list view
@@ -192,22 +196,22 @@ void Timeline::SetObjectPicked(int index, ObjectType type)
 void Timeline::SetTimeFrameRate(size_t rate){time_frame_rate = rate;}
 
 
-//dropdown list view for timeline being edited
-static DropDownListViewSettings timeline_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
-static int edit_timeline_listview_activeIndex = 0;
-static int edit_timeline_listview_itemsCount = 0;
-static std::string timeline_choices = "";
+
 
 //dropdown list view for object being edited.
-//DropDownListViewSettings InitDropDownListViewSettings(int itemsShowCount, bool editMode, bool valueChanged, int scrollIndex)
-static DropDownListViewSettings obj_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
 static int edit_obj_listview_activeIndex = 0;
-static int edit_obj_listview_itemsCount = 0;
-static std::string obj_choices = "";
+static bool obj_choice_changed = false;
+static std::vector <std::string> obj_choices_vec;
 
 //variables for text input of timeline
 static bool addTimeline = false;
 static char textInput[256] = { 0 };
+
+//dropdown list view for timeline being edited
+static DropDownListViewSettings timeline_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
+static int edit_timeline_listview_activeIndex = 0;
+static std::vector <std::string> timeline_choices_vec;
+static bool timeline_choice_changed = false;
 
 //variables for file save/load
 static GuiFileDialogState fileDialogState = InitGuiFileDialog(GetWorkingDirectory());
@@ -223,30 +227,35 @@ static FileFrameState frames_file_state = FileFrameState::NONE;
 
 void Timeline::InitGUI()
 {
-	obj_choices = "";
+	obj_choices_vec.clear();
 	
 	if(sound_producer_vector_ref)
 	{
-		obj_choices = "None;Listener;";
+		obj_choices_vec.resize(sound_producer_vector_ref->size() + 2);
+		
+		obj_choices_vec[0] = "None";
+		obj_choices_vec[1] = "Listener";		
 		
 		for(size_t i = 0; i < sound_producer_vector_ref->size(); i++)
 		{
-			obj_choices += sound_producer_vector_ref->at(i)->GetNameString() + ";";
+			obj_choices_vec[i+2] = sound_producer_vector_ref->at(i)->GetNameString() 
+									+ "( " + std::to_string(i) + " )";		
 		}
-		
-		edit_obj_listview_itemsCount = (int)sound_producer_vector_ref->size() + 2;
-				
+						
 	}
 	
-	timeline_choices = "";
+	obj_choice_changed = false;
+	
+	timeline_choices_vec.clear();
+	timeline_choices_vec.resize(timeline_plots_position.size());
 	
 	for(size_t i = 0; i < timeline_plots_position.size(); i++)
 	{
-		timeline_choices += timeline_plots_position[i].name + ";";
+		timeline_choices_vec[i] = timeline_plots_position[i].name + "( " + std::to_string(i) + " )";
 	}
 	
-	edit_timeline_listview_itemsCount = (int)timeline_plots_position.size();
-	
+	timeline_choice_changed = false;
+		
 	fileDialogState.windowBounds = {200, 200, 440, 310};
 }
 
@@ -277,30 +286,63 @@ void Timeline::DrawGui_Item()
 void Timeline::DrawTimelinePlotEditorGUI()
 {
 	
-	//draw active object label
-	GuiLabel((Rectangle){ 25, 520, 85, 30 }, "Active Object");
+	static int obj_item_current_idx = 0; // Here we store our selection data as an index.
+	const char* obj_combo_preview_value = obj_choices_vec[obj_item_current_idx].c_str();  // Pass in the preview value visible before opening the combo (it could be anything)
+	static ImGuiComboFlags obj_flags = 0;
+				
+	if (ImGui::BeginCombo("Object", obj_combo_preview_value, obj_flags))
+	{
+		for (int n = 0; n < obj_choices_vec.size(); n++)
+		{
+			const bool is_selected = (obj_item_current_idx == n);
+			if (ImGui::Selectable(obj_choices_vec[n].c_str(), is_selected))
+			{
+				obj_item_current_idx = n;
+				edit_obj_listview_activeIndex = obj_item_current_idx;
+				obj_choice_changed = true;
+			}
+
+			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
 	
-	//draw dropdown object editing box
-	edit_obj_listview_activeIndex = Gui_Dropdown_ListView_Simple(&obj_dropdown_listview_settings, (Rectangle){ 100, 520, 70, 35 }, 
-															obj_choices.c_str(), edit_obj_listview_itemsCount,
-															edit_obj_listview_activeIndex
-														);
+	ImGui::Separator();
 												
 	//Draw active timeline label
-	GuiLabel((Rectangle){ 25, 450, 85, 30 }, "Active Timeline");
-			
-	//draw timeline position plot choices dropdown
-	edit_timeline_listview_activeIndex = Gui_Dropdown_ListView_Simple(&timeline_dropdown_listview_settings, (Rectangle){ 25, 480, 70, 35 }, 
-															timeline_choices.c_str(), edit_timeline_listview_itemsCount,
-															edit_timeline_listview_activeIndex
-														);
+	ImGui::Text("Timeline Settings");
 	
+	static int timeline_item_current_idx = 0; // Here we store our selection data as an index.
+	const char* timeline_combo_preview_value = obj_choices_vec[obj_item_current_idx].c_str();  // Pass in the preview value visible before opening the combo (it could be anything)
+	static ImGuiComboFlags timeline_obj_flags = 0;
+				
+	if (ImGui::BeginCombo("Timeline", timeline_combo_preview_value, timeline_obj_flags))
+	{
+		for (int n = 0; n < timeline_choices_vec.size(); n++)
+		{
+			const bool is_selected = (timeline_item_current_idx == n);
+			if (ImGui::Selectable(timeline_choices_vec[n].c_str(), is_selected))
+			{
+				timeline_item_current_idx = n;
+				edit_timeline_listview_activeIndex = timeline_item_current_idx;
+				timeline_choice_changed = true;
+			}
+
+			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
 	
 	//draw add button to add another timeline
-	if( GuiButton( (Rectangle){ 125, 455, 20, 20 }, "+" ))
+	if(ImGui::Button("Add Timeline"))
 	{
 		addTimeline = true;
 	}
+	
 	
 	if(addTimeline)
 	{
@@ -333,10 +375,11 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	}
 	
 	//draw remove button to remove current edited timeline
-	if( GuiButton( (Rectangle){ 150, 455, 20, 20 }, "-" ) )
+	if( ImGui::Button("Remove Timeline") )
 	{
 		//remove timeline position
 		size_t index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+		
 		//if index is more than 0 or valid
 		if(index)
 		{
@@ -347,23 +390,17 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	}
 	
 	//if timeline choice edited has changed
-	if(timeline_dropdown_listview_settings.valueChanged)
+	if(timeline_choice_changed)
 	{
-		timeline_dropdown_listview_settings.valueChanged = false;
-		
-		timeline_dropdown_listview_settings.scrollIndex = edit_timeline_listview_activeIndex;
-		
+		timeline_choice_changed = false;
+				
 		edit_obj_listview_activeIndex = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
-		
-		obj_dropdown_listview_settings.valueChanged = true;
 	}
 	
 	//if object choice edited by timeline changes													
-	if(obj_dropdown_listview_settings.valueChanged )
+	if(obj_choice_changed)
 	{
-		obj_dropdown_listview_settings.valueChanged = false;
-		
-		obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
+		obj_choice_changed = false;
 		
 		timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit = edit_obj_listview_activeIndex;
 		
@@ -446,7 +483,6 @@ void Timeline::DrawTimelinePointsGUI()
 	//draw position timeline if there are points to draw
 	if(positionTimelineSettings.array_points_ptr )
 	{
-		
 		//if adding point to timeline
 		if(addPointToTimeline && timelineSettings.frameSelected)
 		{
@@ -599,8 +635,6 @@ void Timeline::DrawTimelinePointsGUI()
 }
 
 
-
-
 void Timeline::DrawFramesGUI()
 {
 	//Draw frames label
@@ -693,7 +727,6 @@ void Timeline::DrawFramesFileDialog()
 		
 		if (fileDialogState.SelectFilePressed)
 		{
-			
 			// save project file (if supported extension)
 			std::string filename = std::string(fileDialogState.fileNameText);
 			
@@ -868,7 +901,6 @@ void Timeline::RunPlaybackWithTimeline(ImmediateModeSoundPlayer* im_sound_player
 			}
 			
 			//get location
-		
 			float& x = timeline_plots_position[i].timeline_points_posx[timelineSettings.current_timeline_frame]; 
 			float& y = timeline_plots_position[i].timeline_points_posy[timelineSettings.current_timeline_frame]; 
 			float& z = timeline_plots_position[i].timeline_points_posz[timelineSettings.current_timeline_frame];
@@ -1104,7 +1136,6 @@ void Timeline::LoadSaveData(TimelineSaveData& save_data)
 	
 	//change editor variables to match the newly loaded position
 	edit_obj_listview_activeIndex = timeline_plots_position[edit_timeline_listview_activeIndex].indexObjectToEdit;
-	obj_dropdown_listview_settings.scrollIndex = edit_obj_listview_activeIndex;
 	Timeline::InitGUI();
 }
 

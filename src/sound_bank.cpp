@@ -23,7 +23,6 @@
 #include "backends/rlImGui.h"
 #include "backends/imfilebrowser.h"
 
-//static GuiFileDialogState fileDialogState;
 
 //for .flac audio file decoding
 #define DR_FLAC_IMPLEMENTATION
