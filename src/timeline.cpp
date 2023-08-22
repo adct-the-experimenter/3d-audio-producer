@@ -196,8 +196,6 @@ void Timeline::SetObjectPicked(int index, ObjectType type)
 void Timeline::SetTimeFrameRate(size_t rate){time_frame_rate = rate;}
 
 
-
-
 //dropdown list view for object being edited.
 static int edit_obj_listview_activeIndex = 0;
 static bool obj_choice_changed = false;
@@ -205,10 +203,9 @@ static std::vector <std::string> obj_choices_vec;
 
 //variables for text input of timeline
 static bool addTimeline = false;
-static char textInput[256] = { 0 };
+static char textInput[32] = { 0 };
 
 //dropdown list view for timeline being edited
-static DropDownListViewSettings timeline_dropdown_listview_settings = InitDropDownListViewSettings(3,false,false,0);
 static int edit_timeline_listview_activeIndex = 0;
 static std::vector <std::string> timeline_choices_vec;
 static bool timeline_choice_changed = false;
@@ -269,11 +266,11 @@ void Timeline::DrawGui_Item()
         Rectangle drawAreaRect = {0, 400 , static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
 		DrawRectangleRec(drawAreaRect, Fade(GRAY, 0.5f));
 		
-		DrawFramesGUI();
+		DrawTimelinePlotEditorGUI();
 		
 		DrawTimelinePointsGUI();
 		
-		DrawTimelinePlotEditorGUI();
+		DrawFramesGUI();
 		
 		DrawFramesFileDialog();
 				
@@ -315,7 +312,7 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	ImGui::Text("Timeline Settings");
 	
 	static int timeline_item_current_idx = 0; // Here we store our selection data as an index.
-	const char* timeline_combo_preview_value = obj_choices_vec[obj_item_current_idx].c_str();  // Pass in the preview value visible before opening the combo (it could be anything)
+	const char* timeline_combo_preview_value = timeline_choices_vec[timeline_item_current_idx].c_str();  // Pass in the preview value visible before opening the combo (it could be anything)
 	static ImGuiComboFlags timeline_obj_flags = 0;
 				
 	if (ImGui::BeginCombo("Timeline", timeline_combo_preview_value, timeline_obj_flags))
@@ -347,31 +344,46 @@ void Timeline::DrawTimelinePlotEditorGUI()
 	if(addTimeline)
 	{
 		//prompt for timeline name
+        
+        // Always center this window when appearing
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		
+		ImGui::OpenPopup("Create Timeline");
 
-        int isSecret = 0;
-		int result = GuiTextInputBox((Rectangle){ GetScreenWidth()/2.f - 120, GetScreenHeight()/2.f - 60, 240, 140 }, GuiIconText(0, "Timeline Name Input..."), "Give the new timeline a name.\nCancel to stop creating timeline.", "Ok;Cancel", textInput);
-
-		//if ok clicked
-		if (result == 1)
+		if (ImGui::BeginPopupModal("Create Timeline", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			addTimeline = false;
+			//display name input box
+			ImGui::InputText("Name", textInput, 32);
 			
-			//add timeline position and its name
-			Timeline::AddPlotPositionToTimeline(std::string(textInput));
-			//add timeline playback marker
-			Timeline::AddPlotPlaybackMarkerToTimeline();
+			ImGui::Separator();
 			
+			//display ok button
+			if(ImGui::Button("OK"))
+			{
+				addTimeline = false;
+			
+				//add timeline position and its name
+				Timeline::AddPlotPositionToTimeline(std::string(textInput));
+				//add timeline playback marker
+				Timeline::AddPlotPlaybackMarkerToTimeline();
+				
+				//refresh timeline gui after adding timeline
+				Timeline::InitGUI();
+				
+				strcpy(textInput, "\0");
+			}
+			
+			//display cancel button
+			if(ImGui::Button("Cancel"))
+			{
+				addTimeline = false;
+				strcpy(textInput, "\0");
+			}
+			
+			ImGui::EndPopup();
 		}
-		//else if cancel clicked
-		else if(result == 2)
-		{
-			addTimeline = false;
-		}
-
-		if ((result == 0) || (result == 1) || (result == 2))
-		{
-			strcpy(textInput, "\0");
-		}
+		
 	}
 	
 	//draw remove button to remove current edited timeline
@@ -478,7 +490,6 @@ void Timeline::DrawTimelinePointsGUI()
 	DrawRectangleRec(timelineSettings.mouseArea, Fade(GRAY, 0.5f));
 
 	Gui_Timeline(&timelineSettings);
-		
 		
 	//draw position timeline if there are points to draw
 	if(positionTimelineSettings.array_points_ptr )
@@ -637,49 +648,55 @@ void Timeline::DrawTimelinePointsGUI()
 
 void Timeline::DrawFramesGUI()
 {
-	//Draw frames label
-	GuiLabel((Rectangle){ 25, 540, 85, 30 }, "Frames");
-	
-	//draw new frames button
-	if( GuiButton( (Rectangle){ 25, 560, 40, 20 }, "New" ) )
+	if(ImGui::TreeNode("Frames"))
 	{
-		//replace current file in use for frames for plot with empty filepath
-		size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
-		timeline_plots_position[edit_index].frames_filepath = "";
-		
-		//reset all points to false which erases it from GUI.
-		for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
+		//draw new frames button
+		if( ImGui::Button("New Frames") )
 		{
-			timeline_plots_position[edit_index].timeline_settings_bool_array[i] = false;
-			timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = false;
+			//replace current file in use for frames for plot with empty filepath
+			size_t edit_index = static_cast <size_t> (edit_timeline_listview_activeIndex);
+			timeline_plots_position[edit_index].frames_filepath = "";
+			
+			//reset all points to false which erases it from GUI.
+			for(uint16_t i = 0; i < MAX_NUMBER_OF_POINTS_IN_TIMELINE_PLOT; i++)
+			{
+				timeline_plots_position[edit_index].timeline_settings_bool_array[i] = false;
+				timeline_plots_playback_markers[edit_index].timeline_settings_bool_array[i] = false;
+			}
 		}
+		
+		ImGui::SameLine();
+		
+		//draw load frames button
+		if( ImGui::Button("Load Frames") )
+		{
+			frames_file_state = FileFrameState::LOAD_NEW;
+			fileDialogState.windowActive = true; //activate file dialog
+			global_dialog_in_use = true;
+		}
+		
+		ImGui::SameLine();
+		
+		//draw save frames button
+		if( ImGui::Button("Save Frames") )
+		{
+			frames_file_state = FileFrameState::SAVE_NEW;
+			fileDialogState.windowActive = true; //activate file dialog
+			global_dialog_in_use = true;
+		}
+				
+		//draw frame rate control
+		if (ImGui::InputInt("Frame Rate", &time_frame_rate) )
+		{
+			second_frame_count = 0; //reset just in case
+		} 
+		
+		ImGui::TreePop();
 	}
 	
-	//draw load frames button
-	if( GuiButton( (Rectangle){ 25, 590, 40, 20 }, "Load" ) )
-	{
-		frames_file_state = FileFrameState::LOAD_NEW;
-		fileDialogState.windowActive = true; //activate file dialog
-		global_dialog_in_use = true;
-	}
 	
-	//draw save frames button
-	if( GuiButton( (Rectangle){ 25, 620, 40, 20 }, "Save" ) )
-	{
-		frames_file_state = FileFrameState::SAVE_NEW;
-		fileDialogState.windowActive = true; //activate file dialog
-		global_dialog_in_use = true;
-	}
 	
-	//draw rate label
-	GuiLabel((Rectangle){ 80, 580, 60, 30 }, "Frame Rate");
 	
-	//draw frame rate control
-	if (GuiValueBox((Rectangle){ 80, 600, 60, 25 }, NULL, &time_frame_rate, 0, 100, frameRateBoxEditMode) )
-	{
-		frameRateBoxEditMode = !frameRateBoxEditMode;
-		second_frame_count = 0; //reset just in case
-	} 
 }
 
 void Timeline::DrawFramesFileDialog()
