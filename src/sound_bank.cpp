@@ -78,10 +78,9 @@ bool IsFileFLAC(std::string filepath)
 
 void SoundBank::DrawGui_Item()
 {
-	//draw rectangle
 
-	
-	if (ImGui::Begin("Sound Bank", &Open, ImGuiWindowFlags_AlwaysVerticalScrollbar))
+
+	if (ImGui::TreeNode("Sound Bank"))
 	{
 		
 		soundbank_menu_in_use = ImGui::IsWindowHovered();
@@ -135,9 +134,11 @@ void SoundBank::DrawGui_Item()
 		}
 		
 		sound_fileDialog_loader.Display();
+		
+		ImGui::TreePop();
 	}
 		
-	ImGui::End();
+
 	
 }
 

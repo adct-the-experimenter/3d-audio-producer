@@ -625,8 +625,7 @@ void MainGuiEditor::DrawGUIWindow()
 	//ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
 
 	bool Open = true;
-	
-	if (ImGui::Begin("GUI Operations", &Open, ImGuiWindowFlags_NoScrollbar))
+	if (ImGui::Begin("GUI Operations", &Open, ImGuiWindowFlags_AlwaysVerticalScrollbar))
 	{
 		bool open = true;
 		ImGui::ShowDemoWindow(&open);
@@ -639,17 +638,17 @@ void MainGuiEditor::DrawGUIWindow()
 		//render if project is initialized
 		if(project_init)
 		{
+			//draw object creation/edit menu
+			MainGuiEditor::draw_object_creation_menu();
+			
 			//draw sound bank
 			MainGuiEditor::draw_sound_bank();
 
 			//draw HRTF edit menu
 			//MainGuiEditor::draw_hrtf_menu();
 
-			//draw object creation/edit menu
-			MainGuiEditor::draw_object_creation_menu();
-
 			//draw timeline 
-			//MainGuiEditor::draw_timeline_menu();
+			MainGuiEditor::draw_timeline_menu();
 			
 		} 
 		
@@ -691,15 +690,11 @@ void MainGuiEditor::draw_object_creation_menu()
 	if(objectManipulationState){return;}
 	
 	//create,edit object menu panel
-	//draw rectangle panel on the left
-	bool Open = true;
-	
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-	
+		
 	bool createObjectClicked = false;
 	bool editObjectClicked = false;
 	
-	if (ImGui::Begin("Object Creation / Edit", &Open, ImGuiWindowFlags_NoScrollbar))
+	if (ImGui::TreeNode("Object Creation / Edit"))
 	{
 		const char* obj_items[] = { "None", "Listener", "Sound Producer", 
 									"Standard Reverb Zone", "EAX Reverb Zone", "Echo Zone", 
@@ -1032,10 +1027,10 @@ void MainGuiEditor::draw_object_creation_menu()
 			}
 			default:{ break;}
 		}
+		
+		ImGui::TreePop();
 	}
 	
-	ImGui::End();
-	ImGui::PopStyleVar();
 	
 }
 
@@ -1050,56 +1045,66 @@ static bool show_timeline_toggle_bool = false;
 
 void MainGuiEditor::draw_timeline_menu()
 {
-	//draw timeline playback controls
-	float center_x = GetScreenWidth() / 2;
 	
-	//draw play button
-	if(GuiButton( (Rectangle){ center_x - 100, 50, 50, 30 }, "Play" ))
+	if (ImGui::TreeNode("Playback"))
 	{
-		//initialize audio player
-		im_sound_player.InitPlayer_ComplexPlayback();
+		//draw play button
+		if(ImGui::Button("Play"))
+		{
+			//initialize audio player
+			im_sound_player.InitPlayer_ComplexPlayback();
+			
+			//solve audio playback in timeline according to timeline playback marker plot
+			timeline_window.SolveAudioPlaybackInTimeline(&im_sound_player);
+			
+			//calculate current time from current timeline frame
+			//assuming 1 second per timeline frame, and ignore timeline frame rate for now		
+			double time = timeline_window.GetCurrentTimelineFrame();
+					
+			//set time in sound player.
+			im_sound_player.SetCurrentTimeInSoundPlayer(time);
+			
+			im_sound_player.StartPlayback_ComplexPlayback();
+		}
 		
-		//solve audio playback in timeline according to timeline playback marker plot
-		timeline_window.SolveAudioPlaybackInTimeline(&im_sound_player);
+		ImGui::SameLine();
 		
-		//calculate current time from current timeline frame
-		//assuming 1 second per timeline frame, and ignore timeline frame rate for now		
-		double time = timeline_window.GetCurrentTimelineFrame();
-				
-		//set time in sound player.
-		im_sound_player.SetCurrentTimeInSoundPlayer(time);
+		//draw pause button
+		if(ImGui::Button("Pause"))
+		{
+			im_sound_player.PausePlayback_ComplexPlayback();
+			timeline_window.SetCurrentTimelineFrameAtPause();
+		}
 		
-		im_sound_player.StartPlayback_ComplexPlayback();
+		ImGui::SameLine();
 		
+		//draw stop button
+		if(ImGui::Button("Stop"))
+		{
+			im_sound_player.StopPlayback_ComplexPlayback();
+			timeline_window.ResetCurrentTimelineFrameToZero();
+		}
 		
+		if(ImGui::TreeNode("Timeline"))
+		{
+			timeline_window.SetShowTimelineBool(true);	
+			timeline_window.DrawGui_Item();
+			
+			ImGui::TreePop();
+		}
+		
+		ImGui::TreePop();
 	}
-	
-	//draw pause button
-	if(GuiButton( (Rectangle){ center_x, 50, 50, 30 },  "Pause" ))
-	{
-		im_sound_player.PausePlayback_ComplexPlayback();
-		timeline_window.SetCurrentTimelineFrameAtPause();
-	}
-	
-	//draw stop button
-	if(GuiButton( (Rectangle){ center_x + 100, 50, 50, 30 }, "Stop"))
-	{
-		im_sound_player.StopPlayback_ComplexPlayback();
-		timeline_window.ResetCurrentTimelineFrameToZero();
-	}
-	
+			
 	//if need to add point or playback marker to timeline
 	
-	//draw on bottom third of screen	
-	timeline_window.DrawGui_Item();
-	
 	//draw show timeline button
-	if( GuiButton( (Rectangle){ 25, 420, 70, 30 }, "Timeline" ) )
-	{
-		show_timeline_toggle_bool = !show_timeline_toggle_bool;
+	//if( GuiButton( (Rectangle){ 25, 420, 70, 30 }, "Timeline" ) )
+	//{
+	//	show_timeline_toggle_bool = !show_timeline_toggle_bool;
 		
-		timeline_window.SetShowTimelineBool(show_timeline_toggle_bool);
-	}
+	//	timeline_window.SetShowTimelineBool(show_timeline_toggle_bool);
+	//}
 	
 	//if timeline is shown
 	if(show_timeline_toggle_bool)
