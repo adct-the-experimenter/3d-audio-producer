@@ -6,6 +6,10 @@
 
 #include "raygui/gui_valid_float.h"
 
+#include "imgui.h"
+#include "backends/rlImGui.h"
+#include "backends/imfilebrowser.h"
+
 #include <cstring>
 
 CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
@@ -20,6 +24,10 @@ CreateSoundProducerDialog::CreateSoundProducerDialog(const std::string& title)
 
 void CreateSoundProducerDialog::SetPointerToSoundBank(SoundBank* thisSoundBank){m_sound_bank_ptr = thisSoundBank;}
 
+static float xValue = 0.0f;
+static float yValue = 0.0f;
+static float zValue = 0.0f;
+
 static ValidFloatParamSettings xValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
 
 static ValidFloatParamSettings yValueParam = InitValidFloatParamSettings(0.0f, 0.0f, min_position_value, max_position_value, "0.0");
@@ -28,7 +36,7 @@ static ValidFloatParamSettings zValueParam = InitValidFloatParamSettings(0.0f, 0
 
 static std::uint8_t account_num;
 
-static char char_name[20] = "name here";
+static char char_name[32] = "name here";
 static bool name_box_pressed = false;
 
 static bool free_roam_box_stat = false;
@@ -36,45 +44,80 @@ static bool free_roam_box_stat = false;
 static bool dropDownSoundMode = false;
 static int dropDownSoundActive = 0;
 
+static std::array <std::string,10> sound_items;
 
 void CreateSoundProducerDialog::DrawDialog()
-{
-	
-	bool exit = GuiWindowBox((Rectangle){300,100,400,500},"Create Sound Producer");
-	
-	okClicked = GuiButton( (Rectangle){ 400, 500, 70, 30 }, GuiIconText(0, "OK") );
-	
-	cancelClicked = GuiButton( (Rectangle){ 500, 500, 70, 30 }, GuiIconText(0, "Cancel") );
-	if(exit){cancelClicked = true;}
-	
-	
-	if( GuiTextBox((Rectangle){400,200,100,50}, char_name, 20, name_box_pressed) )
+{	
+	ImGui::OpenPopup("Create Sound Producer");
+
+	// Always center this window when appearing
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	if (ImGui::BeginPopupModal("Create Sound Producer", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		name_box_pressed = !name_box_pressed;
-	}
-	
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){400,300,50,50}, 20, &xValueParam,"X:",10) )
-	{
-		xValueParam.editMode = !xValueParam.editMode;
-	}
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){500,300,50,50}, 20, &yValueParam,"Y:",10) )
-	{
-		yValueParam.editMode = !yValueParam.editMode;
-	}
-	if( GuiTextBox_ValidValueFloatSimple((Rectangle){600,300,50,50}, 20, &zValueParam,"Z:",10) )
-	{
-		zValueParam.editMode = !zValueParam.editMode;
-	}
-	
-	free_roam_box_stat = GuiCheckBox((Rectangle){ 400, 460, 20, 20 }, "Free Roam:", free_roam_box_stat);
-	
-	if(m_sound_bank_ptr)
-	{
-		if( GuiDropdownBox((Rectangle){ 400,380,140,30 }, sound_choices.c_str(), &dropDownSoundActive, dropDownSoundMode) )
+		//display name input box
+		if(ImGui::InputText("Name", char_name, 32))
 		{
-			dropDownSoundMode = !dropDownSoundMode;
-			account_num = dropDownSoundActive;
+			name_box_pressed = !name_box_pressed;
 		}
+		
+		//display x value float input box
+		ImGui::InputFloat("x", &xValue, 0.01f, 1.0f, "%.3f");
+		
+		//display y value float input box
+		ImGui::InputFloat("y", &yValue, 0.01f, 1.0f, "%.3f");
+		
+		//display z value float input box
+		ImGui::InputFloat("z", &zValue, 0.01f, 1.0f, "%.3f");
+		
+		ImGui::Separator();
+		
+		ImGui::Checkbox("Free Roam",&free_roam_box_stat);
+		
+		ImGui::Separator();
+		
+		if(m_sound_bank_ptr)
+		{
+			static int item_current_idx = 0; // Here we store our selection data as an index.
+			const char* combo_preview_value = sound_items[item_current_idx].c_str();  // Pass in the preview value visible before opening the combo (it could be anything)
+			static ImGuiComboFlags flags = 0;
+						
+			if (ImGui::BeginCombo("Sound Account", combo_preview_value, flags))
+			{
+				for (int n = 0; n < sound_items.size(); n++)
+				{
+					const bool is_selected = (item_current_idx == n);
+					if (ImGui::Selectable(sound_items[n].c_str(), is_selected))
+					{
+						item_current_idx = n;
+						account_num = item_current_idx;
+					}
+
+					// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			
+		}
+		
+		//display OK and Cancel button on the same lines
+		if (ImGui::Button("OK", ImVec2(120, 0))) 
+		{ 
+			okClicked = true;
+			ImGui::CloseCurrentPopup(); 
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0))) 
+		{
+			cancelClicked = true; 
+			ImGui::CloseCurrentPopup(); 
+		}
+		
+		ImGui::EndPopup();
 	}
 	
 	
@@ -82,9 +125,9 @@ void CreateSoundProducerDialog::DrawDialog()
 	if(okClicked)
 	{
 		name = std::string(char_name);
-		xPosition = xValueParam.current_value;
-		yPosition = yValueParam.current_value;
-		zPosition = zValueParam.current_value;
+		xPosition = xValue;
+		yPosition = yValue;
+		zPosition = zValue;
 		tempFreeRoamBool = free_roam_box_stat;
 		sound_bank_account_num = account_num;
 	}
@@ -139,11 +182,12 @@ void CreateSoundProducerDialog::InitSoundBankChoices()
 		sound_choices = "";
 		
 		//put choices into specific format
-		std::array <std::string,10> account_look_up = m_sound_bank_ptr->GetAccountLookupTable();
+		sound_items = m_sound_bank_ptr->GetAccountLookupTable();
 		
-		for(size_t i = 0; i < account_look_up.size(); i++ )
+		//add text so that imgui does not complain about unique labels
+		for(size_t i = 0; i < sound_items.size(); i++)
 		{
-			sound_choices += std::to_string(i) + " | " + account_look_up[i] + ";";
+			sound_items[i] = sound_items[i] + " ( " + std::to_string(i) + " )";
 		}
 		
 	}

@@ -1,8 +1,5 @@
 #include "sound_bank.h"
 
-#include "audio-stream-container.h"
-#include <sndfile.h>
-
 ///Data Directory File Path
 
 #define QUOTE(name) #name
@@ -17,13 +14,8 @@
 #define DATADIR_NAME STR(DATADIR)
 
 #include <unistd.h>
-
-#include "raygui/raygui.h"
-
-
-#include "raygui/gui_file_dialog.h"
-
 #include <cstring>
+#include <iostream>
 
 #include "dialog_var.h"
 
@@ -50,7 +42,7 @@ SoundBank::SoundBank()
 
 struct TextBoxParam
 {
-	char char_name[20] = " ";
+	char char_name[32] = "##";
 	bool name_box_pressed = false;
 };
 

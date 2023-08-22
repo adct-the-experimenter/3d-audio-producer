@@ -380,6 +380,8 @@ void MainGuiEditor::HandleEvents()
 		else if(IsKeyDown(KEY_O))
 		{
 			proj_file_state = ProjectFileState::LOAD;
+			proj_fileDialog_loader.SetTitle("Open project");
+			proj_fileDialog_loader.SetTypeFilters({ ".xml" });
 			proj_fileDialog_loader.Open(); //activate file dialog
 		}
 	}
@@ -616,21 +618,18 @@ void MainGuiEditor::UpdateTexture3DSceneWindow()
 	
 }	
 
-//#define SHOW_IMGUI_DEBUG_MENU
 
 void MainGuiEditor::DrawGUIWindow()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
+	//ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2((float)GetScreenWidth(), (float)GetScreenHeight()));
 
 	bool Open = true;
 	
 	if (ImGui::Begin("GUI Operations", &Open, ImGuiWindowFlags_NoScrollbar))
 	{
-		#ifdef SHOW_IMGUI_DEBUG_MENU
-		bool open_demo = true;
-		ImGui::ShowDemoWindow(&open_demo);
-		#endif
+		bool open = true;
+		ImGui::ShowDemoWindow(&open);
 		
 		ImVec2 size = ImGui::GetContentRegionAvail();
 		
@@ -647,7 +646,7 @@ void MainGuiEditor::DrawGUIWindow()
 			//MainGuiEditor::draw_hrtf_menu();
 
 			//draw object creation/edit menu
-			//MainGuiEditor::draw_object_creation_menu();
+			MainGuiEditor::draw_object_creation_menu();
 
 			//draw timeline 
 			//MainGuiEditor::draw_timeline_menu();
@@ -684,343 +683,360 @@ enum class OurGuiState : std::uint8_t { NONE=0,
 									
 static OurGuiState g_state = OurGuiState::NONE;
 
+#define SHOW_IMGUI_DEBUG_MENU
+
 void MainGuiEditor::draw_object_creation_menu()
 {
 	
-	if(objectManipulationState){}
+	if(objectManipulationState){return;}
 	
 	//create,edit object menu panel
 	//draw rectangle panel on the left
+	bool Open = true;
 	
-	GuiDrawRectangle((Rectangle){20,120,150,160}, 1, BLACK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)) );
-	//GuiPanel( (Rectangle){20,80,125,160} );
-	GuiDrawText("Object Creation / Edit", (Rectangle){20,120,125,20}, 1, BLACK);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	
-	//draw button create
-	bool createObjectClicked = GuiButton( (Rectangle){ 25, 180, 70, 30 }, "Create" );
-	//draw button edit
-	bool editObjectClicked = GuiButton( (Rectangle){ 25, 220, 70, 30 }, "Edit" );
+	bool createObjectClicked = false;
+	bool editObjectClicked = false;
 	
-	//draw GuiDropdownBox for choosing type to manipulate
-	
-	if( GuiDropdownBox((Rectangle){ 25,140,140,30 }, "None;Listener;Sound Producer;Standard Reverb Zone; EAX Reverb Zone; Echo Zone", &dropDownObjectTypeActive, dropDownObjectTypeMode) )
+	if (ImGui::Begin("Object Creation / Edit", &Open, ImGuiWindowFlags_NoScrollbar))
 	{
-		dropDownObjectTypeMode = !dropDownObjectTypeMode;
-	}
-	
-	//if object to manipulate is not none, and not in a state of object manipulation
-	if(dropDownObjectTypeActive != 0 && !objectManipulationState)
-	{
-		//if create object button clicked on
-		if(createObjectClicked)
+		const char* obj_items[] = { "None", "Listener", "Sound Producer", 
+									"Standard Reverb Zone", "EAX Reverb Zone", "Echo Zone", 
+								   };
+		static int item_current = 1;
+		ImGui::ListBox("Object Type", &item_current, obj_items, IM_ARRAYSIZE(obj_items), 4);
+		
+		if(ImGui::Button("Create") )
 		{
-			create_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
-			create_sp_dialog.InitSoundBankChoices();
-			
-			switch(dropDownObjectTypeActive)
+			dropDownObjectTypeActive = item_current;
+			createObjectClicked = true;
+		}
+		
+		if(ImGui::Button("Edit"))
+		{
+			dropDownObjectTypeActive = item_current;
+			editObjectClicked = true;
+		}
+		
+		//if object to manipulate is not none, and not in a state of object manipulation
+		if(dropDownObjectTypeActive != 0 && !objectManipulationState)
+		{
+			//if create object button clicked on
+			if(createObjectClicked)
 			{
-				//sound producer
-				case 2:{ g_state = OurGuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
-				//standard reverb zone
-				case 3:{ g_state = OurGuiState::CREATE_SR_ZONE; dialogInUse = true; break;}
-				//eax reverb zone
-				case 4:{ g_state = OurGuiState::CREATE_ER_ZONE; dialogInUse = true; break;}
-				//echo zone
-				case 5:{ g_state = OurGuiState::CREATE_ECHO_ZONE; dialogInUse = true; break;}
-				default:{break;}
+				create_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+				create_sp_dialog.InitSoundBankChoices();
+				
+				switch(dropDownObjectTypeActive)
+				{
+					//sound producer
+					case 2:{ g_state = OurGuiState::CREATE_SOUND_PRODUCER; dialogInUse = true; break;}
+					//standard reverb zone
+					case 3:{ g_state = OurGuiState::CREATE_SR_ZONE; dialogInUse = true; break;}
+					//eax reverb zone
+					case 4:{ g_state = OurGuiState::CREATE_ER_ZONE; dialogInUse = true; break;}
+					//echo zone
+					case 5:{ g_state = OurGuiState::CREATE_ECHO_ZONE; dialogInUse = true; break;}
+					default:{break;}
+				}
+			}
+			
+			//if edit object button clicked on
+			if(editObjectClicked)
+			{
+				
+				switch(dropDownObjectTypeActive)
+				{
+					//listener
+					case 1:
+					{ 
+						g_state = OurGuiState::EDIT_LISTENER;
+						dialogInUse = true;
+						edit_lt_dialog.InitGUI();
+						break;
+					}
+					//sound producer
+					case 2:
+					{ 
+						g_state = OurGuiState::EDIT_SOUND_PRODUCER;
+						dialogInUse = true;
+						edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+						edit_sp_dialog.InitGUI();
+						break;
+					}
+					//standard reverb zone
+					case 3:
+					{ 
+						g_state = OurGuiState::EDIT_SR_ZONE;
+						dialogInUse = true;
+						edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+						edit_sr_zone_dialog.InitGUI();
+						break;
+					}
+					//eax reverb zone
+					case 4:
+					{
+						g_state = OurGuiState::EDIT_ER_ZONE;
+						dialogInUse = true;
+						edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+						edit_er_zone_dialog.InitGUI();
+						break;
+					}
+					//echo zone
+					case 5:
+					{ 
+						g_state = OurGuiState::EDIT_ECHO_ZONE;
+						dialogInUse = true;
+						edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+						edit_echo_zone_dialog.InitGUI(); 
+						break;
+					}
+					default:{break;}
+				}
 			}
 		}
 		
-		//if edit object button clicked on
-		if(editObjectClicked)
+		if(soundproducer_picked != -1 && editKeyPressed)
+		{
+			editKeyPressed = false;
+			g_state = OurGuiState::EDIT_SOUND_PRODUCER;
+			dialogInUse = true;
+			edit_sp_dialog.SetCurrentSoundProducerEditedIndex(size_t(soundproducer_picked));
+			edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
+			edit_sp_dialog.InitGUI();
+		}
+		
+		//if effect zone index is not null, effect type not null, and edit key pressed
+		if(effect_zone_picked != -1 && effect_zone_type_picked != EffectsManager::EffectZoneType::NONE
+		   && editKeyPressed)
 		{
 			
-			switch(dropDownObjectTypeActive)
+			effects_manager_ptr->SetEffectZonePicked(false,effect_zone_type_picked, effect_zone_picked);
+			
+			switch(effect_zone_type_picked)
 			{
-				//listener
-				case 1:
-				{ 
-					g_state = OurGuiState::EDIT_LISTENER;
-					dialogInUse = true;
-					edit_lt_dialog.InitGUI();
-					break;
-				}
-				//sound producer
-				case 2:
-				{ 
-					g_state = OurGuiState::EDIT_SOUND_PRODUCER;
-					dialogInUse = true;
-					edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
-					edit_sp_dialog.InitGUI();
-					break;
-				}
-				//standard reverb zone
-				case 3:
+				case EffectsManager::EffectZoneType::STANDARD_REVERB:
 				{ 
 					g_state = OurGuiState::EDIT_SR_ZONE;
-					dialogInUse = true;
 					edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
-					edit_sr_zone_dialog.InitGUI();
+					edit_sr_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
+					edit_sr_zone_dialog.InitGUI(); 
 					break;
 				}
-				//eax reverb zone
-				case 4:
+				case EffectsManager::EffectZoneType::EAX_REVERB:
 				{
 					g_state = OurGuiState::EDIT_ER_ZONE;
-					dialogInUse = true;
 					edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+					edit_er_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 					edit_er_zone_dialog.InitGUI();
 					break;
 				}
-				//echo zone
-				case 5:
-				{ 
+				case EffectsManager::EffectZoneType::ECHO:
+				{
 					g_state = OurGuiState::EDIT_ECHO_ZONE;
-					dialogInUse = true;
 					edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
+					edit_echo_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
 					edit_echo_zone_dialog.InitGUI(); 
 					break;
 				}
 				default:{break;}
 			}
 		}
-	}
-	
-	if(soundproducer_picked != -1 && editKeyPressed)
-	{
-		editKeyPressed = false;
-		g_state = OurGuiState::EDIT_SOUND_PRODUCER;
-		dialogInUse = true;
-		edit_sp_dialog.SetCurrentSoundProducerEditedIndex(size_t(soundproducer_picked));
-		edit_sp_dialog.SetPointerToSoundBank(&m_sound_bank);
-		edit_sp_dialog.InitGUI();
-	}
-	
-	//if effect zone index is not null, effect type not null, and edit key pressed
-	if(effect_zone_picked != -1 && effect_zone_type_picked != EffectsManager::EffectZoneType::NONE
-	   && editKeyPressed)
-	{
 		
-		effects_manager_ptr->SetEffectZonePicked(false,effect_zone_type_picked, effect_zone_picked);
-		
-		switch(effect_zone_type_picked)
+		switch(g_state)
 		{
-			case EffectsManager::EffectZoneType::STANDARD_REVERB:
-			{ 
-				g_state = OurGuiState::EDIT_SR_ZONE;
-				edit_sr_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
-				edit_sr_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
-				edit_sr_zone_dialog.InitGUI(); 
+			case OurGuiState::EDIT_LISTENER:
+			{
+				edit_lt_dialog.DrawDialog();
+				
+				if(edit_lt_dialog.OkClickedOn() || edit_lt_dialog.CancelClickedOn())
+				{
+					g_state = OurGuiState::NONE;
+					create_sp_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
 				break;
 			}
-			case EffectsManager::EffectZoneType::EAX_REVERB:
+			case OurGuiState::CREATE_SOUND_PRODUCER:
 			{
-				g_state = OurGuiState::EDIT_ER_ZONE;
-				edit_er_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
-				edit_er_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
-				edit_er_zone_dialog.InitGUI();
+				create_sp_dialog.DrawDialog();
+				
+				if(create_sp_dialog.OkClickedOn())
+				{
+					//create sound producer
+					std::string name = create_sp_dialog.getNewName();
+					float x,y,z;
+					create_sp_dialog.getNewPosition(x,y,z);
+					bool freeRoam = create_sp_dialog.getFreeRoamBool();
+					std::uint8_t account_num =  create_sp_dialog.getAccountNumber();
+					MainGuiEditor::CreateSoundProducer(name,x, y, z, freeRoam, account_num);
+										
+					g_state = OurGuiState::NONE;
+					create_sp_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
+				if(create_sp_dialog.CancelClickedOn())
+				{
+					g_state = OurGuiState::NONE;
+					create_sp_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
 				break;
 			}
-			case EffectsManager::EffectZoneType::ECHO:
+			case OurGuiState::EDIT_SOUND_PRODUCER:
 			{
-				g_state = OurGuiState::EDIT_ECHO_ZONE;
-				edit_echo_zone_dialog.SetPointerToEffectsManager(effects_manager_ptr.get());
-				edit_echo_zone_dialog.SetCurrentZoneIndexForEditing(size_t(effect_zone_picked));
-				edit_echo_zone_dialog.InitGUI(); 
+				edit_sp_dialog.DrawDialog();
+				
+				if(edit_sp_dialog.OkClickedOn() || edit_sp_dialog.CancelClickedOn())
+				{						
+					g_state = OurGuiState::NONE;
+					edit_sp_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
 				break;
 			}
-			default:{break;}
-		}
-	}
-	
-	switch(g_state)
-	{
-		case OurGuiState::EDIT_LISTENER:
-		{
-			edit_lt_dialog.DrawDialog();
-			
-			if(edit_lt_dialog.OkClickedOn() || edit_lt_dialog.CancelClickedOn())
+			case OurGuiState::CREATE_ECHO_ZONE:
 			{
-				g_state = OurGuiState::NONE;
-				create_sp_dialog.resetConfig();
-				dialogInUse = false;
+				create_echo_zone_dialog.DrawDialog();
+				
+				if(create_echo_zone_dialog.OkClickedOn() )
+				{
+					//create echo zone
+					float x,y,z,width;
+					EchoZoneProperties properties;
+					
+					create_echo_zone_dialog.getNewPosition(x,y,z);
+					std::string name = create_echo_zone_dialog.getNewName();
+					width = create_echo_zone_dialog.getNewWidth();
+					properties = create_echo_zone_dialog.getNewProperties();
+					
+					effects_manager_ptr->CreateEchoZone(name,x,y,z,width,properties);
+					
+					g_state = OurGuiState::NONE;
+					create_echo_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				if(create_echo_zone_dialog.CancelClickedOn())
+				{
+					g_state = OurGuiState::NONE;
+					create_echo_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
+				break;
 			}
-			
-			break;
-		}
-		case OurGuiState::CREATE_SOUND_PRODUCER:
-		{
-			create_sp_dialog.DrawDialog();
-			
-			if(create_sp_dialog.OkClickedOn())
+			case OurGuiState::EDIT_ECHO_ZONE:
 			{
-				//create sound producer
-				std::string name = create_sp_dialog.getNewName();
-				float x,y,z;
-				create_sp_dialog.getNewPosition(x,y,z);
-				bool freeRoam = create_sp_dialog.getFreeRoamBool();
-				std::uint8_t account_num =  create_sp_dialog.getAccountNumber();
-				MainGuiEditor::CreateSoundProducer(name,x, y, z, freeRoam, account_num);
-									
-				g_state = OurGuiState::NONE;
-				create_sp_dialog.resetConfig();
-				dialogInUse = false;
+				edit_echo_zone_dialog.DrawDialog();
+				
+				if(edit_echo_zone_dialog.OkClickedOn() || edit_echo_zone_dialog.CancelClickedOn())
+				{						
+					g_state = OurGuiState::NONE;
+					edit_echo_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
+				break;
 			}
-			
-			if(create_sp_dialog.CancelClickedOn())
+			case OurGuiState::CREATE_SR_ZONE:
 			{
-				g_state = OurGuiState::NONE;
-				create_sp_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			
-			break;
-		}
-		case OurGuiState::EDIT_SOUND_PRODUCER:
-		{
-			edit_sp_dialog.DrawDialog();
-			
-			if(edit_sp_dialog.OkClickedOn() || edit_sp_dialog.CancelClickedOn())
-			{						
-				g_state = OurGuiState::NONE;
-				edit_sp_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			
-			break;
-		}
-		case OurGuiState::CREATE_ECHO_ZONE:
-		{
-			create_echo_zone_dialog.DrawDialog();
-			
-			if(create_echo_zone_dialog.OkClickedOn() )
-			{
-				//create echo zone
-				float x,y,z,width;
-				EchoZoneProperties properties;
+				create_sr_zone_dialog.DrawDialog();
 				
-				create_echo_zone_dialog.getNewPosition(x,y,z);
-				std::string name = create_echo_zone_dialog.getNewName();
-				width = create_echo_zone_dialog.getNewWidth();
-				properties = create_echo_zone_dialog.getNewProperties();
-				
-				effects_manager_ptr->CreateEchoZone(name,x,y,z,width,properties);
-				
-				g_state = OurGuiState::NONE;
-				create_echo_zone_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			if(create_echo_zone_dialog.CancelClickedOn())
-			{
-				g_state = OurGuiState::NONE;
-				create_echo_zone_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			
-			break;
-		}
-		case OurGuiState::EDIT_ECHO_ZONE:
-		{
-			edit_echo_zone_dialog.DrawDialog();
-			
-			if(edit_echo_zone_dialog.OkClickedOn() || edit_echo_zone_dialog.CancelClickedOn())
-			{						
-				g_state = OurGuiState::NONE;
-				edit_echo_zone_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			
-			break;
-		}
-		case OurGuiState::CREATE_SR_ZONE:
-		{
-			create_sr_zone_dialog.DrawDialog();
-			
-			if(create_sr_zone_dialog.OkClickedOn() )
-			{
-				//create standard reverb zone
-				float x,y,z,width;
-				ReverbStandardProperties properties;
-				
-				create_sr_zone_dialog.getNewPosition(x,y,z);
-				std::string name = create_sr_zone_dialog.getNewName();
-				width = create_sr_zone_dialog.getNewWidth();
-				properties = create_sr_zone_dialog.getNewProperties();
-				
-				effects_manager_ptr->CreateStandardReverbZone(name,x,y,z,width,properties);
-				
-				g_state = OurGuiState::NONE;
-				create_sr_zone_dialog.resetConfig();
-				dialogInUse = false;
-			}
+				if(create_sr_zone_dialog.OkClickedOn() )
+				{
+					//create standard reverb zone
+					float x,y,z,width;
+					ReverbStandardProperties properties;
+					
+					create_sr_zone_dialog.getNewPosition(x,y,z);
+					std::string name = create_sr_zone_dialog.getNewName();
+					width = create_sr_zone_dialog.getNewWidth();
+					properties = create_sr_zone_dialog.getNewProperties();
+					
+					effects_manager_ptr->CreateStandardReverbZone(name,x,y,z,width,properties);
+					
+					g_state = OurGuiState::NONE;
+					create_sr_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
 
-			if(create_sr_zone_dialog.CancelClickedOn())
-			{
-				g_state = OurGuiState::NONE;
-				create_sr_zone_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			
-			break;
-		}
-		case OurGuiState::EDIT_SR_ZONE:
-		{
-			edit_sr_zone_dialog.DrawDialog();
-			
-			if(edit_sr_zone_dialog.OkClickedOn() || edit_sr_zone_dialog.CancelClickedOn())
-			{						
-				g_state = OurGuiState::NONE;
-				edit_sr_zone_dialog.resetConfig();
-				dialogInUse = false;
-			}
-			break;
-		}
-		case OurGuiState::CREATE_ER_ZONE:
-		{
-			create_er_zone_dialog.DrawDialog();
-			
-			if(create_er_zone_dialog.OkClickedOn()  )
-			{
-				//create eax reverb zone
-				float x,y,z,width;
-				ReverbEAXProperties properties;
+				if(create_sr_zone_dialog.CancelClickedOn())
+				{
+					g_state = OurGuiState::NONE;
+					create_sr_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
 				
-				create_er_zone_dialog.getNewPosition(x,y,z);
-				std::string name = create_er_zone_dialog.getNewName();
-				width = create_er_zone_dialog.getNewWidth();
-				properties = create_er_zone_dialog.getNewProperties();
-				
-				effects_manager_ptr->CreateEAXReverbZone(name,x,y,z,width,properties);
-				
-				g_state = OurGuiState::NONE;
-				create_sr_zone_dialog.resetConfig();
-				dialogInUse = false;
+				break;
 			}
-			
-			if(create_er_zone_dialog.CancelClickedOn())
+			case OurGuiState::EDIT_SR_ZONE:
 			{
-				g_state = OurGuiState::NONE;
-				create_er_zone_dialog.resetConfig();
-				dialogInUse = false;
+				edit_sr_zone_dialog.DrawDialog();
+				
+				if(edit_sr_zone_dialog.OkClickedOn() || edit_sr_zone_dialog.CancelClickedOn())
+				{						
+					g_state = OurGuiState::NONE;
+					edit_sr_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				break;
 			}
-			
-			break;
-		}
-		case OurGuiState::EDIT_ER_ZONE:
-		{
-			edit_er_zone_dialog.DrawDialog();
-			
-			if(edit_er_zone_dialog.OkClickedOn() || edit_er_zone_dialog.CancelClickedOn())
-			{						
-				g_state = OurGuiState::NONE;
-				edit_er_zone_dialog.resetConfig();
-				dialogInUse = false;
+			case OurGuiState::CREATE_ER_ZONE:
+			{
+				create_er_zone_dialog.DrawDialog();
+				
+				if(create_er_zone_dialog.OkClickedOn()  )
+				{
+					//create eax reverb zone
+					float x,y,z,width;
+					ReverbEAXProperties properties;
+					
+					create_er_zone_dialog.getNewPosition(x,y,z);
+					std::string name = create_er_zone_dialog.getNewName();
+					width = create_er_zone_dialog.getNewWidth();
+					properties = create_er_zone_dialog.getNewProperties();
+					
+					effects_manager_ptr->CreateEAXReverbZone(name,x,y,z,width,properties);
+					
+					g_state = OurGuiState::NONE;
+					create_sr_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
+				if(create_er_zone_dialog.CancelClickedOn())
+				{
+					g_state = OurGuiState::NONE;
+					create_er_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
+				break;
 			}
-			
-			break;
+			case OurGuiState::EDIT_ER_ZONE:
+			{
+				edit_er_zone_dialog.DrawDialog();
+				
+				if(edit_er_zone_dialog.OkClickedOn() || edit_er_zone_dialog.CancelClickedOn())
+				{						
+					g_state = OurGuiState::NONE;
+					edit_er_zone_dialog.resetConfig();
+					dialogInUse = false;
+				}
+				
+				break;
+			}
+			default:{ break;}
 		}
-		default:{ break;}
 	}
+	
+	ImGui::End();
+	ImGui::PopStyleVar();
+	
 }
 
 
