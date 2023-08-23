@@ -1,6 +1,8 @@
 
 # 3D Audio Producer
 
+## Moved to new location https://gitlab.com/pab44/3d-audio-producer
+
 This is a fork of the binaural-audio-editor project, but wxwidgets and openscenegraph are replaced with raygui and raylib.
 
 This project is an audio application that produces 3D audio from 2D mono audio samples and positional information given through the graphical user interface. 
